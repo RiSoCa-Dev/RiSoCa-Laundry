@@ -64,7 +64,7 @@ export function OrderForm() {
   const watchedValues = watch();
   const servicePackage = watch('servicePackage');
   const needsLocation = servicePackage === 'package2' || servicePackage === 'package3';
-  const isFreeDelivery = watchedValues.distance <= 0.5;
+  const isFreeDelivery = needsLocation && watchedValues.distance > 0 && watchedValues.distance <= 0.5;
 
   // Effect to update form distance when URL param changes
   useEffect(() => {
@@ -102,7 +102,7 @@ export function OrderForm() {
       }
       setShowDistancePrompt(false);
       
-      const isFreeDelivery = distance <= 0.5 && needsLocation;
+      const isFreeDelivery = needsLocation && distance > 0 && distance <= 0.5;
       const effectiveWeight = isFreeDelivery ? 7.5 : (!weight || weight < 0 ? 0 : weight);
       const loads = Math.max(1, Math.ceil(effectiveWeight / 7.5));
       setCalculatedLoads(loads);
@@ -216,14 +216,14 @@ export function OrderForm() {
                         <Controller
                             name="weight"
                             control={control}
-                            render={({ field }) => <Input id="weight" type="number" placeholder="e.g., 7.5" className="text-center bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" {...field} value={field.value ?? ''} disabled={isFreeDelivery && needsLocation}/>}
+                            render={({ field }) => <Input id="weight" type="number" placeholder="e.g., 7.5" className="text-center bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" {...field} value={field.value ?? ''} disabled={isFreeDelivery}/>}
                         />
                     </div>
                 </div>
                  {form.formState.errors.weight && (
                     <p className="text-xs font-medium text-destructive">{form.formState.errors.weight.message}</p>
                 )}
-                 {isFreeDelivery && needsLocation && <p className="text-xs text-center text-primary font-semibold">Free delivery applied! Weight set to 7.5kg.</p>}
+                 {isFreeDelivery && <p className="text-xs text-center text-primary font-semibold">Free delivery applied! Weight set to 7.5kg.</p>}
             </div>
             {needsLocation && (
               <div className="space-y-2">
