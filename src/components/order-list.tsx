@@ -34,7 +34,8 @@ export type Order = {
 type OrderListProps = {
   orders: Order[];
   isEditing: boolean;
-  onUpdateOrder: (orderId: string, field: keyof Order, value: any) => void;
+  onFieldUpdate: (orderId: string, field: keyof Order, value: any) => void;
+  onStatusUpdate: (orderId: string, newStatus: string) => void;
 };
 
 const statusOptions = [
@@ -68,10 +69,10 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export function OrderList({ orders, isEditing, onUpdateOrder }: OrderListProps) {
+export function OrderList({ orders, isEditing, onFieldUpdate, onStatusUpdate }: OrderListProps) {
   const handleFieldChange = (orderId: string, field: keyof Order, value: string) => {
-    const numericValue = field === 'status' ? value : parseFloat(value) || 0;
-    onUpdateOrder(orderId, field, numericValue);
+    const numericValue = parseFloat(value) || 0;
+    onFieldUpdate(orderId, field, numericValue);
   }
 
   return (
@@ -97,7 +98,7 @@ export function OrderList({ orders, isEditing, onUpdateOrder }: OrderListProps) 
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="text-sm">
-                    <Label for={`weight-mob-${order.id}`}>Weight (kg)</Label>
+                    <Label htmlFor={`weight-mob-${order.id}`}>Weight (kg)</Label>
                     {isEditing ? (
                         <Input id={`weight-mob-${order.id}`} type="number" value={order.weight} onChange={e => handleFieldChange(order.id, 'weight', e.target.value)} className="h-8"/>
                     ) : (
@@ -105,7 +106,7 @@ export function OrderList({ orders, isEditing, onUpdateOrder }: OrderListProps) 
                     )}
                   </div>
                    <div className="text-sm">
-                    <Label for={`load-mob-${order.id}`}>Load</Label>
+                    <Label htmlFor={`load-mob-${order.id}`}>Load</Label>
                      {isEditing ? (
                         <Input id={`load-mob-${order.id}`} type="number" value={order.load} onChange={e => handleFieldChange(order.id, 'load', e.target.value)} className="h-8"/>
                     ) : (
@@ -115,7 +116,7 @@ export function OrderList({ orders, isEditing, onUpdateOrder }: OrderListProps) 
                 </div>
 
                 <div className="text-sm">
-                  <Label for={`total-mob-${order.id}`}>Total (₱)</Label>
+                  <Label htmlFor={`total-mob-${order.id}`}>Total (₱)</Label>
                    {isEditing ? (
                         <Input id={`total-mob-${order.id}`} type="number" value={order.total} onChange={e => handleFieldChange(order.id, 'total', e.target.value)} className="h-8"/>
                     ) : (
@@ -125,7 +126,8 @@ export function OrderList({ orders, isEditing, onUpdateOrder }: OrderListProps) 
 
                  <Select
                     value={order.status}
-                    onValueChange={(newStatus) => onUpdateOrder(order.id, 'status', newStatus)}
+                    onValueChange={(newStatus) => onStatusUpdate(order.id, newStatus)}
+                    disabled={isEditing}
                   >
                     <SelectTrigger className="w-full h-10 mt-2">
                       <SelectValue placeholder="Update Status" />
@@ -192,7 +194,8 @@ export function OrderList({ orders, isEditing, onUpdateOrder }: OrderListProps) 
                 <TableCell>
                   <Select
                     value={order.status}
-                    onValueChange={(newStatus) => onUpdateOrder(order.id, 'status', newStatus)}
+                    onValueChange={(newStatus) => onStatusUpdate(order.id, newStatus)}
+                    disabled={isEditing}
                   >
                     <SelectTrigger className="w-[180px] h-9">
                       <SelectValue placeholder="Update Status" />

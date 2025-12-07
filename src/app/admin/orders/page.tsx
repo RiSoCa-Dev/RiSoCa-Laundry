@@ -40,18 +40,49 @@ export default function AdminOrdersPage() {
       } else {
         const fetchedOrders = data as Order[];
         setAdminOrders(fetchedOrders);
-        setInitialOrders(fetchedOrders); // Keep a copy of the original state
+        setInitialOrders(fetchedOrders);
       }
       setOrdersLoading(false);
     }
     fetchAdminOrders();
   }, [toast]);
 
-  const handleUpdateOrder = (orderId: string, field: keyof Order, value: any) => {
+  const handleFieldUpdate = (orderId: string, field: keyof Order, value: any) => {
     setAdminOrders(prev =>
       prev.map(o => (o.id === orderId ? { ...o, [field]: value } : o))
     );
   };
+
+  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    // Immediately update local state for a responsive UI
+    setAdminOrders(prev =>
+        prev.map(o => (o.id === orderId ? { ...o, status: newStatus } : o))
+    );
+     setInitialOrders(prev =>
+        prev.map(o => (o.id === orderId ? { ...o, status: newStatus } : o))
+    );
+
+    // Save to database
+    const { error } = await supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .eq('id', orderId);
+
+    if (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Status Update Failed',
+            description: `Could not update order ${orderId}. Please try again.`,
+        });
+        // Revert UI on failure
+        setAdminOrders(initialOrders);
+    } else {
+        toast({
+            title: 'Status Updated',
+            description: `Order ${orderId} is now "${newStatus}".`,
+        });
+    }
+  }
   
   const handleCancel = () => {
     setAdminOrders(initialOrders);
@@ -65,7 +96,7 @@ export default function AdminOrdersPage() {
         supabase
             .from('orders')
             .update({
-                status: order.status,
+                // Status is saved separately, only update these fields
                 weight: order.weight,
                 load: order.load,
                 total: order.total,
@@ -122,7 +153,7 @@ export default function AdminOrdersPage() {
               </>
             ) : (
               <Button onClick={() => setIsEditing(true)} disabled={ordersLoading}>
-                <Edit className="mr-2 h-4 w-4" /> Edit Orders
+                <Edit className="mr-2 h-4 w-4" /> Edit Details
               </Button>
             )}
         </div>
@@ -137,7 +168,8 @@ export default function AdminOrdersPage() {
           <OrderList 
             orders={adminOrders} 
             isEditing={isEditing}
-            onUpdateOrder={handleUpdateOrder} 
+            onFieldUpdate={handleFieldUpdate} 
+            onStatusUpdate={handleStatusUpdate}
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
