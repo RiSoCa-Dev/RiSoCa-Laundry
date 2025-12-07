@@ -12,7 +12,7 @@ export default function ContactUsPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <AppHeader />
-      <main className="flex-1 flex items-center justify-center container mx-auto px-4 py-12">
+      <main className="flex-1 flex items-center justify-center container mx-auto px-4 py-8">
         <Card className="w-full max-w-lg">
             <CardHeader>
                 <CardTitle className="text-3xl">Contact Us</CardTitle>

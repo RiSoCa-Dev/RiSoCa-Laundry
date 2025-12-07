@@ -22,9 +22,9 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <AppHeader />
-      <main className="flex-1 flex flex-col items-center justify-center container mx-auto px-4 py-4 md:py-8 text-center">
+      <main className="flex-1 flex flex-col items-center justify-center container mx-auto px-4 py-4 md:py-6 text-center">
         
-        <div className="flex items-center justify-center space-x-4 mb-8">
+        <div className="flex items-center justify-center space-x-4 mb-6">
            <WashingMachine className="h-12 w-12 md:h-16 md:w-16 text-primary" />
            <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary text-left">RKR Laundry</h1>
@@ -32,7 +32,7 @@ export default function Home() {
            </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 mb-12">
+        <div className="flex flex-row items-center gap-4 mb-8">
           <Link href="/login" passHref>
             <Button size="lg" className="w-40 h-12 text-base rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-shadow">
               <LogIn className="mr-2 h-4 w-4" />
