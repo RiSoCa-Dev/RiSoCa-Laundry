@@ -1,7 +1,9 @@
+
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
 import { AppHeader } from '@/components/app-header'
@@ -18,42 +20,55 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { UserPlus } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 export default function RegisterPage() {
+  const router = useRouter()
+  const { toast } = useToast()
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [countdown, setCountdown] = useState(3)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
-    setMessage(null)
+    setError(null)
 
     const formData = new FormData(e.currentTarget)
-
     const email = String(formData.get('email'))
     const password = String(formData.get('password'))
 
-    const { error } = await supabase.auth.signUp({
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      // ✅ add emailRedirectTo if you want
-      // options: {
-      //   emailRedirectTo: `${location.origin}/auth/callback`,
-      // },
     })
 
     setLoading(false)
 
-    if (error) {
-      setMessage(error.message)
+    if (signUpError) {
+      setError(signUpError.message)
       return
     }
 
-    setMessage(
-      'Registration successful. Check your email to confirm your account (if required).'
-    )
+    // Show success toast and start countdown
+    const { id: toastId, update } = toast({
+      variant: 'default',
+      title: 'Signup Successful!',
+      description: `Redirecting to login in ${countdown}s...`,
+      className: 'bg-green-500 text-white',
+    });
 
-    e.currentTarget.reset()
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        const newCountdown = prev - 1;
+        update({ id: toastId, description: `Redirecting to login in ${newCountdown}s...` });
+        if (newCountdown === 0) {
+          clearInterval(interval);
+          router.push('/login');
+        }
+        return newCountdown;
+      });
+    }, 1000);
   }
 
   return (
@@ -127,9 +142,9 @@ export default function RegisterPage() {
               </Button>
             </form>
 
-            {message && (
-              <p className="mt-3 text-center text-xs text-muted-foreground">
-                {message}
+            {error && (
+              <p className="mt-3 text-center text-xs text-destructive">
+                {error}
               </p>
             )}
 
