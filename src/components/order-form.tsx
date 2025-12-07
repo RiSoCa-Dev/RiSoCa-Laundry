@@ -44,6 +44,7 @@ export function OrderForm() {
   const [isPending, startTransition] = useTransition();
   const [pricingResult, setPricingResult] = useState<PricingResult | null>(null);
   const [calculatedLoads, setCalculatedLoads] = useState(1);
+  const [showDistancePrompt, setShowDistancePrompt] = useState(false);
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
@@ -62,7 +63,15 @@ export function OrderForm() {
     startTransition(() => {
       const { servicePackage, weight = 0, distance } = values;
 
-      const effectiveWeight = weight < 7.5 ? 7.5 : weight;
+      if ((servicePackage === 'package2' || servicePackage === 'package3') && (!distance || distance <= 0)) {
+        setPricingResult(null);
+        setShowDistancePrompt(true);
+        return;
+      }
+      setShowDistancePrompt(false);
+      
+
+      const effectiveWeight = !weight || weight < 0 ? 0 : weight;
       const loads = Math.max(1, Math.ceil(effectiveWeight / 7.5));
       setCalculatedLoads(loads);
       const baseCost = loads * 180;
@@ -90,6 +99,7 @@ export function OrderForm() {
       calculatePrice(parsed.data);
     } else {
       setPricingResult(null);
+      setShowDistancePrompt(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedValues.servicePackage, watchedValues.weight, watchedValues.distance]);
@@ -163,7 +173,7 @@ export function OrderForm() {
                         <Controller
                             name="weight"
                             control={form.control}
-                            render={({ field }) => <Input id="weight" type="number" placeholder="e.g., 7.5kg" className="text-center bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" {...field} value={field.value ?? ''}/>}
+                            render={({ field }) => <Input id="weight" type="number" placeholder="e.g., 7.5" className="text-center bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" {...field} value={field.value ?? ''}/>}
                         />
                     </div>
                 </div>
@@ -180,7 +190,7 @@ export function OrderForm() {
                         <Controller
                         name="distance"
                         control={form.control}
-                        render={({ field }) => <Input id="distance" type="number" placeholder="e.g. 1" className="text-center bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0" {...field} />}
+                        render={({ field }) => <Input id="distance" type="number" placeholder="e.g. 1" className="text-center bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" {...field} />}
                         />
                     </div>
                 </div>
@@ -201,6 +211,8 @@ export function OrderForm() {
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         <span className="text-sm">Calculating...</span>
                     </div>
+                ) : showDistancePrompt ? (
+                    <div className="text-center text-primary h-16 flex items-center justify-center text-sm font-semibold">Please enter your distance.</div>
                 ) : pricingResult ? (
                     <>
                         <div className="flex justify-between items-center">
@@ -217,7 +229,7 @@ export function OrderForm() {
                         </div>
                     </>
                 ) : (
-                    <div className="text-center text-muted-foreground h-16 flex items-center justify-center text-sm">Select a package to see the price.</div>
+                     <div className="text-center text-muted-foreground h-16 flex items-center justify-center text-sm">Select a package to see the price.</div>
                 )}
             </div>
           </div>
@@ -226,7 +238,7 @@ export function OrderForm() {
           <Button 
             type="submit" 
             className="w-full bg-accent text-accent-foreground hover:bg-accent/90 text-base py-5"
-            disabled={isPending || !form.formState.isValid}
+            disabled={isPending || !form.formState.isValid || showDistancePrompt}
           >
             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Place Order
