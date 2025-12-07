@@ -10,17 +10,13 @@ import {
 } from '@/components/ui/card';
 import { OrderList, Order } from '@/components/order-list';
 import { supabase } from '@/lib/supabaseClient';
-import { Loader2, Inbox, Edit, Save, X } from 'lucide-react';
+import { Loader2, Inbox } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
 
 export default function AdminOrdersPage() {
   const { toast } = useToast();
   const [adminOrders, setAdminOrders] = useState<Order[]>([]);
-  const [initialOrders, setInitialOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     async function fetchAdminOrders() {
@@ -40,95 +36,40 @@ export default function AdminOrdersPage() {
       } else {
         const fetchedOrders = data as Order[];
         setAdminOrders(fetchedOrders);
-        setInitialOrders(fetchedOrders);
       }
       setOrdersLoading(false);
     }
     fetchAdminOrders();
   }, [toast]);
+  
+  const handleUpdateOrder = async (updatedOrder: Order) => {
+    // Optimistically update UI
+    setAdminOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
 
-  const handleFieldUpdate = (orderId: string, field: keyof Order, value: any) => {
-    setAdminOrders(prev =>
-      prev.map(o => (o.id === orderId ? { ...o, [field]: value } : o))
-    );
-  };
-
-  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
-    // Immediately update local state for a responsive UI
-    setAdminOrders(prev =>
-        prev.map(o => (o.id === orderId ? { ...o, status: newStatus } : o))
-    );
-     setInitialOrders(prev =>
-        prev.map(o => (o.id === orderId ? { ...o, status: newStatus } : o))
-    );
-
-    // Save to database
     const { error } = await supabase
         .from('orders')
-        .update({ status: newStatus })
-        .eq('id', orderId);
+        .update({
+            status: updatedOrder.status,
+            weight: updatedOrder.weight,
+            load: updatedOrder.load,
+            total: updatedOrder.total,
+        })
+        .eq('id', updatedOrder.id);
 
     if (error) {
         toast({
             variant: 'destructive',
-            title: 'Status Update Failed',
-            description: `Could not update order ${orderId}. Please try again.`,
+            title: 'Update Failed',
+            description: `Could not update order ${updatedOrder.id}. Please try again.`,
         });
-        // Revert UI on failure
-        setAdminOrders(initialOrders);
+        // On failure, you might want to refetch or revert the optimistic update
+        // For simplicity, we are not reverting here but it's a good practice
     } else {
         toast({
-            title: 'Status Updated',
-            description: `Order ${orderId} is now "${newStatus}".`,
-        });
-    }
-  }
-  
-  const handleCancel = () => {
-    setAdminOrders(initialOrders);
-    setIsEditing(false);
-  }
-
-  const handleSave = async () => {
-    setIsSaving(true);
-
-    const updatePromises = adminOrders.map(order => 
-        supabase
-            .from('orders')
-            .update({
-                // Status is saved separately, only update these fields
-                weight: order.weight,
-                load: order.load,
-                total: order.total,
-            })
-            .eq('id', order.id)
-    );
-
-    try {
-        const results = await Promise.all(updatePromises);
-        const hasError = results.some(res => res.error);
-
-        if (hasError) {
-            throw new Error('An error occurred while saving one or more orders.');
-        }
-
-        toast({
-            title: 'Success!',
-            description: 'All order changes have been saved.',
+            title: 'Order Updated',
+            description: `Order ${updatedOrder.id} has been successfully updated.`,
             className: 'bg-green-500 text-white',
         });
-        setInitialOrders(adminOrders); // Update the base state
-        setIsEditing(false);
-    } catch(error: any) {
-        console.error('Error saving orders:', error);
-        toast({
-            variant: 'destructive',
-            title: 'Save Failed',
-            description: error.message || 'Could not save order changes.',
-        });
-        setAdminOrders(initialOrders); // Revert on failure
-    } finally {
-        setIsSaving(false);
     }
   }
 
@@ -138,24 +79,7 @@ export default function AdminOrdersPage() {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Manage Orders</CardTitle>
-          <CardDescription>Manage and track all customer orders.</CardDescription>
-        </div>
-        <div className="flex gap-2">
-            {isEditing ? (
-              <>
-                <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
-                  <X className="mr-2 h-4 w-4" /> Cancel
-                </Button>
-                <Button onClick={handleSave} disabled={isSaving}>
-                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                  Save
-                </Button>
-              </>
-            ) : (
-              <Button onClick={() => setIsEditing(true)} disabled={ordersLoading}>
-                <Edit className="mr-2 h-4 w-4" /> Edit Details
-              </Button>
-            )}
+          <CardDescription>View and update all customer orders.</CardDescription>
         </div>
       </CardHeader>
       <CardContent>
@@ -167,9 +91,7 @@ export default function AdminOrdersPage() {
         ) : adminOrders.length > 0 ? (
           <OrderList 
             orders={adminOrders} 
-            isEditing={isEditing}
-            onFieldUpdate={handleFieldUpdate} 
-            onStatusUpdate={handleStatusUpdate}
+            onUpdateOrder={handleUpdateOrder}
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
