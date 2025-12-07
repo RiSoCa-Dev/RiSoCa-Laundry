@@ -55,19 +55,19 @@ export default function RegisterPage() {
         throw authError;
       }
       
-      // After successful signup in auth, insert into public.users table
+      // After successful signup in auth, insert into public.profiles table
       if (authData.user) {
         const { error: insertError } = await supabase
-          .from('users')
+          .from('profiles')
           .insert({ 
-            id: authData.user.id, 
+            id: authData.user.id,
             first_name: firstName, 
             last_name: lastName,
-            role: 'customer' // Default role
+            email: email,
           });
 
         if (insertError) {
-          // If inserting into public.users fails, we should ideally handle this.
+          // If inserting into public.profiles fails, we should ideally handle this.
           // For now, we'll log the error and proceed with the success toast.
           console.error('Error saving user to public table:', insertError);
           setError(`Account created, but failed to save profile: ${insertError.message}`);
@@ -79,21 +79,19 @@ export default function RegisterPage() {
 
 
       let countdown = 3;
-      const { id: toastId, update } = toast({
+      toast({
         variant: 'default',
         title: 'Signup Successful!',
-        description: `Redirecting to login in ${countdown}s...`,
+        description: `Redirecting to home in ${countdown}s...`,
         className: 'bg-green-500 text-white',
+        duration: 3000,
       });
 
       const interval = setInterval(() => {
         countdown -= 1;
-        if (update) {
-          update({ id: toastId, description: `Redirecting to login in ${countdown}s...` });
-        }
-        if (countdown === 0) {
+        if (countdown <= 0) {
           clearInterval(interval);
-          router.push('/login');
+          router.push('/');
         }
       }, 1000);
 
