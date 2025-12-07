@@ -10,6 +10,10 @@ import {
 
 const faqs = [
     {
+        question: "What are your operating hours?",
+        answer: "We are open from Monday to Sunday, 7:30 AM to 7:30 PM."
+    },
+    {
         question: "How does your pricing work?",
         answer: "Our standard pricing is ₱180 per 7.5kg load for wash, dry, and fold services. For services requiring delivery, we charge ₱20 per kilometer after the first kilometer, which is free. For a detailed breakdown, please visit our Service Rates page."
     },
@@ -32,10 +36,6 @@ const faqs = [
     {
         question: "Is there a minimum weight for laundry service?",
         answer: "Our pricing is based on a standard load of 7.5kg. Any weight up to 7.5kg is considered one load. If your laundry exceeds this, it will be calculated as additional loads."
-    },
-    {
-        question: "What are your operating hours?",
-        answer: "We are open from Monday to Sunday, 7:30 AM to 7:30 PM."
     },
 ]
 
