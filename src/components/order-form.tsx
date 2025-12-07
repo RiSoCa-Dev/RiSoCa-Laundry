@@ -15,28 +15,24 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { pricingLogicGuidance, PricingLogicGuidanceOutput } from '@/ai/flows/pricing-logic-guidance';
-import { Lightbulb, Loader2, Shirt, Sparkles, Truck, WashingMachine, Wind, AlertCircle } from 'lucide-react';
+import { Lightbulb, Loader2, Package, Truck, AlertCircle, ShoppingCart } from 'lucide-react';
 import { Separator } from './ui/separator';
 
-const services = [
-  { id: 'wash', label: 'Wash', icon: WashingMachine },
-  { id: 'dry', label: 'Dry', icon: Wind },
-  { id: 'fold', label: 'Fold', icon: Shirt },
-];
-
-const addOns = [
-  { id: 'stain_removal', label: 'Stain Removal', icon: Sparkles },
-  { id: 'ironing', label: 'Ironing', icon: Shirt },
+const packages = [
+  { id: 'package1', label: 'Package 1', description: 'Wash, Dry, & Fold' },
+  { id: 'package2', label: 'Package 2', description: 'Pick Up + Package 1 + Customer Pick Up' },
+  { id: 'package3', label: 'Package 3', description: 'Customer Drop Off + Package 1 + Deliver' },
+  { id: 'package4', label: 'Package 4', description: 'Pick Up + Package 1 + Deliver (All-In)' },
 ];
 
 const orderSchema = z.object({
-  serviceTypes: z.array(z.string()).min(1, "Please select at least one service."),
-  addOns: z.array(z.string()).optional(),
-  distance: z.coerce.number().min(0, "Distance cannot be negative.").max(50, "We don't deliver beyond 50 miles."),
+  servicePackage: z.string().min(1, "Please select a package."),
+  loads: z.coerce.number().min(1, "Please enter at least one load.").max(10, "Maximum of 10 loads per order."),
+  distance: z.coerce.number().min(0, "Distance cannot be negative.").max(50, "We don't deliver beyond 50 km."),
 });
 
 type OrderFormValues = z.infer<typeof orderSchema>;
@@ -48,8 +44,8 @@ export function OrderForm() {
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
     defaultValues: {
-      serviceTypes: ['wash', 'dry'],
-      addOns: [],
+      servicePackage: 'package1',
+      loads: 1,
       distance: 5,
     },
     mode: 'onChange'
@@ -80,11 +76,12 @@ export function OrderForm() {
     calculatePrice(form.getValues());
 
     return () => subscription.unsubscribe();
-  }, [form]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.watch]);
 
   const onSubmit = (data: OrderFormValues) => {
     console.log('Order submitted:', data, 'with price:', pricingResult?.computedPrice);
-    alert(`Order placed! Total cost: $${pricingResult?.computedPrice.toFixed(2)}`);
+    alert(`Order placed! Total cost: ₱${pricingResult?.computedPrice.toFixed(2)}`);
   };
 
   return (
@@ -92,100 +89,79 @@ export function OrderForm() {
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <CardHeader className="p-4">
           <CardTitle>Create Order</CardTitle>
-          <CardDescription className="text-xs">Select services to calculate the price.</CardDescription>
+          <CardDescription className="text-xs">Select a package to calculate the price.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 p-4 pt-0">
           
           <div className="space-y-2">
-            <Label className="text-base font-semibold">1. Services</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {services.map((service) => (
-                <Controller
-                  key={service.id}
-                  name="serviceTypes"
-                  control={form.control}
-                  render={({ field }) => {
-                    const isChecked = field.value?.includes(service.id);
-                    return (
-                        <div className={`p-0.5 rounded-md transition-all ${isChecked ? 'bg-primary' : 'bg-transparent'}`}>
-                          <Label htmlFor={service.id} className={`flex flex-col items-center justify-center gap-1 text-sm font-medium cursor-pointer p-2 rounded-sm border-2 transition-all ${isChecked ? 'bg-card border-primary' : 'bg-card hover:bg-muted border-transparent'}`}>
-                            <service.icon className={`h-6 w-6 transition-colors ${isChecked ? 'text-primary' : 'text-muted-foreground'}`} />
-                            {service.label}
-                            <Checkbox
-                                id={service.id}
-                                checked={isChecked}
-                                onCheckedChange={(checked) => {
-                                  const newValue = checked
-                                    ? [...field.value, service.id]
-                                    : field.value?.filter((value) => value !== service.id);
-                                  field.onChange(newValue);
-                                }}
-                                className="absolute opacity-0"
-                              />
-                          </Label>
-                        </div>
-                    );
-                  }}
-                />
-              ))}
-            </div>
-            {form.formState.errors.serviceTypes && (
-              <p className="text-xs font-medium text-destructive">{form.formState.errors.serviceTypes.message}</p>
+            <Label className="text-base font-semibold">1. Select a Package</Label>
+            <Controller
+              name="servicePackage"
+              control={form.control}
+              render={({ field }) => (
+                <RadioGroup
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-2"
+                >
+                  {packages.map((pkg) => (
+                    <Label
+                      key={pkg.id}
+                      htmlFor={pkg.id}
+                      className={`flex items-start gap-3 rounded-lg border p-3 transition-all cursor-pointer hover:bg-muted/50 ${field.value === pkg.id ? 'border-primary bg-primary/5' : ''}`}
+                    >
+                      <RadioGroupItem value={pkg.id} id={pkg.id} className="mt-1"/>
+                      <div className="grid gap-0.5">
+                        <span className="font-semibold text-sm">{pkg.label}</span>
+                        <span className="text-xs text-muted-foreground">{pkg.description}</span>
+                      </div>
+                    </Label>
+                  ))}
+                </RadioGroup>
+              )}
+            />
+            {form.formState.errors.servicePackage && (
+              <p className="text-xs font-medium text-destructive">{form.formState.errors.servicePackage.message}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">2. Add-Ons</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {addOns.map((addOn) => (
-                <Controller
-                  key={addOn.id}
-                  name="addOns"
-                  control={form.control}
-                  render={({ field }) => {
-                    const isChecked = field.value?.includes(addOn.id);
-                    return (
-                      <div className={`p-0.5 rounded-md transition-all ${isChecked ? 'bg-primary' : 'bg-transparent'}`}>
-                        <Label htmlFor={addOn.id} className={`flex flex-col items-center justify-center gap-1 text-sm font-medium cursor-pointer p-2 rounded-sm border-2 transition-all ${isChecked ? 'bg-card border-primary' : 'bg-card hover:bg-muted border-transparent'}`}>
-                          <addOn.icon className={`h-6 w-6 transition-colors ${isChecked ? 'text-primary' : 'text-muted-foreground'}`} />
-                          {addOn.label}
-                          <Checkbox
-                              id={addOn.id}
-                              checked={isChecked}
-                              onCheckedChange={(checked) => {
-                                const newValue = checked
-                                  ? [...(field.value ?? []), addOn.id]
-                                  : (field.value ?? [])?.filter((value) => value !== addOn.id);
-                                field.onChange(newValue);
-                              }}
-                              className="absolute opacity-0"
-                            />
-                        </Label>
-                      </div>
-                    )
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="distance" className="text-base font-semibold">3. Location</Label>
-            <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-md">
-                <Truck className="h-5 w-5 text-muted-foreground" />
-                <div className='flex-grow'>
-                    <Label htmlFor="distance" className="text-xs font-medium text-muted-foreground">Distance (miles)</Label>
-                    <Controller
-                    name="distance"
-                    control={form.control}
-                    render={({ field }) => <Input id="distance" type="number" placeholder="5" className="bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0" {...field} />}
-                    />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+                <Label htmlFor="loads" className="text-base font-semibold">2. Loads</Label>
+                <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-md">
+                    <ShoppingCart className="h-5 w-5 text-muted-foreground" />
+                    <div className='flex-grow'>
+                        <Label htmlFor="loads" className="text-xs font-medium text-muted-foreground">Number of Loads</Label>
+                        <Controller
+                            name="loads"
+                            control={form.control}
+                            render={({ field }) => <Input id="loads" type="number" placeholder="1" className="bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0" {...field} />}
+                        />
+                    </div>
                 </div>
+                 {form.formState.errors.loads && (
+                    <p className="text-xs font-medium text-destructive">{form.formState.errors.loads.message}</p>
+                )}
             </div>
-            {form.formState.errors.distance && (
-              <p className="text-xs font-medium text-destructive">{form.formState.errors.distance.message}</p>
-            )}
+            <div className="space-y-2">
+                <Label htmlFor="distance" className="text-base font-semibold">3. Location</Label>
+                <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-md">
+                    <Truck className="h-5 w-5 text-muted-foreground" />
+                    <div className='flex-grow'>
+                        <Label htmlFor="distance" className="text-xs font-medium text-muted-foreground">Distance (km)</Label>
+                        <Controller
+                        name="distance"
+                        control={form.control}
+                        render={({ field }) => <Input id="distance" type="number" placeholder="5" className="bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0" {...field} />}
+                        />
+                    </div>
+                </div>
+                {form.formState.errors.distance && (
+                <p className="text-xs font-medium text-destructive">{form.formState.errors.distance.message}</p>
+                )}
+            </div>
           </div>
+
 
           <Separator />
 
@@ -202,7 +178,7 @@ export function OrderForm() {
                         <div className="flex justify-between items-center">
                             <span className="text-muted-foreground text-base">Total</span>
                             <span className="text-2xl font-bold text-primary">
-                                ${pricingResult.computedPrice.toFixed(2)}
+                                ₱{pricingResult.computedPrice.toFixed(2)}
                             </span>
                         </div>
                         {pricingResult.isValidCombination && pricingResult.suggestedServices.length > 0 && (
@@ -225,7 +201,7 @@ export function OrderForm() {
                         )}
                     </>
                 ) : (
-                    <div className="text-center text-muted-foreground h-16 flex items-center justify-center text-sm">Select services to see price.</div>
+                    <div className="text-center text-muted-foreground h-16 flex items-center justify-center text-sm">Select a package to see the price.</div>
                 )}
             </div>
           </div>
