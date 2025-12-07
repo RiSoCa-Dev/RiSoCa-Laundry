@@ -7,12 +7,13 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L, { LatLng } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+// Statically import marker icons
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
-// This is the correct way to fix the default icon issue in Next.js
-// It should be done once at the module level.
+// Fix the default icon issue in Next.js by merging options
+// This should be done once at the module level.
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconUrl: markerIcon.src,
@@ -31,6 +32,7 @@ const SHOP_LONGITUDE = 121.775073;
 function DraggableMarker() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Set initial position to shop's location
   const [position, setPosition] = useState<LatLng>(new LatLng(SHOP_LATITUDE, SHOP_LONGITUDE));
 
   const updateURL = (pos: LatLng) => {
@@ -40,6 +42,7 @@ function DraggableMarker() {
     
     const params = new URLSearchParams(searchParams.toString());
     params.set('distance', distanceInKm.toFixed(2));
+    // Use replace to avoid adding to browser history
     router.replace(`/select-location?${params.toString()}`);
   };
 
@@ -55,6 +58,7 @@ function DraggableMarker() {
     }
   });
 
+  // Try to locate the user when the map is ready
   useEffect(() => {
     map.locate();
   }, [map]);
@@ -73,7 +77,9 @@ function DraggableMarker() {
         eventHandlers={{
             dragend: handleDragEnd,
         }}
-    />
+    >
+      {/* You can add a popup here if you want */}
+    </Marker>
   );
 }
 
