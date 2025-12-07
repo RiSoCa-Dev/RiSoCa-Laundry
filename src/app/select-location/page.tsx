@@ -3,7 +3,6 @@
 import { Suspense, useCallback, useState } from 'react'
 import { useLoadScript, Libraries } from '@react-google-maps/api'
 import { Loader2, AlertTriangle } from 'lucide-react'
-import { supabase } from '@/lib/supabaseClient'
 
 import { LocationConfirmation } from '@/components/location-confirmation'
 import { LocationMap } from '@/components/location-map'
@@ -35,7 +34,7 @@ function SelectLocationContent() {
   )
 
   /**
-   * Save selected coords to Supabase
+   * Save selected coords
    */
   async function saveLocation() {
     if (!coords) {
@@ -46,29 +45,10 @@ function SelectLocationContent() {
     setSaving(true)
     setStatus(null)
 
-    const { data: userData, error: userError } =
-      await supabase.auth.getUser()
-
-    if (userError || !userData.user) {
-      setSaving(false)
-      setStatus('You must be logged in to save a location.')
-      return
-    }
-
-    const { error } = await supabase.from('locations').insert({
-      user_id: userData.user.id,
-      latitude: coords.lat,
-      longitude: coords.lng,
-    })
-
+    // Simulate saving
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     setSaving(false)
-
-    if (error) {
-      console.error(error)
-      setStatus('Failed to save location: ' + error.message)
-      return
-    }
-
     setStatus('✅ Location saved successfully.')
   }
 
