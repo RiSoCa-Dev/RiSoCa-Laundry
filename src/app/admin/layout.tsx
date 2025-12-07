@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
@@ -15,13 +15,33 @@ export default function AdminLayout({
 }) {
   const { profile, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isLoginPage = pathname === '/admin/login';
 
   useEffect(() => {
-    if (!loading && profile?.role !== 'admin') {
+    if (!loading && profile?.role !== 'admin' && !isLoginPage) {
       router.push('/admin/login');
     }
-  }, [profile, loading, router]);
+    if (!loading && profile?.role === 'admin' && isLoginPage) {
+      router.push('/admin');
+    }
+  }, [profile, loading, router, isLoginPage]);
 
+  // If we are on the login page and not an admin, show the login page
+  if (isLoginPage && profile?.role !== 'admin') {
+     return (
+        <div className="flex flex-col h-screen">
+            <AppHeader showLogo={true} />
+            <main className="flex-1 flex items-center justify-center">
+                {children}
+            </main>
+            <AppFooter />
+        </div>
+     )
+  }
+
+  // If loading, or if not an admin (and not on login page), show loader
   if (loading || profile?.role !== 'admin') {
     return (
       <div className="flex flex-col h-screen">
@@ -34,6 +54,7 @@ export default function AdminLayout({
     );
   }
 
+  // If admin, show the protected content
   return (
     <div className="flex flex-col h-screen">
         <AppHeader showLogo={true} />
