@@ -55,9 +55,9 @@ export default function RegisterPage() {
         throw authError;
       }
       
-      // After successful signup in auth, insert into public.profiles table
       if (authData.user) {
-        const { error: insertError } = await supabase
+        // Insert into public.profiles table
+        const { error: profileError } = await supabase
           .from('profiles')
           .insert({ 
             id: authData.user.id,
@@ -66,14 +66,28 @@ export default function RegisterPage() {
             email: email,
           });
 
-        if (insertError) {
-          // This error is critical. If the profile isn't created, the user might not be able to log in properly.
-          // We'll now throw this error to stop the process and show a meaningful message.
-          console.error('Error saving user to public.profiles table:', insertError);
-          throw new Error(`Account created, but failed to save profile. Please contact support. Details: ${insertError.message}`);
+        if (profileError) {
+          console.error('Error saving user to public.profiles table:', profileError);
+          throw new Error(`Account created, but failed to save profile. Please contact support. Details: ${profileError.message}`);
         }
+
+        // Insert into public.users table
+        const { error: userError } = await supabase
+          .from('users')
+          .insert({
+            id: authData.user.id,
+            first_name: firstName,
+            last_name: lastName,
+            role: 'customer', // Default role
+          });
+
+        if (userError) {
+          console.error('Error saving user to public.users table:', userError);
+          // Optional: You might want to clean up the profile entry if this fails
+          throw new Error(`Account created, but failed to save user role. Please contact support. Details: ${userError.message}`);
+        }
+
       } else {
-        // This case should ideally not happen if authError is null
          throw new Error("Signup succeeded but no user data was returned.");
       }
 
