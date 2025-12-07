@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 import {
   Table,
@@ -19,7 +18,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-type Order = {
+export type Order = {
   id: string;
   customer: string;
   contact: string;

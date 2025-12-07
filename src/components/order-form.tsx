@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Weight, Layers, Info, MapPin } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useOrders } from '@/context/OrderContext';
 
 const packages = [
   { id: 'package1', label: 'Package 1', description: 'Wash, Dry, & Fold' },
@@ -47,6 +48,7 @@ export function OrderForm() {
   const [pricingResult, setPricingResult] = useState<PricingResult | null>(null);
   const [calculatedLoads, setCalculatedLoads] = useState(1);
   const [showDistancePrompt, setShowDistancePrompt] = useState(false);
+  const { addOrder } = useOrders();
   
   const distanceParam = searchParams.get('distance');
   const packageParam = searchParams.get('servicePackage');
@@ -157,7 +159,18 @@ export function OrderForm() {
 
 
   const onSubmit = (data: OrderFormValues) => {
-    console.log('Order submitted:', data, 'with price:', pricingResult?.computedPrice);
+    if (!pricingResult) return;
+
+    const newOrder = {
+        id: `ORD${String(Date.now()).slice(-3)}${String(Math.floor(Math.random() * 100)).padStart(2, '0')}`,
+        customer: 'Jane Doe', // Placeholder
+        contact: '09123456789', // Placeholder
+        load: calculatedLoads,
+        weight: data.weight || (isFreeDelivery ? 7.5 : 0),
+        status: 'Order Placed',
+        total: pricingResult.computedPrice,
+    };
+    addOrder(newOrder);
     router.push('/order-status');
   };
 
