@@ -240,7 +240,7 @@ export function OrderForm() {
                   <div className="flex flex-col gap-2">
                       <Button type="button" variant="outline" onClick={handleLocationSelect} className="w-full">
                         <MapPin className="mr-2 h-4 w-4"/>
-                        {watchedValues.distance > 0 ? `Distance: ${watchedValues.distance.toFixed(2)} km (Change)` : 'Select Location on Map'}
+                        {watchedValues.distance > 0 ? `Distance: ${watchedValues.distance.toFixed(2)} km (Change)` : 'Select Location'}
                       </Button>
                   </div>
                   {form.formState.errors.distance && !watchedValues.distance ? (
