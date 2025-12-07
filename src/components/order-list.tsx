@@ -40,6 +40,7 @@ const statusOptions = [
   'Washing',
   'Drying',
   'Folding',
+  'Ready for Pick Up',
   'Out for Delivery',
   'Delivered',
 ];
@@ -49,6 +50,7 @@ const getStatusColor = (status: string) => {
     case 'Delivered':
       return 'bg-green-500';
     case 'Out for Delivery':
+    case 'Ready for Pick Up':
       return 'bg-blue-500';
     case 'Washing':
     case 'Drying':
@@ -146,7 +148,7 @@ export function OrderList({ orders, onStatusChange }: OrderListProps) {
                   >
                     <SelectTrigger className="w-[180px] h-9">
                       <SelectValue placeholder="Update Status" />
-                    </SelectTrigger>
+                    </Trigger>
                     <SelectContent>
                       {statusOptions.map((status) => (
                         <SelectItem key={status} value={status}>

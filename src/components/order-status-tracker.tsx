@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Shirt, Truck, PackageCheck, CircleCheck, Wind, WashingMachine } from 'lucide-react';
+import { Shirt, Truck, PackageCheck, CircleCheck, Wind, WashingMachine, Package } from 'lucide-react';
 
 const statuses = [
   { name: 'Order Placed', icon: CircleCheck, duration: 2000 },
@@ -11,6 +11,7 @@ const statuses = [
   { name: 'Washing', icon: WashingMachine, duration: 6000 },
   { name: 'Drying', icon: Wind, duration: 5000 },
   { name: 'Folding', icon: Shirt, duration: 5000 },
+  { name: 'Ready for Pick Up', icon: Package, duration: 3000 },
   { name: 'Out for Delivery', icon: Truck, duration: 4000 },
   { name: 'Delivered', icon: PackageCheck, duration: 0 },
 ];
