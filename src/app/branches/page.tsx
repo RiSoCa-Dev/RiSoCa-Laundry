@@ -49,8 +49,8 @@ export default function BranchesPage() {
                         </div>
                         
                         <div className="space-y-2">
-                             <div className="flex items-center gap-3 text-muted-foreground text-sm">
-                                <Phone className="h-5 w-5 flex-shrink-0" />
+                             <div className="flex items-start gap-3 text-muted-foreground text-sm">
+                                <Phone className="h-5 w-5 mt-0.5 flex-shrink-0" />
                                 <div className="flex flex-col">
                                     {branch.phoneNumbers.map(phone => (
                                         <a key={phone} href={`tel:${phone}`} className="hover:text-primary">{phone}</a>
