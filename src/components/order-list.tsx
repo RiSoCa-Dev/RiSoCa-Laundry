@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -42,11 +43,13 @@ const statusOptions = [
   'Ready for Pick Up',
   'Out for Delivery',
   'Delivered',
+  'Success',
 ];
 
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'Delivered':
+    case 'Success':
       return 'bg-green-500';
     case 'Out for Delivery':
     case 'Ready for Pick Up':

@@ -13,6 +13,7 @@ type CustomerOrderListProps = {
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'Delivered':
+    case 'Success':
       return 'bg-green-500';
     case 'Out for Delivery':
     case 'Ready for Pick Up':
