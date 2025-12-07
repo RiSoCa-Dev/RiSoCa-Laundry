@@ -6,7 +6,6 @@ import L, { LatLng } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default Leaflet icon path in Next.js
-// This needs to be done once in a client component.
 const DefaultIcon = L.icon({
     iconUrl: '/marker-icon.png',
     iconRetinaUrl: '/marker-icon-2x.png',
@@ -63,13 +62,13 @@ function DraggableMarker({ onPositionChange }: { onPositionChange: (pos: LatLng)
 
 export function LocationMap({ onPositionChange }: { onPositionChange: (pos: LatLng) => void }) {
     const [isClient, setIsClient] = useState(false);
+    const [mapKey, setMapKey] = useState('server');
     
     useEffect(() => {
         setIsClient(true);
+        // Using a stable string key that's set once on client mount
+        setMapKey('client-map'); 
     }, []);
-
-    // Unique key to force re-mount and avoid container initialization errors
-    const mapKey = isClient ? new Date().toISOString() : 'server';
 
     return (
         <div className="h-64 w-full rounded-lg overflow-hidden relative border">
