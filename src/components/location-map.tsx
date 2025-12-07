@@ -76,17 +76,6 @@ function DraggableMarker() {
 }
 
 export function LocationMap() {
-    const [isClient, setIsClient] = useState(false);
-    
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
-
-    if (!isClient) {
-      // Return null or a placeholder until the client-side code can run
-      return null;
-    }
-
     return (
         <MapContainer
             center={[SHOP_LATITUDE, SHOP_LONGITUDE]}
