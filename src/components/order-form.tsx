@@ -5,6 +5,7 @@ import { useState, useEffect, useTransition } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import dynamic from 'next/dynamic';
 import {
   Card,
   CardContent,
@@ -17,10 +18,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Loader2, Truck, Weight, Layers, Info, MapPin } from 'lucide-react';
+import { Loader2, Weight, Layers, Info, MapPin } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { LocationPicker } from './location-picker';
+import { Skeleton } from './ui/skeleton';
+
+const LocationPicker = dynamic(
+  () => import('./location-picker').then(mod => mod.LocationPicker),
+  { 
+    ssr: false,
+    loading: () => <Button type="button" variant="outline" className="w-full"><Skeleton className="h-4 w-24" /></Button>
+  }
+);
 
 
 const packages = [
@@ -200,10 +209,17 @@ export function OrderForm() {
             <div className="space-y-2">
                 <Label htmlFor="distance" className="text-base font-semibold">3. Location</Label>
                 <div className="flex flex-col gap-2">
-                    <Button type="button" variant="outline" onClick={() => setIsLocationPickerOpen(true)} className="w-full">
-                        <MapPin className="mr-2 h-4 w-4"/>
-                        Select Location
-                    </Button>
+                    <LocationPicker
+                      open={isLocationPickerOpen}
+                      onOpenChange={setIsLocationPickerOpen}
+                      onLocationSelect={handleLocationSelect}
+                      trigger={
+                        <Button type="button" variant="outline" onClick={() => setIsLocationPickerOpen(true)} className="w-full">
+                          <MapPin className="mr-2 h-4 w-4"/>
+                          Select Location
+                        </Button>
+                      }
+                    />
                     {watchedValues.distance > 0 && (
                        <div className="text-xs text-center text-muted-foreground">
                            Distance: {watchedValues.distance.toFixed(2)} km
@@ -262,12 +278,8 @@ export function OrderForm() {
         </CardFooter>
       </form>
     </Card>
-    <LocationPicker
-        open={isLocationPickerOpen}
-        onOpenChange={setIsLocationPickerOpen}
-        onLocationSelect={handleLocationSelect}
-    />
     </>
   );
 }
 
+    
