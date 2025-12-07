@@ -4,15 +4,14 @@ import Link from 'next/link';
 
 export function AppFooter() {
   return (
-    <footer className="w-full py-4 mt-auto">
-      <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} RKR Laundry. All rights reserved.</p>
-        <div className="flex items-center gap-4 mt-4 sm:mt-0">
-          <Link href="#" className="hover:text-primary"><Facebook className="h-5 w-5" /></Link>
-          <Link href="#" className="hover:text-primary"><Twitter className="h-5 w-5" /></Link>
-
-          <Link href="#" className="hover:text-primary"><Instagram className="h-5 w-5" /></Link>
+    <footer className="w-full py-2">
+      <div className="container mx-auto flex flex-col items-center justify-center text-xs text-muted-foreground">
+        <div className="flex items-center gap-4 mb-2">
+          <Link href="#" className="hover:text-primary"><Facebook className="h-4 w-4" /></Link>
+          <Link href="#" className="hover:text-primary"><Twitter className="h-4 w-4" /></Link>
+          <Link href="#" className="hover:text-primary"><Instagram className="h-4 w-4" /></Link>
         </div>
+        <p>&copy; {new Date().getFullYear()} RKR Laundry. All rights reserved.</p>
       </div>
     </footer>
   );
