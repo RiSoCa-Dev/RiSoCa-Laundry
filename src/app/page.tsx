@@ -3,7 +3,7 @@ import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Package, FileText, MapPin, Phone, HelpCircle, UserPlus, LogIn, Calculator, Bike, Download } from 'lucide-react';
+import { Package, FileText, MapPin, Phone, HelpCircle, UserPlus, LogIn, Calculator, Bike, Download, WashingMachine } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const gridItems = [
@@ -24,6 +24,14 @@ export default function Home() {
       <AppHeader />
       <main className="flex-1 overflow-hidden flex flex-col items-center justify-center container mx-auto px-4 text-center">
         
+        <div className="flex flex-col items-center mb-6">
+            <div className="flex items-center gap-2">
+              <WashingMachine className="h-8 w-8 text-primary" />
+              <span className="font-bold text-primary text-2xl">RKR Laundry</span>
+            </div>
+            <p className="text-sm text-muted-foreground">Fast. Clean. Convenient.</p>
+        </div>
+
         <div className="flex flex-row items-center gap-4 mb-6">
           <Link href="/login" passHref>
             <Button size="lg" className="w-32 h-11 text-base rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-shadow">
