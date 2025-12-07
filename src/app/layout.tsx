@@ -6,8 +6,8 @@ import { AuthProvider } from '@/context/AuthContext';
 import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
-  title: 'RKR Laundry',
-  description: 'Fast. Clean. Convenient. Modern laundry service with real-time tracking and smart pricing.',
+  title: 'RKR Laundry Service',
+  description: 'Fast, clean, and convenient laundry service at rkrlaundry.com. Real-time tracking and smart pricing for your laundry needs.',
 };
 
 export default function RootLayout({

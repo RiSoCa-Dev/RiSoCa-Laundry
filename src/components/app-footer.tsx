@@ -7,11 +7,11 @@ export function AppFooter() {
       <div className="container mx-auto flex flex-wrap items-center justify-center text-xs text-muted-foreground gap-x-4 gap-y-1">
         <p>&copy; {new Date().getFullYear()} RKR Laundry. All rights reserved.</p>
         <div className="flex items-center space-x-2">
-          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+          <a href="https://facebook.com/rkrlaundry" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
             <Facebook className="h-5 w-5" />
             <span className="sr-only">Facebook</span>
           </a>
-          <a href="mailto:contact@rkrlaundry.com" className="text-muted-foreground hover:text-primary transition-colors">
+          <a href="mailto:support@rkrlaundry.com" className="text-muted-foreground hover:text-primary transition-colors">
             <Mail className="h-5 w-5" />
             <span className="sr-only">Email</span>
           </a>
