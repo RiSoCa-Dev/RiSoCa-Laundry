@@ -1,7 +1,8 @@
-
 'use client';
 
 import Link from 'next/link';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Package, FileText, MapPin, Phone, HelpCircle, UserPlus, ArrowRight, ClipboardList, Bike, Download, WashingMachine, DollarSign, User, ShieldCheck, Loader2 } from 'lucide-react';
 import { AppHeader } from '@/components/app-header';
@@ -21,18 +22,17 @@ const customerGridItems = [
   { href: '/contact-us', label: 'Contact Us', icon: Phone },
 ];
 
-const adminGridItems = [
-  { href: '/admin/orders', label: 'Manage Orders', icon: ClipboardList },
-  { href: '/admin/rates', label: 'Manage Service Rates', icon: DollarSign },
-];
-
-
 export default function Home() {
   const { user, profile, loading } = useAuth();
-  const isAdmin = profile?.role === 'admin';
-  const gridItems = isAdmin ? adminGridItems : customerGridItems;
-  
-  if (loading) {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && profile?.role === 'admin') {
+      router.replace('/admin');
+    }
+  }, [loading, profile, router]);
+
+  if (loading || profile?.role === 'admin') {
      return (
       <div className="flex flex-col h-screen">
         <AppHeader showLogo={true} />
@@ -45,7 +45,7 @@ export default function Home() {
   }
 
   return (
-      <HomePageWrapper gridItems={gridItems}>
+      <HomePageWrapper gridItems={customerGridItems}>
         <div className="flex flex-col h-screen select-none">
           <AppHeader showLogo={false} />
           <main className="flex-1 overflow-y-auto flex flex-col items-center container mx-auto px-4 text-center pt-2 md:pt-4">
@@ -59,12 +59,7 @@ export default function Home() {
             </div>
 
             <div className="flex flex-row items-center justify-center gap-4 mb-4 h-11">
-              {isAdmin ? (
-                <div className="flex items-center gap-2 text-foreground">
-                    <ShieldCheck className="h-7 w-7 text-primary"/>
-                    <span className="font-bold text-xl text-primary">ADMIN</span>
-                </div>
-              ) : user ? (
+              {user ? (
                  <div className="flex items-center gap-2 text-foreground">
                     <User className="h-6 w-6"/>
                     <span className="font-semibold text-lg">Welcome, {profile?.first_name || user.email}!</span>
@@ -87,7 +82,7 @@ export default function Home() {
               )}
             </div>
 
-            <div className={`grid gap-x-2 gap-y-2 sm:gap-x-4 sm:gap-y-4 w-full max-w-sm sm:max-w-md pb-4 ${isAdmin ? 'grid-cols-2' : 'grid-cols-3'}`}>
+            <div className="grid gap-x-2 gap-y-2 sm:gap-x-4 sm:gap-y-4 w-full max-w-sm sm:max-w-md pb-4 grid-cols-3">
               {/* Grid items will be rendered by HomePageWrapper */}
             </div>
 
@@ -97,4 +92,3 @@ export default function Home() {
       </HomePageWrapper>
   );
 }
-

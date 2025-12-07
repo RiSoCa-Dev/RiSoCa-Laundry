@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -45,7 +44,7 @@ export default function AdminOrdersPage() {
   };
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Manage Orders</CardTitle>
         <CardDescription>Manage and track all customer orders.</CardDescription>
