@@ -1,4 +1,6 @@
 
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Menu, UserCog, Download, Info, LogOut, WashingMachine } from 'lucide-react';
@@ -7,16 +9,21 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from '@/context/AuthContext';
 
-const navLinks = [
-  { href: '/login', label: 'Administrator Login', icon: UserCog },
-  { href: '/download-app', label: 'Download APK', icon: Download },
-  { href: '/about', label: 'About', icon: Info },
-  { href: '#', label: 'Exit System', icon: LogOut },
-];
 
 export function AppHeader({ showLogo = false }: { showLogo?: boolean }) {
+    const { user, signOut } = useAuth();
+
+    const navLinks = [
+      { href: '/login', label: 'Administrator Login', icon: UserCog, requiresAuth: false },
+      { href: '/download-app', label: 'Download APK', icon: Download, requiresAuth: false },
+      { href: '/about', label: 'About', icon: Info, requiresAuth: false },
+    ];
+
+
   return (
     <header className="w-full border-b bg-background/95">
       <div className="container flex h-16 items-center justify-between px-4">
@@ -46,6 +53,15 @@ export function AppHeader({ showLogo = false }: { showLogo?: boolean }) {
                   </Link>
                 </DropdownMenuItem>
               ))}
+               {user && (
+                <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={signOut} className="flex items-center gap-3 text-destructive transition-colors hover:text-destructive hover:bg-destructive/10 rounded-md text-base cursor-pointer">
+                        <LogOut className="h-5 w-5" />
+                        Log Out
+                    </DropdownMenuItem>
+                </>
+              )}
             </nav>
           </DropdownMenuContent>
         </DropdownMenu>

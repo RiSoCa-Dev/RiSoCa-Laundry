@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
 import {
@@ -13,19 +14,36 @@ import {
 } from '@/components/ui/card';
 import { OrderList } from '@/components/order-list';
 import { useOrders } from '@/context/OrderContext';
+import { useAuth } from '@/context/AuthContext';
 import { Loader2, Inbox } from 'lucide-react';
 
 export default function AdminPage() {
   const { orders, updateOrderStatus } = useOrders();
-  const [isClient, setIsClient] = useState(false);
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
 
   const handleStatusChange = (orderId: string, newStatus: string) => {
     updateOrderStatus(orderId, newStatus);
   };
+
+  if (loading || !user) {
+     return (
+        <div className="flex flex-col h-screen">
+          <AppHeader showLogo={true} />
+          <main className="flex-1 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </main>
+          <AppFooter />
+        </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen">
@@ -37,11 +55,7 @@ export default function AdminPage() {
             <CardDescription>Manage and track all customer orders.</CardDescription>
           </CardHeader>
           <CardContent>
-            {!isClient ? (
-              <div className="flex justify-center items-center h-40">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : orders.length > 0 ? (
+            {orders.length > 0 ? (
               <OrderList orders={orders} onStatusChange={handleStatusChange} />
             ) : (
               <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">

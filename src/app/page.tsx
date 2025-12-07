@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Package, FileText, MapPin, Phone, HelpCircle, UserPlus, ArrowRight, ClipboardList, Bike, Download, WashingMachine, DollarSign, LogOut, User } from 'lucide-react';
+import { Package, FileText, MapPin, Phone, HelpCircle, UserPlus, ArrowRight, ClipboardList, Bike, Download, WashingMachine, DollarSign, User } from 'lucide-react';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
 import { HomePageWrapper } from '@/components/home-page-wrapper';
@@ -22,7 +22,7 @@ const gridItems = [
 ];
 
 export default function Home() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile } = useAuth();
 
   return (
       <HomePageWrapper gridItems={gridItems}>
@@ -38,17 +38,11 @@ export default function Home() {
                 <p className="text-lg md:text-2xl text-muted-foreground mt-1">Fast. Clean. Convenient.</p>
             </div>
 
-            <div className="flex flex-row items-center gap-4 mb-4">
+            <div className="flex flex-row items-center justify-center gap-4 mb-4 h-11">
               {user ? (
-                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 text-foreground">
-                        <User className="h-6 w-6"/>
-                        <span className="font-semibold text-lg">Welcome, {profile?.first_name || user.email}!</span>
-                    </div>
-                    <Button size="lg" variant="outline" onClick={signOut} className="w-32 h-11 text-base rounded-full">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Log Out
-                    </Button>
+                 <div className="flex items-center gap-2 text-foreground">
+                    <User className="h-6 w-6"/>
+                    <span className="font-semibold text-lg">Welcome, {profile?.first_name || user.email}!</span>
                 </div>
               ) : (
                 <>
