@@ -9,7 +9,7 @@ import { AppFooter } from '@/components/app-footer';
 import { HomePageWrapper } from '@/components/home-page-wrapper';
 import { useAuth } from '@/context/AuthContext';
 
-const gridItems = [
+const customerGridItems = [
   { href: '/order-status', label: 'Order Status', icon: Package },
   { href: '/create-order', label: 'Create Order', icon: FileText },
   { href: '/service-rates', label: 'Service Rates', icon: DollarSign },
@@ -21,8 +21,16 @@ const gridItems = [
   { href: '/contact-us', label: 'Contact Us', icon: Phone },
 ];
 
+const adminGridItems = [
+  { href: '/admin', label: 'Manage Orders', icon: ClipboardList },
+  { href: '/service-rates', label: 'Manage Service Rates', icon: DollarSign },
+];
+
+
 export default function Home() {
   const { user, profile } = useAuth();
+  const isAdmin = profile?.role === 'admin';
+  const gridItems = isAdmin ? adminGridItems : customerGridItems;
 
   return (
       <HomePageWrapper gridItems={gridItems}>
@@ -39,7 +47,7 @@ export default function Home() {
             </div>
 
             <div className="flex flex-row items-center justify-center gap-4 mb-4 h-11">
-              {profile?.role === 'admin' ? (
+              {isAdmin ? (
                 <div className="flex items-center gap-2 text-foreground">
                     <ShieldCheck className="h-7 w-7 text-primary"/>
                     <span className="font-bold text-xl text-primary">ADMIN</span>
@@ -67,7 +75,7 @@ export default function Home() {
               )}
             </div>
 
-            <div className="grid grid-cols-3 gap-x-2 gap-y-2 sm:gap-x-4 sm:gap-y-4 w-full max-w-sm sm:max-w-md pb-4">
+            <div className={`grid gap-x-2 gap-y-2 sm:gap-x-4 sm:gap-y-4 w-full max-w-sm sm:max-w-md pb-4 ${isAdmin ? 'grid-cols-2' : 'grid-cols-3'}`}>
               {/* Grid items will be rendered by HomePageWrapper */}
             </div>
 
