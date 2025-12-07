@@ -5,11 +5,17 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L, { LatLng } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+// Statically import marker images to prevent 404 errors in Next.js
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
 // Fix for default Leaflet icon path in Next.js
+// This needs to be done once in a client-side context
 const DefaultIcon = L.icon({
-    iconUrl: '/marker-icon.png',
-    iconRetinaUrl: '/marker-icon-2x.png',
-    shadowUrl: '/marker-shadow.png',
+    iconUrl: markerIcon.src,
+    iconRetinaUrl: markerIcon2x.src,
+    shadowUrl: markerShadow.src,
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
@@ -70,23 +76,28 @@ export function LocationMap({ onPositionChange }: { onPositionChange: (pos: LatL
         setMapKey('client-map'); 
     }, []);
 
+    // The key on MapContainer forces a re-render, which is essential
+    // for re-initializing the map when the dialog is re-opened.
+    // The isClient check prevents server-side rendering.
+    if (!isClient) {
+      return null;
+    }
+
     return (
         <div className="h-64 w-full rounded-lg overflow-hidden relative border">
-            {isClient && (
-                 <MapContainer
-                    key={mapKey}
-                    center={[SHOP_LATITUDE, SHOP_LONGITUDE]}
-                    zoom={13}
-                    scrollWheelZoom={true}
-                    style={{ height: '100%', width: '100%' }}
-                >
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <DraggableMarker onPositionChange={onPositionChange} />
-                </MapContainer>
-            )}
+             <MapContainer
+                key={mapKey} // Stable key to prevent unnecessary re-initialization
+                center={[SHOP_LATITUDE, SHOP_LONGITUDE]}
+                zoom={13}
+                scrollWheelZoom={true}
+                style={{ height: '100%', width: '100%' }}
+            >
+                <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <DraggableMarker onPositionChange={onPositionChange} />
+            </MapContainer>
         </div>
     );
 }
