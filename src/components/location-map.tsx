@@ -7,13 +7,13 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L, { LatLng } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Statically import marker icons
+// Statically import marker icons to fix display issues in Next.js
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
-// Fix the default icon issue in Next.js by merging options
-// This should be done once at the module level.
+// Fix the default icon issue by merging options once at the module level.
+// This prevents Leaflet from trying to dynamically load image URLs.
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconUrl: markerIcon.src,
@@ -42,7 +42,7 @@ function DraggableMarker() {
     
     const params = new URLSearchParams(searchParams.toString());
     params.set('distance', distanceInKm.toFixed(2));
-    // Use replace to avoid adding to browser history
+    // Use replace to avoid adding to browser history on every drag/click
     router.replace(`/select-location?${params.toString()}`);
   };
 
@@ -58,7 +58,7 @@ function DraggableMarker() {
     }
   });
 
-  // Try to locate the user when the map is ready
+  // On initial mount, try to locate the user
   useEffect(() => {
     map.locate();
   }, [map]);
@@ -78,7 +78,7 @@ function DraggableMarker() {
             dragend: handleDragEnd,
         }}
     >
-      {/* You can add a popup here if you want */}
+      {/* A popup could be added here for more context if needed */}
     </Marker>
   );
 }
