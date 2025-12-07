@@ -21,6 +21,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Edit, Save, X, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
 
 export type Order = {
   id: string;
@@ -71,9 +73,11 @@ const getStatusColor = (status: string) => {
 };
 
 function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: OrderListProps['onUpdateOrder'] }) {
+    const { toast } = useToast();
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [editableOrder, setEditableOrder] = useState(order);
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
     const handleFieldChange = (field: keyof Order, value: string) => {
         const numericFields = ['weight', 'load', 'total'];
@@ -84,8 +88,21 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
         }));
     };
 
+    const handleStatusChange = async (newStatus: string) => {
+        setIsUpdatingStatus(true);
+        const updatedOrderWithStatus = { ...order, status: newStatus };
+        await onUpdateOrder(updatedOrderWithStatus);
+        setEditableOrder(prev => ({...prev, status: newStatus }));
+        setIsUpdatingStatus(false);
+        toast({
+            title: 'Status Updated',
+            description: `Order ${order.id} is now '${newStatus}'.`,
+        });
+    }
+
     const handleSave = async () => {
         setIsSaving(true);
+        // We only update the fields that are editable, but pass the whole object
         await onUpdateOrder(editableOrder);
         setIsSaving(false);
         setIsEditing(false);
@@ -128,22 +145,25 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                             <Label htmlFor={`total-mob-${order.id}`}>Total (₱)</Label>
                             <Input id={`total-mob-${order.id}`} type="number" value={editableOrder.total} onChange={e => handleFieldChange('total', e.target.value)} className="h-8" disabled={!isEditing || isSaving} />
                         </div>
-                        <Select
-                            value={editableOrder.status}
-                            onValueChange={(newStatus) => handleFieldChange('status', newStatus)}
-                            disabled={!isEditing || isSaving}
-                        >
-                            <SelectTrigger className="w-full h-10 mt-2">
-                                <SelectValue placeholder="Update Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                            {statusOptions.map((status) => (
-                                <SelectItem key={status} value={status}>
-                                {status}
-                                </SelectItem>
-                            ))}
-                            </SelectContent>
-                        </Select>
+                        <div className="relative">
+                            <Select
+                                value={editableOrder.status}
+                                onValueChange={handleStatusChange}
+                                disabled={isEditing || isSaving || isUpdatingStatus}
+                            >
+                                <SelectTrigger className="w-full h-10 mt-2">
+                                    <SelectValue placeholder="Update Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                {statusOptions.map((status) => (
+                                    <SelectItem key={status} value={status}>
+                                    {status}
+                                    </SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
+                            {isUpdatingStatus && <Loader2 className="animate-spin h-4 w-4 absolute right-10 top-1/2 -translate-y-1/2" />}
+                        </div>
                     </CardContent>
                     <CardFooter className="p-4 pt-0 flex justify-end gap-2">
                         {isEditing ? (
@@ -187,24 +207,25 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                 </TableCell>
                 <TableCell>
                     {isEditing ? (
-                         <Select
-                            value={editableOrder.status}
-                            onValueChange={(newStatus) => handleFieldChange('status', newStatus)}
-                            disabled={isSaving}
-                        >
-                            <SelectTrigger className="w-[180px] h-9">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {statusOptions.map((status) => (
-                                    <SelectItem key={status} value={status}>{status}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <Badge className="text-white bg-gray-400">Not available</Badge>
                     ) : (
-                        <Badge className={`${getStatusColor(order.status)} hover:${getStatusColor(order.status)} text-white`}>
-                           {order.status}
-                        </Badge>
+                         <div className="relative w-[180px]">
+                            <Select
+                                value={editableOrder.status}
+                                onValueChange={handleStatusChange}
+                                disabled={isUpdatingStatus}
+                            >
+                                <SelectTrigger className="w-[180px] h-9">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {statusOptions.map((status) => (
+                                        <SelectItem key={status} value={status}>{status}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {isUpdatingStatus && <Loader2 className="animate-spin h-4 w-4 absolute right-10 top-1/2 -translate-y-1/2" />}
+                        </div>
                     )}
                 </TableCell>
                 <TableCell className="space-x-2">
