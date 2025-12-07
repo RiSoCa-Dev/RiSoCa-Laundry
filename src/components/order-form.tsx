@@ -23,6 +23,7 @@ import { Separator } from './ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useOrders } from '@/context/OrderContext';
+import { useAuth } from '@/context/AuthContext';
 
 const packages = [
   { id: 'package1', label: 'Package 1', description: 'Wash, Dry, & Fold' },
@@ -58,6 +59,7 @@ type PendingOrder = {
 export function OrderForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, profile } = useAuth();
   const [isPending, startTransition] = useTransition();
   const [pricingResult, setPricingResult] = useState<PricingResult | null>(null);
   const [calculatedLoads, setCalculatedLoads] = useState(1);
@@ -88,6 +90,12 @@ export function OrderForm() {
         deliveryOption: 'drop-off',
     }
   });
+  
+  useEffect(() => {
+    if (profile) {
+      customerForm.setValue('customerName', `${profile.first_name || ''} ${profile.last_name || ''}`.trim());
+    }
+  }, [profile, customerForm]);
 
   const { watch, setValue, trigger, control } = form;
   const watchedValues = watch();
@@ -194,6 +202,10 @@ export function OrderForm() {
 
   const onOrderSubmit = (data: OrderFormValues) => {
     if (!pricingResult) return;
+     if (!user) {
+      router.push('/login');
+      return;
+    }
     setPendingOrder({
         orderData: data,
         pricing: pricingResult,
@@ -203,7 +215,7 @@ export function OrderForm() {
   };
 
   const onCustomerInfoSubmit = (customerData: CustomerFormValues) => {
-    if (!pendingOrder) return;
+    if (!pendingOrder || !user) return;
 
     let finalWeight = pendingOrder.orderData.weight;
     if (pendingOrder.orderData.servicePackage === 'package1' && (finalWeight === undefined || finalWeight === 0)) {
@@ -214,6 +226,7 @@ export function OrderForm() {
 
     const newOrder = {
         id: `ORD${String(Date.now()).slice(-3)}${String(Math.floor(Math.random() * 100)).padStart(2, '0')}`,
+        customer_id: user.id,
         customer: customerData.customerName,
         contact: customerData.contactNumber,
         load: pendingOrder.loads,
@@ -427,5 +440,3 @@ export function OrderForm() {
     </>
   );
 }
-
-    

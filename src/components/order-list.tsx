@@ -21,12 +21,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export type Order = {
   id: string;
+  customer_id: string;
   customer: string;
   contact: string;
   load: number;
   weight: number;
   status: string;
   total: number;
+  created_at: string;
 };
 
 type OrderListProps = {
@@ -136,8 +138,8 @@ export function OrderList({ orders, onStatusChange }: OrderListProps) {
                 <TableCell>{order.customer}</TableCell>
                 <TableCell>{order.contact}</TableCell>
                 <TableCell>{order.load}</TableCell>
-                <TableCell>{order.weight.toFixed(2)}</TableCell>
-                <TableCell>₱{order.total.toFixed(2)}</TableCell>
+                <TableCell>{order.weight}</TableCell>
+                <TableCell>₱{order.total}</TableCell>
                 <TableCell>
                   <Badge className={`${getStatusColor(order.status)} hover:${getStatusColor(order.status)} text-white`}>
                     {order.status}
