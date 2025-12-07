@@ -20,7 +20,7 @@ const gridItems = [
 
 export default function Home() {
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen select-none">
       <AppHeader />
       <main className="flex-1 overflow-y-auto flex flex-col items-center container mx-auto px-4 text-center pt-2 md:pt-4">
         
