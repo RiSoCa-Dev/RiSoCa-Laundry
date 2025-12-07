@@ -22,8 +22,8 @@ const DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-const SHOP_LATITUDE = 14.5515;
-const SHOP_LONGITUDE = 121.0493;
+const SHOP_LATITUDE = 17.522928;
+const SHOP_LONGITUDE = 121.775073;
 
 function DraggableMarker() {
   const router = useRouter();
