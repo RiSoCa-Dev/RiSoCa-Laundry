@@ -4,10 +4,9 @@ import { AppFooter } from '@/components/app-footer';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Package, FileText, MapPin, Phone, HelpCircle, UserPlus, ArrowRight, Calculator, Bike, Download, WashingMachine, DollarSign } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 
 const gridItems = [
-  { href: '/order-status', label: 'Order Status', icon: Package, notification: true },
+  { href: '/order-status', label: 'Order Status', icon: Package },
   { href: '/create-order', label: 'Create Order', icon: FileText },
   { href: '/service-rates', label: 'Service Rates', icon: DollarSign },
   { href: '/track-rider', label: 'Track Rider', icon: Bike },
@@ -52,7 +51,6 @@ export default function Home() {
             <Link href={item.href} key={item.label} className="relative flex flex-col items-center justify-center gap-1 p-1 rounded-lg group">
               <item.icon className="h-14 w-14 md:h-16 md:w-16 text-foreground/80 group-hover:text-primary transition-colors" />
               <span className="text-sm sm:text-base font-medium text-foreground/90 text-center">{item.label}</span>
-              {item.notification && <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center rounded-full bg-red-500 text-white p-0 text-[10px]">3</Badge>}
             </Link>
           ))}
         </div>
