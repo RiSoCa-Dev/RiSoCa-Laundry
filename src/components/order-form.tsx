@@ -49,11 +49,12 @@ export function OrderForm() {
   const [showDistancePrompt, setShowDistancePrompt] = useState(false);
   
   const distanceParam = searchParams.get('distance');
+  const packageParam = searchParams.get('servicePackage');
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
     defaultValues: {
-      servicePackage: 'package1',
+      servicePackage: packageParam || 'package1',
       weight: undefined,
       distance: distanceParam ? parseFloat(distanceParam) : 0,
     },
@@ -77,7 +78,9 @@ export function OrderForm() {
   }, [distanceParam, setValue]);
 
   const handleLocationSelect = () => {
-    router.push('/select-location');
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('servicePackage', watchedValues.servicePackage);
+    router.push(`/select-location?${params.toString()}`);
   };
 
   useEffect(() => {
@@ -95,21 +98,23 @@ export function OrderForm() {
     startTransition(() => {
       const { servicePackage, weight, distance } = values;
 
-      if ((servicePackage === 'package2' || servicePackage === 'package3') && (!distance || distance <= 0)) {
+      const needsLocationForCalc = servicePackage === 'package2' || servicePackage === 'package3';
+      
+      if (needsLocationForCalc && (!distance || distance <= 0)) {
         setPricingResult(null);
         setShowDistancePrompt(true);
         return;
       }
       setShowDistancePrompt(false);
       
-      const isFreeDelivery = needsLocation && distance > 0 && distance <= 0.5;
-      const effectiveWeight = isFreeDelivery ? 7.5 : (!weight || weight < 0 ? 0 : weight);
+      const isFree = needsLocationForCalc && distance > 0 && distance <= 0.5;
+      const effectiveWeight = isFree ? 7.5 : (!weight || weight < 0 ? 0 : weight);
       const loads = Math.max(1, Math.ceil(effectiveWeight / 7.5));
       setCalculatedLoads(loads);
       const baseCost = loads * 180;
 
       let transportFee = 0;
-      if (!isFreeDelivery) {
+      if (!isFree && needsLocationForCalc) {
         const billableDistance = Math.max(0, distance - 1);
         if (servicePackage === 'package2') {
             transportFee = billableDistance * 10;
@@ -142,9 +147,13 @@ export function OrderForm() {
             }
         }
     });
+    // Manually trigger calculation on initial load with params
+    if (distanceParam) {
+        calculatePrice(form.getValues());
+    }
     return () => subscription.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [watch]);
+  }, [watch, distanceParam]);
 
 
   const onSubmit = (data: OrderFormValues) => {
@@ -254,7 +263,7 @@ export function OrderForm() {
                 ) : showDistancePrompt ? (
                     <div className="text-center text-primary h-16 flex items-center justify-center text-sm font-semibold">
                         {servicePackage === 'package2'
-                            ? 'Please select a location for delivery or Pick Up'
+                            ? 'Please select a location for delivery or Pick Up.'
                             : 'Please select a location for delivery.'}
                     </div>
                 ) : pricingResult ? (
@@ -293,3 +302,5 @@ export function OrderForm() {
     </>
   );
 }
+
+    
