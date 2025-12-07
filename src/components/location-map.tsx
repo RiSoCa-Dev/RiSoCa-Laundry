@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
@@ -30,6 +31,7 @@ export function LocationMap() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [markerPosition, setMarkerPosition] = useState(SHOP_POSITION);
+  const [mapCenter, setMapCenter] = useState(SHOP_POSITION);
 
   // Update URL with the new distance
   const updateURL = useCallback(
@@ -44,11 +46,32 @@ export function LocationMap() {
     [router, searchParams]
   );
   
-  // Set initial position and update URL on first load
+  // Get user's current location on initial load
   useEffect(() => {
-    updateURL(new google.maps.LatLng(markerPosition.lat, markerPosition.lng))
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userPosition = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          setMapCenter(userPosition);
+          setMarkerPosition(userPosition);
+          updateURL(new google.maps.LatLng(userPosition.lat, userPosition.lng));
+        },
+        (error) => {
+          console.error("Error getting user location:", error);
+          alert("Could not get your location. Please enable location services in your browser settings. Defaulting to shop location.");
+          // If user denies, default to shop position and update URL
+          updateURL(new google.maps.LatLng(SHOP_POSITION.lat, SHOP_POSITION.lng));
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by this browser. Defaulting to shop location.");
+      updateURL(new google.maps.LatLng(SHOP_POSITION.lat, SHOP_POSITION.lng));
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
   const handleMarkerDragEnd = useCallback(
     (event: google.maps.MapMouseEvent) => {
@@ -85,7 +108,7 @@ export function LocationMap() {
     <GoogleMap
       options={mapOptions}
       zoom={14}
-      center={SHOP_POSITION}
+      center={mapCenter}
       mapTypeId={google.maps.MapTypeId.ROADMAP}
       mapContainerStyle={{ width: '100%', height: '100%' }}
       onClick={handleMapClick}
