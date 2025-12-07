@@ -9,7 +9,7 @@ export default function DownloadAppPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <AppHeader />
-      <main className="flex-1 container mx-auto px-4 py-4 md:py-8">
+      <main className="flex-1 container mx-auto px-4 py-8">
         <div className="flex flex-col items-center text-center">
             <h1 className="text-3xl md:text-4xl font-bold text-primary">Download Our App</h1>
             <p className="text-base md:text-lg text-muted-foreground mt-2 max-w-2xl">Get the full RKR Laundry experience on your mobile device. Track orders, get exclusive deals, and more.</p>

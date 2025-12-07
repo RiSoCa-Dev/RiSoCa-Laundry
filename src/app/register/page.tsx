@@ -18,7 +18,7 @@ export default function RegisterPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <AppHeader />
-      <main className="flex-1 flex items-center justify-center">
+      <main className="flex-1 flex items-center justify-center px-4">
         <Card className="mx-auto max-w-sm w-full">
           <CardHeader>
             <CardTitle className="text-xl">Sign Up</CardTitle>

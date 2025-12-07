@@ -22,14 +22,11 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <AppHeader />
-      <main className="flex-1 flex flex-col items-center justify-center container mx-auto px-4 py-4 text-center">
+      <main className="flex-1 flex flex-col items-center justify-center container mx-auto px-4 py-8 text-center">
         
-        <div className="flex items-center justify-center space-x-4 mb-6">
-           <WashingMachine className="h-12 w-12 md:h-16 md:w-16 text-primary" />
-           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary text-left">RKR Laundry</h1>
-            <p className="text-sm md:text-md text-muted-foreground text-left">Fast. Clean. Convenient.</p>
-           </div>
+        <div className="mb-6">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary text-center">RKR Laundry</h1>
+            <p className="text-sm md:text-md text-muted-foreground text-center">Fast. Clean. Convenient.</p>
         </div>
 
         <div className="flex flex-row items-center gap-4 mb-8">
