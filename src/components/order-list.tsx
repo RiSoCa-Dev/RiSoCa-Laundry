@@ -22,6 +22,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 type Order = {
   id: string;
   customer: string;
+  contact: string;
+  load: number;
+  weight: number;
   status: string;
   total: number;
 };
@@ -68,16 +71,23 @@ export function OrderList({ orders, onStatusChange }: OrderListProps) {
             <Card key={order.id} className="w-full">
               <CardHeader className="p-4 flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">{order.id}</CardTitle>
-                <Badge className={`${getStatusColor(order.status)} hover:${getStatusColor(order.status)}`}>
+                <Badge className={`${getStatusColor(order.status)} hover:${getStatusColor(order.status)} text-white`}>
                   {order.status}
                 </Badge>
               </CardHeader>
               <CardContent className="p-4 pt-0 space-y-2">
                 <div className="text-sm text-muted-foreground">
-                  <span className="font-semibold">Customer:</span> {order.customer}
+                  <span className="font-semibold text-foreground">Customer Name:</span> {order.customer}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  <span className="font-semibold">Total:</span> ₱{order.total.toFixed(2)}
+                  <span className="font-semibold text-foreground">Contact #:</span> {order.contact}
+                </div>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div><span className="font-semibold text-foreground">Load:</span> {order.load}</div>
+                  <div><span className="font-semibold text-foreground">Weight:</span> {order.weight} kg</div>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <span className="font-semibold text-foreground">Total:</span> ₱{order.total.toFixed(2)}
                 </div>
                  <Select
                     value={order.status}
@@ -107,6 +117,9 @@ export function OrderList({ orders, onStatusChange }: OrderListProps) {
             <TableRow>
               <TableHead>Order ID</TableHead>
               <TableHead>Customer</TableHead>
+              <TableHead>Contact</TableHead>
+              <TableHead>Load</TableHead>
+              <TableHead>Weight (kg)</TableHead>
               <TableHead>Total</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Action</TableHead>
@@ -117,9 +130,12 @@ export function OrderList({ orders, onStatusChange }: OrderListProps) {
               <TableRow key={order.id}>
                 <TableCell className="font-medium">{order.id}</TableCell>
                 <TableCell>{order.customer}</TableCell>
+                <TableCell>{order.contact}</TableCell>
+                <TableCell>{order.load}</TableCell>
+                <TableCell>{order.weight.toFixed(2)}</TableCell>
                 <TableCell>₱{order.total.toFixed(2)}</TableCell>
                 <TableCell>
-                  <Badge className={`${getStatusColor(order.status)} hover:${getStatusColor(order.status)}`}>
+                  <Badge className={`${getStatusColor(order.status)} hover:${getStatusColor(order.status)} text-white`}>
                     {order.status}
                   </Badge>
                 </TableCell>
