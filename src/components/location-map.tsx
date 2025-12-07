@@ -11,6 +11,7 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
+// This is the correct way to fix the default icon issue in Next.js
 const DefaultIcon = L.icon({
     iconUrl: markerIcon.src,
     iconRetinaUrl: markerIcon2x.src,
@@ -82,6 +83,7 @@ export function LocationMap() {
     }, []);
 
     if (!isClient) {
+      // Return null or a placeholder until the client-side code can run
       return null;
     }
 
