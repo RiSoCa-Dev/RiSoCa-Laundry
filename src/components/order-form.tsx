@@ -257,7 +257,11 @@ export function OrderForm() {
                         <span className="text-sm">Calculating...</span>
                     </div>
                 ) : showDistancePrompt ? (
-                    <div className="text-center text-primary h-16 flex items-center justify-center text-sm font-semibold">Please select a location for delivery.</div>
+                    <div className="text-center text-primary h-16 flex items-center justify-center text-sm font-semibold">
+                        {servicePackage === 'package2'
+                            ? 'Please select a location for delivery or Pick Up'
+                            : 'Please select a location for delivery.'}
+                    </div>
                 ) : pricingResult ? (
                     <>
                         <div className="flex justify-between items-center">
@@ -294,3 +298,5 @@ export function OrderForm() {
     </>
   );
 }
+
+    
