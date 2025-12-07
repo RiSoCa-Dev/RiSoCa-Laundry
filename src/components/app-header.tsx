@@ -28,11 +28,11 @@ export function AppHeader() {
               <span className="sr-only">Toggle Menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="right">
+          <SheetContent side="right" className="w-auto h-auto top-14 right-4 rounded-lg">
              <SheetHeader>
               <SheetTitle className="sr-only">Menu</SheetTitle>
             </SheetHeader>
-            <nav className="grid gap-2 text-lg font-medium mt-8">
+            <nav className="grid gap-2 text-lg font-medium">
               {navLinks.map(({ href, label, icon: Icon }) => (
                 <Link key={href} href={href} className="flex items-center gap-4 px-4 py-3 text-muted-foreground transition-colors hover:text-foreground hover:bg-muted rounded-md">
                   <Icon className="h-6 w-6" />
