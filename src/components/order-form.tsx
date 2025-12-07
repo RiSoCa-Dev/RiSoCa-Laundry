@@ -162,7 +162,7 @@ export function OrderForm() {
                         <Controller
                             name="weight"
                             control={form.control}
-                            render={({ field }) => <Input id="weight" type="number" placeholder="e.g., 7.5kg" className="bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" {...field} value={field.value ?? ''}/>}
+                            render={({ field }) => <Input id="weight" type="number" placeholder="e.g., 7.5kg" className="text-center bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" {...field} value={field.value ?? ''}/>}
                         />
                     </div>
                 </div>
@@ -179,7 +179,7 @@ export function OrderForm() {
                         <Controller
                         name="distance"
                         control={form.control}
-                        render={({ field }) => <Input id="distance" type="number" placeholder="e.g. 1" className="bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0" {...field} />}
+                        render={({ field }) => <Input id="distance" type="number" placeholder="e.g. 1" className="text-center bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0" {...field} />}
                         />
                     </div>
                 </div>
@@ -253,5 +253,3 @@ export function OrderForm() {
     </Card>
   );
 }
-
-    
