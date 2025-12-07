@@ -1,12 +1,12 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useLoadScript } from '@react-google-maps/api';
+import { useLoadScript, Libraries } from '@react-google-maps/api';
 import { Loader2 } from 'lucide-react';
 import { LocationConfirmation } from '@/components/location-confirmation';
 import { LocationMap } from '@/components/location-map';
 
-const libraries: ('places' | 'drawing' | 'geometry' | 'localContext' | 'visualization')[] = ['geometry'];
+const libraries: Libraries = ['geometry'];
 
 function SelectLocationContent() {
   const { isLoaded, loadError } = useLoadScript({
