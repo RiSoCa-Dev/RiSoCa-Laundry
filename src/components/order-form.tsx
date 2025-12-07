@@ -18,7 +18,6 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { pricingLogicGuidance, PricingLogicGuidanceOutput } from '@/ai/flows/pricing-logic-guidance';
 import { Lightbulb, Loader2, Package, Truck, AlertCircle, Weight, Layers } from 'lucide-react';
 import { Separator } from './ui/separator';
 
@@ -36,9 +35,16 @@ const orderSchema = z.object({
 
 type OrderFormValues = z.infer<typeof orderSchema>;
 
+interface PricingResult {
+  computedPrice: number;
+  isValidCombination: boolean;
+  suggestedServices: string[];
+  invalidServiceChoices: string[];
+}
+
 export function OrderForm() {
   const [isPending, startTransition] = useTransition();
-  const [pricingResult, setPricingResult] = useState<PricingLogicGuidanceOutput | null>(null);
+  const [pricingResult, setPricingResult] = useState<PricingResult | null>(null);
   const [calculatedLoads, setCalculatedLoads] = useState(1);
 
   const form = useForm<OrderFormValues>({
@@ -52,41 +58,53 @@ export function OrderForm() {
   });
 
   const { watch } = form;
-  const weightValue = watch('weight');
+  const watchedValues = watch();
 
-  useEffect(() => {
-    const weight = weightValue ?? 0;
-    const loads = Math.max(1, Math.ceil(weight / 7.5));
-    setCalculatedLoads(loads);
-  }, [weightValue]);
+  const calculatePrice = (values: OrderFormValues) => {
+    startTransition(() => {
+      const { servicePackage, weight = 0, distance } = values;
 
-  const calculatePrice = (values: OrderFormValues | undefined) => {
-    if (!values) return;
-    const parsed = orderSchema.safeParse(values);
-    if (parsed.success) {
-        startTransition(async () => {
-            const result = await pricingLogicGuidance(parsed.data);
-            setPricingResult(result);
-        });
-    } else {
-        setPricingResult(null);
-    }
-  }
+      const loads = Math.max(1, Math.ceil(weight / 7.5));
+      setCalculatedLoads(loads);
+      const baseCost = loads * 180;
 
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-        const handler = setTimeout(() => {
-            calculatePrice(value as OrderFormValues);
-        }, 300);
-        return () => clearTimeout(handler);
+      let transportFee = 0;
+      const billableDistance = Math.max(0, distance - 1);
+
+      if (servicePackage === 'package2') {
+        transportFee = billableDistance * 10;
+      } else if (servicePackage === 'package3') {
+        transportFee = billableDistance * 10 * 2;
+      }
+      
+      const computedPrice = baseCost + transportFee;
+
+      let suggestedServices: string[] = [];
+      if (servicePackage === 'package2') {
+        suggestedServices.push('Consider Package 3 for a convenient "All-In" option with both pickup and delivery.');
+      } else if (servicePackage === 'package1' && distance > 0) {
+          suggestedServices.push('You have entered a distance. Consider a package with delivery for convenience.');
+      }
+
+      setPricingResult({
+        computedPrice,
+        isValidCombination: true,
+        suggestedServices,
+        invalidServiceChoices: [],
+      });
     });
+  };
 
-    // Initial calculation on mount
-    calculatePrice(form.getValues());
-
-    return () => subscription.unsubscribe();
+  useEffect(() => {
+    const parsed = orderSchema.safeParse(watchedValues);
+    if (parsed.success) {
+      calculatePrice(parsed.data);
+    } else {
+      setPricingResult(null);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.watch]);
+  }, [watchedValues.servicePackage, watchedValues.weight, watchedValues.distance]);
+
 
   const onSubmit = (data: OrderFormValues) => {
     console.log('Order submitted:', data, 'with price:', pricingResult?.computedPrice);
@@ -235,3 +253,5 @@ export function OrderForm() {
     </Card>
   );
 }
+
+    
