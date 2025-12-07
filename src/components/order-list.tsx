@@ -148,7 +148,7 @@ export function OrderList({ orders, onStatusChange }: OrderListProps) {
                   >
                     <SelectTrigger className="w-[180px] h-9">
                       <SelectValue placeholder="Update Status" />
-                    </Trigger>
+                    </SelectTrigger>
                     <SelectContent>
                       {statusOptions.map((status) => (
                         <SelectItem key={status} value={status}>
