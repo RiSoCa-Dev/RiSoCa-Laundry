@@ -5,7 +5,6 @@ import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
 import { OrderForm } from '@/components/order-form';
 import { Loader2 } from 'lucide-react';
-import { SharedLayout } from '@/components/shared-layout';
 
 function CreateOrderForm() {
     return (
@@ -23,10 +22,8 @@ function CreateOrderForm() {
 
 export default function CreateOrderPage() {
   return (
-    <SharedLayout>
       <Suspense fallback={<div className="h-screen w-screen bg-muted flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
           <CreateOrderForm />
       </Suspense>
-    </SharedLayout>
   );
 }

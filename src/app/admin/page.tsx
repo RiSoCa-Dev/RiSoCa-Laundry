@@ -12,9 +12,8 @@ import {
 } from '@/components/ui/card';
 import { OrderList } from '@/components/order-list';
 import { useOrders } from '@/context/OrderContext';
-import { SharedLayout } from '@/components/shared-layout';
 
-function AdminPageContent() {
+export default function AdminPage() {
   const { orders, updateOrderStatus } = useOrders();
 
   const handleStatusChange = (orderId: string, newStatus: string) => {
@@ -38,13 +37,4 @@ function AdminPageContent() {
       <AppFooter />
     </div>
   );
-}
-
-
-export default function AdminPage() {
-  return (
-    <SharedLayout>
-      <AdminPageContent />
-    </SharedLayout>
-  )
 }

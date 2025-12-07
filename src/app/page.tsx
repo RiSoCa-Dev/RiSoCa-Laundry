@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Package, FileText, MapPin, Phone, HelpCircle, UserPlus, ArrowRight, Calculator, Bike, Download, WashingMachine, DollarSign } from 'lucide-react';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
-import { SharedLayout } from '@/components/shared-layout';
 import { HomePageWrapper } from '@/components/home-page-wrapper';
 
 const gridItems = [
@@ -21,7 +20,7 @@ const gridItems = [
   { href: '/contact-us', label: 'Contact Us', icon: Phone },
 ];
 
-function HomePageContent() {
+export default function Home() {
   return (
       <HomePageWrapper gridItems={gridItems}>
         <div className="flex flex-col h-screen select-none">
@@ -60,13 +59,4 @@ function HomePageContent() {
         </div>
       </HomePageWrapper>
   );
-}
-
-
-export default function Home() {
-  return (
-    <SharedLayout>
-      <HomePageContent />
-    </SharedLayout>
-  )
 }

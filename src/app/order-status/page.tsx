@@ -10,10 +10,8 @@ import type { Order } from '@/components/order-list';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useOrders } from '@/context/OrderContext';
-import { SharedLayout } from '@/components/shared-layout';
 
-
-function OrderStatusPageContent() {
+export default function OrderStatusPage() {
     const { orders } = useOrders();
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
@@ -45,12 +43,4 @@ function OrderStatusPageContent() {
       <AppFooter />
     </div>
   );
-}
-
-export default function OrderStatusPage() {
-    return (
-        <SharedLayout>
-            <OrderStatusPageContent />
-        </SharedLayout>
-    )
 }
