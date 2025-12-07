@@ -22,8 +22,8 @@ const customerGridItems = [
 ];
 
 const adminGridItems = [
-  { href: '/admin', label: 'Manage Orders', icon: ClipboardList },
-  { href: '/service-rates', label: 'Manage Service Rates', icon: DollarSign },
+  { href: '/admin/orders', label: 'Manage Orders', icon: ClipboardList },
+  { href: '/admin/rates', label: 'Manage Service Rates', icon: DollarSign },
 ];
 
 

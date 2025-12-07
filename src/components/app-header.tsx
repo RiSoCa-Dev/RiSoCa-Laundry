@@ -21,7 +21,7 @@ export function AppHeader({ showLogo = false }: { showLogo?: boolean }) {
 
     const navLinks = [
       isAdmin 
-        ? { href: '/admin', label: 'Admin Dashboard', icon: LayoutDashboard }
+        ? { href: '/admin/orders', label: 'Admin Dashboard', icon: LayoutDashboard }
         : { href: '/admin/login', label: 'Administrator Login', icon: UserCog },
       { href: '/download-app', label: 'Download APK', icon: Download },
       { href: '/about', label: 'About', icon: Info },
