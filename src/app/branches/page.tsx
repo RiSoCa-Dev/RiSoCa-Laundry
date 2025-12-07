@@ -4,7 +4,6 @@ import { AppFooter } from '@/components/app-footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Phone, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 
 const branches = [
     { 
@@ -41,12 +40,14 @@ export default function BranchesPage() {
                             <MapPin className="h-5 w-5 mt-0.5 flex-shrink-0" />
                             <span>{branch.address}</span>
                         </div>
-                        <Button asChild variant="outline" className="w-full">
-                            <Link href={branch.mapLink} target="_blank" rel="noopener noreferrer">
-                                <LinkIcon className="mr-2 h-4 w-4" />
-                                RKR Laundry - link
+                        
+                        <div className="flex items-center gap-3 text-muted-foreground text-sm">
+                            <LinkIcon className="mr-2 h-4 w-4" />
+                            <Link href={branch.mapLink} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                RKR Laundry Shop
                             </Link>
-                        </Button>
+                        </div>
+                        
                         <div className="space-y-2">
                              <div className="flex items-center gap-3 text-muted-foreground text-sm">
                                 <Phone className="h-5 w-5 flex-shrink-0" />
