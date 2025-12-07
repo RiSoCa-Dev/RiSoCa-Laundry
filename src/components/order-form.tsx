@@ -17,8 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Package, Truck, AlertCircle, Weight, Layers, Info } from 'lucide-react';
+import { Loader2, Truck, Weight, Layers, Info } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -61,7 +60,7 @@ export function OrderForm() {
 
   const calculatePrice = (values: OrderFormValues) => {
     startTransition(() => {
-      const { servicePackage, weight = 0, distance } = values;
+      const { servicePackage, weight, distance } = values;
 
       if ((servicePackage === 'package2' || servicePackage === 'package3') && (!distance || distance <= 0)) {
         setPricingResult(null);
@@ -98,8 +97,14 @@ export function OrderForm() {
     if (parsed.success) {
       calculatePrice(parsed.data);
     } else {
-      setPricingResult(null);
-      setShowDistancePrompt(false);
+        const needsDistance = (watchedValues.servicePackage === 'package2' || watchedValues.servicePackage === 'package3');
+        if (needsDistance && (!watchedValues.distance || watchedValues.distance <= 0)) {
+             setPricingResult(null);
+             setShowDistancePrompt(true);
+        } else {
+             setPricingResult(null);
+             setShowDistancePrompt(false);
+        }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedValues.servicePackage, watchedValues.weight, watchedValues.distance]);
