@@ -53,14 +53,12 @@ const pricingLogicGuidancePrompt = ai.definePrompt({
 
   Here is the pricing structure:
   - Package 1 (Wash, Dry, Fold): ₱180 per load.
-  - Pick Up Fee: ₱10 per kilometer.
-  - Delivery Fee: ₱10 per kilometer.
+  - Transport Fee: ₱10 per kilometer (applies to pick-up or delivery, one way).
 
   Packages:
   - Package 1: Base service only. No transport.
-  - Package 2: Includes Pick Up and Customer returns to pick up.
-  - Package 3: Customer drops off and includes Delivery.
-  - Package 4: Includes both Pick Up and Delivery.
+  - Package 2: One-Way Transport. Includes either Pick Up or Delivery.
+  - Package 3: All-In. Includes both Pick Up and Delivery.
 
   User Selections:
   - Package: {{{servicePackage}}}
@@ -71,11 +69,10 @@ const pricingLogicGuidancePrompt = ai.definePrompt({
   1.  **isValidCombination**: This is always true.
   2.  **computedPrice**: Calculate the total price in PHP based on the selected package, number of loads, and distance.
       - Calculate the base cost: {{{loads}}} * 180.
-      - For Package 2, add a pickup fee: {{{distance}}} * 10.
-      - For Package 3, add a delivery fee: {{{distance}}} * 10.
-      - For Package 4, add both a pickup and delivery fee: ({{{distance}}} * 10) * 2.
+      - For Package 2, add a one-way transport fee: {{{distance}}} * 10.
+      - For Package 3, add a two-way transport fee: ({{{distance}}} * 10) * 2.
       - Sum the costs to get the final price.
-  3.  **suggestedServices**: If the user selects Package 2 or 3, suggest Package 4 as a convenient "All-In" option. If they choose Package 1 with a distance > 0, suggest a package with delivery. Otherwise, provide an empty array.
+  3.  **suggestedServices**: If the user selects Package 2, suggest Package 3 as a convenient "All-In" option. If they choose Package 1 with a distance > 0, suggest a package with delivery. Otherwise, provide an empty array.
   4.  **invalidServiceChoices**: This should be an empty array.
 
   Provide only the JSON output.

@@ -24,9 +24,8 @@ import { Separator } from './ui/separator';
 
 const packages = [
   { id: 'package1', label: 'Package 1', description: 'Wash, Dry, & Fold' },
-  { id: 'package2', label: 'Package 2', description: 'Pick Up + Package 1 + Customer Pick Up' },
-  { id: 'package3', label: 'Package 3', description: 'Customer Drop Off + Package 1 + Deliver' },
-  { id: 'package4', label: 'Package 4', description: 'Pick Up + Package 1 + Deliver (All-In)' },
+  { id: 'package2', label: 'Package 2', description: 'One-Way Transport (Pick Up or Delivery)' },
+  { id: 'package3', label: 'Package 3', description: 'All-In (Pick Up & Delivery)' },
 ];
 
 const orderSchema = z.object({
