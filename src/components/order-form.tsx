@@ -67,12 +67,25 @@ export function OrderForm() {
     mode: 'onChange'
   });
 
-  const { watch, setValue } = form;
+  const { watch, setValue, trigger } = form;
   const watchedValues = watch();
+  const servicePackage = watch('servicePackage');
+  const needsLocation = servicePackage === 'package2' || servicePackage === 'package3';
 
   const handleLocationSelect = (distance: number) => {
     setValue('distance', distance, { shouldValidate: true });
   };
+
+  useEffect(() => {
+    // When package changes, reset distance if it's not needed
+    if (!needsLocation) {
+        setValue('distance', 0);
+    }
+    // Re-trigger validation when the dependency changes
+    trigger();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needsLocation, setValue, trigger]);
+
 
   const calculatePrice = (values: OrderFormValues) => {
     startTransition(() => {
@@ -176,7 +189,7 @@ export function OrderForm() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid gap-4 ${needsLocation ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Label htmlFor="weight" className="text-base font-semibold">2. Weight (kg)</Label>
@@ -206,30 +219,32 @@ export function OrderForm() {
                     <p className="text-xs font-medium text-destructive">{form.formState.errors.weight.message}</p>
                 )}
             </div>
-            <div className="space-y-2">
-                <Label htmlFor="distance" className="text-base font-semibold">3. Location</Label>
-                <div className="flex flex-col gap-2">
-                    <LocationPicker
-                      open={isLocationPickerOpen}
-                      onOpenChange={setIsLocationPickerOpen}
-                      onLocationSelect={handleLocationSelect}
-                      trigger={
-                        <Button type="button" variant="outline" onClick={() => setIsLocationPickerOpen(true)} className="w-full">
-                          <MapPin className="mr-2 h-4 w-4"/>
-                          Select Location
-                        </Button>
-                      }
-                    />
-                    {watchedValues.distance > 0 && (
-                       <div className="text-xs text-center text-muted-foreground">
-                           Distance: {watchedValues.distance.toFixed(2)} km
-                       </div>
-                    )}
-                </div>
-                {form.formState.errors.distance && (
-                <p className="text-xs font-medium text-destructive">{form.formState.errors.distance.message}</p>
-                )}
-            </div>
+            {needsLocation && (
+              <div className="space-y-2">
+                  <Label htmlFor="distance" className="text-base font-semibold">3. Location</Label>
+                  <div className="flex flex-col gap-2">
+                      <LocationPicker
+                        open={isLocationPickerOpen}
+                        onOpenChange={setIsLocationPickerOpen}
+                        onLocationSelect={handleLocationSelect}
+                        trigger={
+                          <Button type="button" variant="outline" onClick={() => setIsLocationPickerOpen(true)} className="w-full">
+                            <MapPin className="mr-2 h-4 w-4"/>
+                            Select Location
+                          </Button>
+                        }
+                      />
+                      {watchedValues.distance > 0 && (
+                         <div className="text-xs text-center text-muted-foreground">
+                             Distance: {watchedValues.distance.toFixed(2)} km
+                         </div>
+                      )}
+                  </div>
+                  {form.formState.errors.distance && (
+                  <p className="text-xs font-medium text-destructive">{form.formState.errors.distance.message}</p>
+                  )}
+              </div>
+            )}
           </div>
 
 
@@ -261,7 +276,7 @@ export function OrderForm() {
                         </div>
                     </>
                 ) : (
-                     <div className="text-center text-muted-foreground h-16 flex items-center justify-center text-sm">Select a package to see the price.</div>
+                     <div className="text-center text-muted-foreground h-16 flex items-center justify-center text-sm">Enter weight and select package.</div>
                 )}
             </div>
           </div>
@@ -281,5 +296,3 @@ export function OrderForm() {
     </>
   );
 }
-
-    
