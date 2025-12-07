@@ -3,10 +3,11 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Package, FileText, MapPin, Phone, HelpCircle, UserPlus, ArrowRight, ClipboardList, Bike, Download, WashingMachine, DollarSign } from 'lucide-react';
+import { Package, FileText, MapPin, Phone, HelpCircle, UserPlus, ArrowRight, ClipboardList, Bike, Download, WashingMachine, DollarSign, LogOut, User } from 'lucide-react';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
 import { HomePageWrapper } from '@/components/home-page-wrapper';
+import { useAuth } from '@/context/AuthContext';
 
 const gridItems = [
   { href: '/order-status', label: 'Order Status', icon: Package },
@@ -21,6 +22,8 @@ const gridItems = [
 ];
 
 export default function Home() {
+  const { user, profile, signOut } = useAuth();
+
   return (
       <HomePageWrapper gridItems={gridItems}>
         <div className="flex flex-col h-screen select-none">
@@ -36,18 +39,33 @@ export default function Home() {
             </div>
 
             <div className="flex flex-row items-center gap-4 mb-4">
-              <Link href="/login" passHref>
-                <Button size="lg" className="w-32 h-11 text-base rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-shadow">
-                  <ArrowRight className="mr-2 h-4 w-4" />
-                  Log In
-                </Button>
-              </Link>
-              <Link href="/register" passHref>
-                <Button size="lg" className="w-32 h-11 text-base rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-lg hover:shadow-xl transition-shadow">
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Register
-                </Button>
-              </Link>
+              {user ? (
+                 <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 text-foreground">
+                        <User className="h-6 w-6"/>
+                        <span className="font-semibold text-lg">Welcome, {profile?.first_name || user.email}!</span>
+                    </div>
+                    <Button size="lg" variant="outline" onClick={signOut} className="w-32 h-11 text-base rounded-full">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Log Out
+                    </Button>
+                </div>
+              ) : (
+                <>
+                  <Link href="/login" passHref>
+                    <Button size="lg" className="w-32 h-11 text-base rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-shadow">
+                      <ArrowRight className="mr-2 h-4 w-4" />
+                      Log In
+                    </Button>
+                  </Link>
+                  <Link href="/register" passHref>
+                    <Button size="lg" className="w-32 h-11 text-base rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-lg hover:shadow-xl transition-shadow">
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Register
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
 
             <div className="grid grid-cols-3 gap-x-2 gap-y-2 sm:gap-x-4 sm:gap-y-4 w-full max-w-sm sm:max-w-md pb-4">

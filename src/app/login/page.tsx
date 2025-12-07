@@ -1,8 +1,10 @@
+
 'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { supabase } from '@/lib/supabaseClient'
 
 import { AppHeader } from '@/components/app-header'
 import { AppFooter } from '@/components/app-footer'
@@ -32,22 +34,33 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
 
-    // Simulating a successful login for demonstration
-    // In a real app, you would have your auth logic here.
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+      
       toast({
         title: 'Login Successful',
         description: 'Welcome back!',
+        className: 'bg-green-500 text-white',
       })
 
-      // Simulate role-based redirect
-      if (email.includes('admin')) {
-        router.push('/admin')
-      } else {
-        router.push('/order-status')
-      }
-    }, 1000)
+      router.push('/');
+
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: 'Login Failed',
+            description: error.message || 'Please check your credentials and try again.',
+        })
+    } finally {
+        setLoading(false)
+    }
   }
 
   return (
@@ -82,7 +95,7 @@ export default function LoginPage() {
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                   <Link
-                    href="/forgot-password"
+                    href="#"
                     className="ml-auto inline-block text-xs underline"
                   >
                     Forgot?

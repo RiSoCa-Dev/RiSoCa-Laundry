@@ -3,6 +3,7 @@ import type {Metadata} from 'next';
 import { Toaster } from "@/components/ui/toaster"
 import './globals.css';
 import { OrderProvider } from '@/context/OrderContext';
+import { AuthProvider } from '@/context/AuthContext';
 
 export const metadata: Metadata = {
   title: 'RKR Laundry',
@@ -22,9 +23,11 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased flex flex-col h-screen">
-        <OrderProvider>
-          {children}
-        </OrderProvider>
+        <AuthProvider>
+          <OrderProvider>
+            {children}
+          </OrderProvider>
+        </AuthProvider>
         <Toaster />
       </body>
     </html>
