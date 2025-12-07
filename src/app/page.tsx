@@ -26,10 +26,10 @@ export default function Home() {
         
         <div className="flex flex-col items-center mb-6">
             <div className="flex items-center gap-3">
-              <WashingMachine className="h-12 w-12 text-primary" />
-              <span className="font-bold text-primary text-4xl">RKR Laundry</span>
+              <WashingMachine className="h-16 w-16 md:h-20 md:w-20 text-primary" />
+              <span className="font-bold text-primary text-4xl md:text-5xl">RKR Laundry</span>
             </div>
-            <p className="text-base text-muted-foreground">Fast. Clean. Convenient.</p>
+            <p className="text-base md:text-lg text-muted-foreground">Fast. Clean. Convenient.</p>
         </div>
 
         <div className="flex flex-row items-center gap-4 mb-6">
@@ -50,8 +50,8 @@ export default function Home() {
         <div className="grid grid-cols-3 gap-x-4 gap-y-4 sm:gap-x-6 w-full max-w-sm sm:max-w-md">
           {gridItems.map((item) => (
             <Link href={item.href} key={item.label} className="relative flex flex-col items-center justify-center gap-1 p-2 rounded-lg group">
-              <item.icon className="h-8 w-8 md:h-10 md:w-10 text-foreground/80 group-hover:text-primary transition-colors" />
-              <span className="text-xs sm:text-sm font-medium text-foreground/90 text-center">{item.label}</span>
+              <item.icon className="h-10 w-10 md:h-12 md:w-12 text-foreground/80 group-hover:text-primary transition-colors" />
+              <span className="text-sm sm:text-base font-medium text-foreground/90 text-center">{item.label}</span>
               {item.notification && <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center rounded-full bg-red-500 text-white p-0 text-[10px]">3</Badge>}
             </Link>
           ))}
