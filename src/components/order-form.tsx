@@ -24,13 +24,13 @@ import { Separator } from './ui/separator';
 
 const packages = [
   { id: 'package1', label: 'Package 1', description: 'Wash, Dry, & Fold' },
-  { id: 'package2', label: 'Package 2', description: 'One-Way Transport (Pick Up or Delivery)' },
+  { id: 'package2', label: 'Package 2', description: 'One-Way Transport' },
   { id: 'package3', label: 'Package 3', description: 'All-In (Pick Up & Delivery)' },
 ];
 
 const orderSchema = z.object({
   servicePackage: z.string().min(1, "Please select a package."),
-  loads: z.coerce.number().min(1, "Please enter at least one load.").max(10, "Maximum of 10 loads per order."),
+  loads: z.coerce.number().max(10, "Maximum of 10 loads per order.").optional(),
   distance: z.coerce.number().min(0, "Distance cannot be negative.").max(50, "We don't deliver beyond 50 km."),
 });
 
@@ -126,7 +126,7 @@ export function OrderForm() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-                <Label htmlFor="loads" className="text-base font-semibold">2. Loads</Label>
+                <Label htmlFor="loads" className="text-base font-semibold">2. Loads (Optional)</Label>
                 <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-md">
                     <ShoppingCart className="h-5 w-5 text-muted-foreground" />
                     <div className='flex-grow'>
@@ -134,7 +134,7 @@ export function OrderForm() {
                         <Controller
                             name="loads"
                             control={form.control}
-                            render={({ field }) => <Input id="loads" type="number" placeholder="1" className="bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0" {...field} />}
+                            render={({ field }) => <Input id="loads" type="number" placeholder="1" className="bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0" {...field} value={field.value ?? ''}/>}
                         />
                     </div>
                 </div>

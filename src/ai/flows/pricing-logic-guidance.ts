@@ -18,7 +18,7 @@ import {z} from 'genkit';
 // Define the input schema
 const PricingLogicGuidanceInputSchema = z.object({
   servicePackage: z.string().describe('The service package selected by the user (e.g., package1, package2).'),
-  loads: z.number().describe('The number of laundry loads.'),
+  loads: z.number().optional().describe('The number of laundry loads.'),
   distance: z.number().describe('The distance for pickup and/or delivery, in kilometers.'),
 });
 export type PricingLogicGuidanceInput = z.infer<typeof PricingLogicGuidanceInputSchema>;
@@ -41,7 +41,9 @@ export type PricingLogicGuidanceOutput = z.infer<typeof PricingLogicGuidanceOutp
 
 // Define the main function
 export async function pricingLogicGuidance(input: PricingLogicGuidanceInput): Promise<PricingLogicGuidanceOutput> {
-  return pricingLogicGuidanceFlow(input);
+  // If loads is not provided, default to 1 for calculation
+  const safeInput = { ...input, loads: input.loads ?? 1 };
+  return pricingLogicGuidanceFlow(safeInput);
 }
 
 // Define the prompt
@@ -83,7 +85,11 @@ const pricingLogicGuidancePrompt = ai.definePrompt({
 const pricingLogicGuidanceFlow = ai.defineFlow(
   {
     name: 'pricingLogicGuidanceFlow',
-    inputSchema: PricingLogicGuidanceInputSchema,
+    inputSchema: z.object({
+        servicePackage: z.string(),
+        loads: z.number(),
+        distance: z.number(),
+    }),
     outputSchema: PricingLogicGuidanceOutputSchema,
   },
   async input => {
@@ -91,3 +97,4 @@ const pricingLogicGuidanceFlow = ai.defineFlow(
     return output!;
   }
 );
+
