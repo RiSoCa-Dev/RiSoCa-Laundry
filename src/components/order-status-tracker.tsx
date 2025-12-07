@@ -4,16 +4,17 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Shirt, Truck, PackageCheck, CircleCheck, Wind, WashingMachine, Package } from 'lucide-react';
+import type { Order } from '@/components/order-list';
 
 const statuses = [
-  { name: 'Order Placed', icon: CircleCheck, duration: 2000 },
-  { name: 'Pickup Scheduled', icon: Truck, duration: 4000 },
-  { name: 'Washing', icon: WashingMachine, duration: 6000 },
-  { name: 'Drying', icon: Wind, duration: 5000 },
-  { name: 'Folding', icon: Shirt, duration: 5000 },
-  { name: 'Ready for Pick Up', icon: Package, duration: 3000 },
-  { name: 'Out for Delivery', icon: Truck, duration: 4000 },
-  { name: 'Delivered', icon: PackageCheck, duration: 0 },
+  { name: 'Order Placed', icon: CircleCheck },
+  { name: 'Pickup Scheduled', icon: Truck },
+  { name: 'Washing', icon: WashingMachine },
+  { name: 'Drying', icon: Wind },
+  { name: 'Folding', icon: Shirt },
+  { name: 'Ready for Pick Up', icon: Package },
+  { name: 'Out for Delivery', icon: Truck },
+  { name: 'Delivered', icon: PackageCheck },
 ];
 
 type StatusLog = {
@@ -21,61 +22,42 @@ type StatusLog = {
   timestamp: string;
 };
 
-export function OrderStatusTracker() {
+export function OrderStatusTracker({ order }: { order: Order }) {
   const [currentStatusIndex, setCurrentStatusIndex] = useState(0);
   const [statusLogs, setStatusLogs] = useState<StatusLog[]>([]);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // This effect runs only once on mount to simulate a single order's lifecycle.
-    const firstLog = { 
-      status: statuses[0].name, 
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-    };
-    setStatusLogs([firstLog]);
-    setProgress((1 / statuses.length) * 100);
-
-    let currentIndex = 0;
-    const scheduleNextUpdate = () => {
-      if (currentIndex >= statuses.length - 1) return;
-
-      const delay = statuses[currentIndex].duration;
-      
-      const timer = setTimeout(() => {
-        currentIndex++;
-        const nextStatus = statuses[currentIndex];
-        setStatusLogs(prev => [
-          ...prev, 
-          { 
-            status: nextStatus.name, 
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          }
-        ]);
-        setCurrentStatusIndex(currentIndex);
-        setProgress(((currentIndex + 1) / statuses.length) * 100);
-        scheduleNextUpdate();
-      }, delay);
-
-      return () => clearTimeout(timer);
-    };
+    const orderStatusIndex = statuses.findIndex(s => s.name === order.status);
     
-    scheduleNextUpdate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (orderStatusIndex !== -1) {
+      setCurrentStatusIndex(orderStatusIndex);
+      
+      const logs = statuses.slice(0, orderStatusIndex + 1).map(s => ({
+        status: s.name,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }));
+      setStatusLogs(logs);
 
-  const CurrentIcon = statuses[currentStatusIndex].icon;
+      setProgress(((orderStatusIndex + 1) / statuses.length) * 100);
+    }
+  }, [order]);
+
+  const CurrentIcon = statuses[currentStatusIndex]?.icon || CircleCheck;
 
   return (
     <Card className="shadow-lg h-full">
       <CardHeader className="p-4">
         <CardTitle className="text-xl">Real-Time Order Tracking</CardTitle>
-        <CardDescription className="text-xs">Track your laundry's journey below.</CardDescription>
+        <CardDescription className="text-xs">
+          Tracking ID: <span className="font-semibold text-primary">{order.id}</span>
+        </CardDescription>
       </CardHeader>
       <CardContent className="p-4 pt-0">
         <div className="space-y-4">
           <div>
             <div className="flex justify-between items-center mb-1">
-              <h3 className="font-semibold text-base text-primary">{statuses[currentStatusIndex].name}</h3>
+              <h3 className="font-semibold text-base text-primary">{statuses[currentStatusIndex]?.name}</h3>
               <CurrentIcon className="h-6 w-6 text-primary" />
             </div>
             <Progress value={progress} className="w-full h-2 [&>div]:bg-primary [&>div]:transition-all [&>div]:duration-1000" />
