@@ -15,19 +15,19 @@ const faqs = [
     },
     {
         question: "How does the pricing work?",
-        answer: "We charge per kilogram for most services like wash, dry, and fold. Special items like suits or dresses are priced per piece. You can check our Service Rates page for more details."
+        answer: "We charge per kilogram for most services. Special items are priced per piece."
     },
     {
         question: "What is the turnaround time?",
-        answer: "Standard service takes 24-48 hours. We also offer express services for same-day delivery at an additional cost."
+        answer: "Standard service takes 24-48 hours. Express services are available."
     },
     {
         question: "Do you offer pickup and delivery?",
-        answer: "Yes, we offer pickup and delivery services. The charges are based on your distance from our nearest branch."
+        answer: "Yes, we offer pickup and delivery services based on your distance."
     },
     {
         question: "How can I track my order?",
-        answer: "You can track your order in real-time using the 'Order Status' feature on our website or mobile app. You will receive notifications at every stage of the process."
+        answer: "You can track your order in real-time on our website or mobile app."
     },
 ]
 
@@ -35,18 +35,18 @@ export default function FaqsPage() {
   return (
     <div className="flex flex-col h-screen">
       <AppHeader />
-      <main className="flex-1 overflow-y-auto pt-4 pb-20 container mx-auto px-4">
-        <div className="flex flex-col items-center text-center mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold text-primary">Frequently Asked Questions</h1>
-            <p className="text-base md:text-lg text-muted-foreground mt-2">Find answers to common questions about our services.</p>
+      <main className="flex-1 overflow-hidden container mx-auto px-4 flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center text-center mb-8">
+            <h1 className="text-2xl md:text-4xl font-bold text-primary">Frequently Asked Questions</h1>
+            <p className="text-sm md:text-lg text-muted-foreground mt-2">Find answers to common questions about our services.</p>
         </div>
         
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-3xl mx-auto w-full">
             <Accordion type="single" collapsible className="w-full">
                 {faqs.map((faq, index) => (
                      <AccordionItem key={index} value={`item-${index}`}>
-                        <AccordionTrigger className="text-base md:text-lg text-left">{faq.question}</AccordionTrigger>
-                        <AccordionContent className="text-sm md:text-base text-muted-foreground">
+                        <AccordionTrigger className="text-sm md:text-base text-left py-2">{faq.question}</AccordionTrigger>
+                        <AccordionContent className="text-xs md:text-sm text-muted-foreground pb-2">
                             {faq.answer}
                         </AccordionContent>
                     </AccordionItem>

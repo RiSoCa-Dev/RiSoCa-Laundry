@@ -12,24 +12,24 @@ export default function ContactUsPage() {
   return (
     <div className="flex flex-col h-screen">
       <AppHeader />
-      <main className="flex-1 overflow-y-auto pt-4 pb-20 flex items-center justify-center container mx-auto px-4">
+      <main className="flex-1 overflow-hidden flex items-center justify-center container mx-auto px-4">
         <Card className="w-full max-w-lg">
-            <CardHeader>
-                <CardTitle className="text-3xl">Contact Us</CardTitle>
+            <CardHeader className="p-4">
+                <CardTitle className="text-2xl">Contact Us</CardTitle>
             </CardHeader>
-            <CardContent>
-                <form className="space-y-4">
-                    <div className="grid gap-2">
+            <CardContent className="p-4 pt-0">
+                <form className="space-y-3">
+                    <div className="grid gap-1.5">
                         <Label htmlFor="name">Name</Label>
                         <Input id="name" placeholder="Your Name" />
                     </div>
-                    <div className="grid gap-2">
+                    <div className="grid gap-1.5">
                         <Label htmlFor="email">Email</Label>
                         <Input id="email" type="email" placeholder="Your Email" />
                     </div>
-                    <div className="grid gap-2">
+                    <div className="grid gap-1.5">
                         <Label htmlFor="message">Message</Label>
-                        <Textarea id="message" placeholder="Your message..." />
+                        <Textarea id="message" placeholder="Your message..." className="min-h-[60px]" />
                     </div>
                     <Button type="submit" className="w-full bg-accent text-accent-foreground">
                        <Send className="mr-2 h-4 w-4"/> Send Message

@@ -18,27 +18,27 @@ export default function RegisterPage() {
   return (
     <div className="flex flex-col h-screen">
       <AppHeader />
-      <main className="flex-1 overflow-y-auto pt-4 pb-20 flex items-center justify-center px-4">
+      <main className="flex-1 overflow-hidden flex items-center justify-center px-4">
         <Card className="mx-auto max-w-sm w-full">
-          <CardHeader>
+          <CardHeader className="p-4">
             <CardTitle className="text-xl">Sign Up</CardTitle>
             <CardDescription>
               Enter your information to create an account
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
+          <CardContent className="p-4 pt-0">
+            <div className="grid gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-1.5">
                   <Label htmlFor="first-name">First name</Label>
                   <Input id="first-name" placeholder="Max" required />
                 </div>
-                <div className="grid gap-2">
+                <div className="grid gap-1.5">
                   <Label htmlFor="last-name">Last name</Label>
                   <Input id="last-name" placeholder="Robinson" required />
                 </div>
               </div>
-              <div className="grid gap-2">
+              <div className="grid gap-1.5">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -47,7 +47,7 @@ export default function RegisterPage() {
                   required
                 />
               </div>
-              <div className="grid gap-2">
+              <div className="grid gap-1.5">
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" />
               </div>
@@ -55,7 +55,7 @@ export default function RegisterPage() {
                 <UserPlus className="mr-2 h-4 w-4" /> Create an account
               </Button>
             </div>
-            <div className="mt-4 text-center text-sm">
+            <div className="mt-3 text-center text-xs">
               Already have an account?{" "}
               <Link href="/login" className="underline">
                 Sign in

@@ -3,7 +3,7 @@ import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { WashingMachine, Package, FileText, MapPin, Phone, HelpCircle, UserPlus, LogIn, Calculator, Bike, Download } from 'lucide-react';
+import { Package, FileText, MapPin, Phone, HelpCircle, UserPlus, LogIn, Calculator, Bike, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const gridItems = [
@@ -12,7 +12,7 @@ const gridItems = [
   { href: '/service-rates', label: 'Service Rates', icon: FileText },
   { href: '/track-rider', label: 'Track Rider', icon: Bike },
   { href: '/download-app', label: 'Download App', icon: Download },
-  { href: '/laundry-calculator', label: 'Laundry Calculator', icon: Calculator },
+  { href: '/laundry-calculator', label: 'Calculator', icon: Calculator },
   { href: '/faqs', label: 'FAQs', icon: HelpCircle },
   { href: '/branches', label: 'Branches', icon: MapPin },
   { href: '/contact-us', label: 'Contact Us', icon: Phone },
@@ -22,29 +22,29 @@ export default function Home() {
   return (
     <div className="flex flex-col h-screen">
       <AppHeader />
-      <main className="flex-1 overflow-y-auto pt-4 pb-20 flex flex-col items-center container mx-auto px-4 text-center">
+      <main className="flex-1 overflow-hidden flex flex-col items-center justify-center container mx-auto px-4 text-center">
         
-        <div className="flex flex-row items-center gap-4 mb-8">
+        <div className="flex flex-row items-center gap-4 mb-6">
           <Link href="/login" passHref>
-            <Button size="lg" className="w-40 h-12 text-base rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-shadow">
+            <Button size="lg" className="w-32 h-11 text-base rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-shadow">
               <LogIn className="mr-2 h-4 w-4" />
               Log In
             </Button>
           </Link>
           <Link href="/register" passHref>
-            <Button size="lg" className="w-40 h-12 text-base rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-lg hover:shadow-xl transition-shadow">
+            <Button size="lg" className="w-32 h-11 text-base rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-lg hover:shadow-xl transition-shadow">
               <UserPlus className="mr-2 h-4 w-4" />
               Register
             </Button>
           </Link>
         </div>
 
-        <div className="grid grid-cols-3 gap-x-4 gap-y-6 sm:gap-x-8 w-full max-w-xs sm:max-w-lg">
+        <div className="grid grid-cols-3 gap-x-4 gap-y-4 sm:gap-x-6 w-full max-w-xs sm:max-w-md">
           {gridItems.map((item) => (
-            <Link href={item.href} key={item.label} className="relative flex flex-col items-center justify-center gap-2 p-2 rounded-lg group">
-              <item.icon className="h-7 w-7 md:h-8 md:w-8 text-foreground/80 group-hover:text-primary transition-colors" />
-              <span className="text-xs font-medium text-foreground/90 text-center">{item.label}</span>
-              {item.notification && <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-red-500 text-white p-0 text-xs">3</Badge>}
+            <Link href={item.href} key={item.label} className="relative flex flex-col items-center justify-center gap-1 p-1 rounded-lg group">
+              <item.icon className="h-6 w-6 md:h-8 md:w-8 text-foreground/80 group-hover:text-primary transition-colors" />
+              <span className="text-[10px] sm:text-xs font-medium text-foreground/90 text-center">{item.label}</span>
+              {item.notification && <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center rounded-full bg-red-500 text-white p-0 text-[10px]">3</Badge>}
             </Link>
           ))}
         </div>

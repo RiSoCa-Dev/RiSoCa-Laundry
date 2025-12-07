@@ -15,24 +15,24 @@ export default function BranchesPage() {
   return (
     <div className="flex flex-col h-screen">
       <AppHeader />
-      <main className="flex-1 overflow-y-auto pt-4 pb-20 container mx-auto px-4">
-        <div className="flex flex-col items-center text-center mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold text-primary">Our Branches</h1>
-            <p className="text-base md:text-lg text-muted-foreground mt-2">Find an RKR Laundry location near you.</p>
+      <main className="flex-1 overflow-hidden container mx-auto px-4 flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center text-center mb-8">
+            <h1 className="text-2xl md:text-4xl font-bold text-primary">Our Branches</h1>
+            <p className="text-sm md:text-lg text-muted-foreground mt-2">Find an RKR Laundry location near you.</p>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
             {branches.map(branch => (
                 <Card key={branch.name}>
-                    <CardHeader>
-                        <CardTitle>{branch.name}</CardTitle>
+                    <CardHeader className="p-4">
+                        <CardTitle className="text-base md:text-xl">{branch.name}</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                        <div className="flex items-center gap-2 text-muted-foreground">
+                    <CardContent className="p-4 pt-0 space-y-2">
+                        <div className="flex items-center gap-2 text-muted-foreground text-xs md:text-sm">
                             <MapPin className="h-4 w-4" />
                             <span>{branch.address}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
+                        <div className="flex items-center gap-2 text-muted-foreground text-xs md:text-sm">
                             <Phone className="h-4 w-4" />
                             <span>{branch.phone}</span>
                         </div>

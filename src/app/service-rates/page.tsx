@@ -8,9 +8,9 @@ const services = [
     { service: 'Wash & Fold (per kg)', price: '8.00' },
     { service: 'Drying (per kg)', price: '5.00' },
     { service: 'Ironing (per piece)', price: '3.00' },
-    { service: 'Stain Removal (per piece)', price: '10.00' },
-    { service: 'Delicate Wash (per piece)', price: '12.00' },
-    { service: 'Beddings & Linens (per kg)', price: '15.00' },
+    { service: 'Stain Removal', price: '10.00' },
+    { service: 'Delicate Wash', price: '12.00' },
+    { service: 'Beddings & Linens', price: '15.00' },
 ];
 
 const deliverySurcharges = [
@@ -23,30 +23,30 @@ export default function ServiceRatesPage() {
   return (
     <div className="flex flex-col h-screen">
       <AppHeader />
-      <main className="flex-1 overflow-y-auto pt-4 pb-20 container mx-auto px-4">
-        <div className="flex flex-col items-center text-center mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold text-primary">Service Rates</h1>
-            <p className="text-base md:text-lg text-muted-foreground mt-2">Transparent pricing for all our services.</p>
+      <main className="flex-1 overflow-hidden container mx-auto px-4 flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center text-center mb-8">
+            <h1 className="text-2xl md:text-4xl font-bold text-primary">Service Rates</h1>
+            <p className="text-sm md:text-lg text-muted-foreground mt-2">Transparent pricing for all our services.</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 max-w-4xl mx-auto w-full">
             <Card>
-                <CardHeader>
-                    <CardTitle>Standard Services</CardTitle>
+                <CardHeader className="p-3">
+                    <CardTitle className="text-lg">Standard Services</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-3 pt-0">
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Service</TableHead>
-                                <TableHead className="text-right">Price ($)</TableHead>
+                                <TableHead className="h-8 text-xs">Service</TableHead>
+                                <TableHead className="text-right h-8 text-xs">Price ($)</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {services.map((item) => (
                                 <TableRow key={item.service}>
-                                    <TableCell>{item.service}</TableCell>
-                                    <TableCell className="text-right">{item.price}</TableCell>
+                                    <TableCell className="p-2 text-xs">{item.service}</TableCell>
+                                    <TableCell className="text-right p-2 text-xs">{item.price}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -55,22 +55,22 @@ export default function ServiceRatesPage() {
             </Card>
 
             <Card>
-                <CardHeader>
-                    <CardTitle>Delivery Surcharges</CardTitle>
+                <CardHeader className="p-3">
+                    <CardTitle className="text-lg">Delivery Surcharges</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-3 pt-0">
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Distance</TableHead>
-                                <TableHead className="text-right">Price ($)</TableHead>
+                                <TableHead className="h-8 text-xs">Distance</TableHead>
+                                <TableHead className="text-right h-8 text-xs">Price ($)</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {deliverySurcharges.map((item) => (
                                 <TableRow key={item.distance}>
-                                    <TableCell>{item.distance}</TableCell>
-                                    <TableCell className="text-right">{item.price}</TableCell>
+                                    <TableCell className="p-2 text-xs">{item.distance}</TableCell>
+                                    <TableCell className="text-right p-2 text-xs">{item.price}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>

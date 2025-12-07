@@ -90,15 +90,15 @@ export function OrderForm() {
   return (
     <Card className="shadow-lg w-full">
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <CardHeader>
-          <CardTitle>Create Your Laundry Order</CardTitle>
-          <CardDescription>Select your services and we'll calculate the price instantly.</CardDescription>
+        <CardHeader className="p-4">
+          <CardTitle>Create Order</CardTitle>
+          <CardDescription className="text-xs">Select services to calculate the price.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-8">
+        <CardContent className="space-y-4 p-4 pt-0">
           
-          <div className="space-y-4">
-            <Label className="text-lg font-semibold text-foreground/90">1. Select Services</Label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label className="text-base font-semibold">1. Services</Label>
+            <div className="grid grid-cols-3 gap-2">
               {services.map((service) => (
                 <Controller
                   key={service.id}
@@ -107,9 +107,9 @@ export function OrderForm() {
                   render={({ field }) => {
                     const isChecked = field.value?.includes(service.id);
                     return (
-                        <div className={`p-1 rounded-lg transition-all ${isChecked ? 'bg-primary' : 'bg-transparent'}`}>
-                          <Label htmlFor={service.id} className={`flex flex-col items-center justify-center gap-2 text-md font-medium cursor-pointer p-3 rounded-md border-2 transition-all ${isChecked ? 'bg-card border-primary' : 'bg-card hover:bg-muted border-transparent'}`}>
-                            <service.icon className={`h-7 w-7 transition-colors ${isChecked ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <div className={`p-0.5 rounded-md transition-all ${isChecked ? 'bg-primary' : 'bg-transparent'}`}>
+                          <Label htmlFor={service.id} className={`flex flex-col items-center justify-center gap-1 text-sm font-medium cursor-pointer p-2 rounded-sm border-2 transition-all ${isChecked ? 'bg-card border-primary' : 'bg-card hover:bg-muted border-transparent'}`}>
+                            <service.icon className={`h-6 w-6 transition-colors ${isChecked ? 'text-primary' : 'text-muted-foreground'}`} />
                             {service.label}
                             <Checkbox
                                 id={service.id}
@@ -130,13 +130,13 @@ export function OrderForm() {
               ))}
             </div>
             {form.formState.errors.serviceTypes && (
-              <p className="text-sm font-medium text-destructive">{form.formState.errors.serviceTypes.message}</p>
+              <p className="text-xs font-medium text-destructive">{form.formState.errors.serviceTypes.message}</p>
             )}
           </div>
 
-          <div className="space-y-4">
-            <Label className="text-lg font-semibold text-foreground/90">2. Choose Add-Ons (Optional)</Label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label className="text-base font-semibold">2. Add-Ons</Label>
+            <div className="grid grid-cols-3 gap-2">
               {addOns.map((addOn) => (
                 <Controller
                   key={addOn.id}
@@ -145,9 +145,9 @@ export function OrderForm() {
                   render={({ field }) => {
                     const isChecked = field.value?.includes(addOn.id);
                     return (
-                      <div className={`p-1 rounded-lg transition-all ${isChecked ? 'bg-primary' : 'bg-transparent'}`}>
-                        <Label htmlFor={addOn.id} className={`flex flex-col items-center justify-center gap-2 text-md font-medium cursor-pointer p-3 rounded-md border-2 transition-all ${isChecked ? 'bg-card border-primary' : 'bg-card hover:bg-muted border-transparent'}`}>
-                          <addOn.icon className={`h-7 w-7 transition-colors ${isChecked ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <div className={`p-0.5 rounded-md transition-all ${isChecked ? 'bg-primary' : 'bg-transparent'}`}>
+                        <Label htmlFor={addOn.id} className={`flex flex-col items-center justify-center gap-1 text-sm font-medium cursor-pointer p-2 rounded-sm border-2 transition-all ${isChecked ? 'bg-card border-primary' : 'bg-card hover:bg-muted border-transparent'}`}>
+                          <addOn.icon className={`h-6 w-6 transition-colors ${isChecked ? 'text-primary' : 'text-muted-foreground'}`} />
                           {addOn.label}
                           <Checkbox
                               id={addOn.id}
@@ -169,71 +169,71 @@ export function OrderForm() {
             </div>
           </div>
           
-          <div className="space-y-3">
-            <Label htmlFor="distance" className="text-lg font-semibold text-foreground/90">3. Set Your Location</Label>
-            <div className="flex items-center gap-3 bg-muted/50 p-3 rounded-lg">
-                <Truck className="h-6 w-6 text-muted-foreground" />
+          <div className="space-y-2">
+            <Label htmlFor="distance" className="text-base font-semibold">3. Location</Label>
+            <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-md">
+                <Truck className="h-5 w-5 text-muted-foreground" />
                 <div className='flex-grow'>
-                    <Label htmlFor="distance" className="text-sm font-medium text-muted-foreground">Pickup/Delivery Distance (miles)</Label>
+                    <Label htmlFor="distance" className="text-xs font-medium text-muted-foreground">Distance (miles)</Label>
                     <Controller
                     name="distance"
                     control={form.control}
-                    render={({ field }) => <Input id="distance" type="number" placeholder="e.g., 5" className="bg-transparent border-0 text-lg font-semibold p-0 h-auto focus-visible:ring-0" {...field} />}
+                    render={({ field }) => <Input id="distance" type="number" placeholder="5" className="bg-transparent border-0 text-base font-semibold p-0 h-auto focus-visible:ring-0" {...field} />}
                     />
                 </div>
             </div>
             {form.formState.errors.distance && (
-              <p className="text-sm font-medium text-destructive">{form.formState.errors.distance.message}</p>
+              <p className="text-xs font-medium text-destructive">{form.formState.errors.distance.message}</p>
             )}
           </div>
 
           <Separator />
 
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground/90">Pricing Summary</h3>
-            <div className="bg-muted/50 p-6 rounded-lg space-y-4">
+          <div className="space-y-2">
+            <h3 className="text-base font-semibold">Pricing Summary</h3>
+            <div className="bg-muted/50 p-3 rounded-lg space-y-2">
                 {isPending ? (
-                    <div className="flex items-center justify-center text-muted-foreground h-24">
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        <span>Calculating your price...</span>
+                    <div className="flex items-center justify-center text-muted-foreground h-16">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <span className="text-sm">Calculating...</span>
                     </div>
                 ) : pricingResult ? (
                     <>
                         <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground text-lg">Total</span>
-                            <span className="text-3xl font-bold text-primary">
+                            <span className="text-muted-foreground text-base">Total</span>
+                            <span className="text-2xl font-bold text-primary">
                                 ${pricingResult.computedPrice.toFixed(2)}
                             </span>
                         </div>
                         {pricingResult.isValidCombination && pricingResult.suggestedServices.length > 0 && (
-                            <Alert className='bg-primary/5 border-primary/20'>
+                            <Alert className='bg-primary/5 border-primary/20 p-2'>
                                 <Lightbulb className="h-4 w-4 text-primary" />
-                                <AlertTitle className='text-primary'>Smart Suggestion</AlertTitle>
-                                <AlertDescription>
+                                <AlertTitle className='text-primary text-xs font-semibold'>Suggestion</AlertTitle>
+                                <AlertDescription className="text-xs">
                                     {pricingResult.suggestedServices[0]}
                                 </AlertDescription>
                             </Alert>
                         )}
                         {!pricingResult.isValidCombination && pricingResult.invalidServiceChoices && pricingResult.invalidServiceChoices.length > 0 && (
-                            <Alert variant="destructive">
+                            <Alert variant="destructive" className="p-2">
                                 <AlertCircle className="h-4 w-4" />
-                                <AlertTitle>Invalid Selection</AlertTitle>
-                                <AlertDescription>
+                                <AlertTitle className="text-xs font-semibold">Invalid Selection</AlertTitle>
+                                <AlertDescription className="text-xs">
                                     {pricingResult.invalidServiceChoices[0]}
                                 </AlertDescription>
                             </Alert>
                         )}
                     </>
                 ) : (
-                    <div className="text-center text-muted-foreground h-24 flex items-center justify-center">Select services to see the price.</div>
+                    <div className="text-center text-muted-foreground h-16 flex items-center justify-center text-sm">Select services to see price.</div>
                 )}
             </div>
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="p-4 pt-0">
           <Button 
             type="submit" 
-            className="w-full bg-accent text-accent-foreground hover:bg-accent/90 text-lg py-6"
+            className="w-full bg-accent text-accent-foreground hover:bg-accent/90 text-base py-5"
             disabled={isPending || !pricingResult?.isValidCombination || !form.formState.isValid}
           >
             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

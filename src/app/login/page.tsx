@@ -18,17 +18,17 @@ export default function LoginPage() {
   return (
     <div className="flex flex-col h-screen">
       <AppHeader />
-      <main className="flex-1 overflow-y-auto pt-4 pb-20 flex items-center justify-center px-4">
+      <main className="flex-1 overflow-hidden flex items-center justify-center px-4">
         <Card className="mx-auto max-w-sm w-full">
-          <CardHeader>
+          <CardHeader className="p-4">
             <CardTitle className="text-2xl">Login</CardTitle>
             <CardDescription>
-              Enter your email below to login to your account
+              Enter your email below to login
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
-              <div className="grid gap-2">
+          <CardContent className="p-4 pt-0">
+            <div className="grid gap-3">
+              <div className="grid gap-1.5">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -37,11 +37,11 @@ export default function LoginPage() {
                   required
                 />
               </div>
-              <div className="grid gap-2">
+              <div className="grid gap-1.5">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
-                  <Link href="#" className="ml-auto inline-block text-sm underline">
-                    Forgot your password?
+                  <Link href="#" className="ml-auto inline-block text-xs underline">
+                    Forgot?
                   </Link>
                 </div>
                 <Input id="password" type="password" required />
@@ -50,7 +50,7 @@ export default function LoginPage() {
                 <LogIn className="mr-2 h-4 w-4" /> Login
               </Button>
             </div>
-            <div className="mt-4 text-center text-sm">
+            <div className="mt-3 text-center text-xs">
               Don&apos;t have an account?{" "}
               <Link href="/register" className="underline">
                 Sign up

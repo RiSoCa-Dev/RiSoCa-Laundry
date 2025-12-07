@@ -47,33 +47,33 @@ export default function LaundryCalculatorPage() {
   return (
     <div className="flex flex-col h-screen">
       <AppHeader />
-      <main className="flex-1 overflow-y-auto pt-4 pb-20 flex items-center justify-center container mx-auto px-4">
+      <main className="flex-1 overflow-hidden flex items-center justify-center container mx-auto px-4">
         <Card className="w-full max-w-md">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Calculator /> Laundry Weight Calculator</CardTitle>
-                <CardDescription>Estimate the weight of your laundry load before placing an order.</CardDescription>
+            <CardHeader className="p-4">
+                <CardTitle className="flex items-center gap-2 text-xl"><Calculator /> Laundry Weight Calculator</CardTitle>
+                <CardDescription className="text-xs">Estimate the weight of your laundry load.</CardDescription>
             </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
+            <CardContent className="p-4 pt-0">
+                <div className="space-y-2">
                     {Object.keys(itemWeights).map((key) => {
                         const item = key as Item;
                         return (
                             <div key={item} className="flex items-center justify-between">
-                                <Label htmlFor={item} className="capitalize">{item.replace('-', ' ')}</Label>
+                                <Label htmlFor={item} className="capitalize text-sm">{item.replace('-', ' ')}</Label>
                                 <Input 
                                     id={item}
                                     type="number"
                                     value={counts[item]}
                                     onChange={(e) => handleCountChange(item, parseInt(e.target.value) || 0)}
-                                    className="w-24"
+                                    className="w-20 h-8"
                                 />
                             </div>
                         )
                     })}
                 </div>
-                <div className="mt-8 text-center">
-                    <p className="text-muted-foreground">Estimated Total Weight</p>
-                    <p className="text-3xl font-bold text-primary">{totalWeight.toFixed(2)} kg</p>
+                <div className="mt-4 text-center">
+                    <p className="text-muted-foreground text-sm">Estimated Total Weight</p>
+                    <p className="text-2xl font-bold text-primary">{totalWeight.toFixed(2)} kg</p>
                 </div>
             </CardContent>
         </Card>
