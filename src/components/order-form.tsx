@@ -18,8 +18,9 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Package, Truck, AlertCircle, Weight, Layers } from 'lucide-react';
+import { Loader2, Package, Truck, AlertCircle, Weight, Layers, Info } from 'lucide-react';
 import { Separator } from './ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const packages = [
   { id: 'package1', label: 'Package 1', description: 'Wash, Dry, & Fold' },
@@ -142,7 +143,21 @@ export function OrderForm() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-                <Label htmlFor="weight" className="text-base font-semibold">2. Weight (kg)</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="weight" className="text-base font-semibold">2. Weight (kg)</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs text-sm">
+                          Final weight will be confirmed at the shop. One load is 7.5kg. Any excess is considered a new load.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-md">
                     <Weight className="h-5 w-5 text-muted-foreground" />
                     <div className='flex-grow'>
