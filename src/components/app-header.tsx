@@ -25,7 +25,7 @@ const navLinks = [
 export function AppHeader() {
   return (
     <header className="w-full border-b bg-background/95">
-      <div className="container flex h-14 items-center justify-end px-4 relative">
+      <div className="container flex h-14 items-center justify-start px-4 relative">
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">
@@ -33,7 +33,7 @@ export function AppHeader() {
               <span className="sr-only">Toggle Menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent>
+          <SheetContent side="left">
              <SheetHeader>
               <SheetTitle className="sr-only">Menu</SheetTitle>
             </SheetHeader>
