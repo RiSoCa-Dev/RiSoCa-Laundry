@@ -56,32 +56,14 @@ export default function RegisterPage() {
         throw authError;
       }
       
-      if (authData.user) {
-        // Insert into public.profiles table with role
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({ 
-            id: authData.user.id,
-            first_name: firstName, 
-            last_name: lastName,
-            email: email,
-            role: 'customer' // Add default role here
-          });
-
-        if (profileError) {
-          console.error('Error saving user profile:', profileError);
-          // This is a critical error, as the user exists in auth but not in profiles.
-          throw new Error(`Account created, but failed to save profile. Please contact support. Details: ${profileError.message}`);
-        }
-
-      } else {
+      if (!authData.user) {
          throw new Error("Signup succeeded but no user data was returned.");
       }
 
       toast({
         variant: 'default',
         title: 'Signup Successful!',
-        description: `Redirecting to login...`,
+        description: `Please check your email to verify your account. Redirecting to login...`,
         className: 'bg-green-500 text-white',
         duration: 3000,
       });
