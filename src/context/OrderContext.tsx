@@ -3,7 +3,7 @@
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import type { Order } from '@/components/order-list';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, writeBatch, doc, serverTimestamp, query, orderBy, where } from 'firebase/firestore';
+import { collection, writeBatch, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useAuth } from './AuthContext';
@@ -34,7 +34,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   // --- Admin-specific data fetching ---
   const adminOrdersQuery = useMemoFirebase(() => {
     if (!firestore || !profile || profile.role !== 'admin') return null;
-    return query(collection(firestore, 'allOrders'), orderBy("orderDate", "desc"));
+    return query(collection(firestore, 'orders'), orderBy("orderDate", "desc"));
   }, [firestore, profile]);
   const { data: allOrdersData, isLoading: adminOrdersLoading } = useCollection<Order>(adminOrdersQuery);
 
@@ -51,7 +51,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     const newOrderId = doc(collection(firestore, 'id_generator')).id;
 
     const userOrderRef = doc(firestore, `users/${user.uid}/orders`, newOrderId);
-    const adminOrderRef = doc(firestore, 'allOrders', newOrderId);
+    const adminOrderRef = doc(firestore, 'orders', newOrderId);
 
     const batch = writeBatch(firestore);
     
@@ -72,7 +72,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     if (!firestore || !userId) return;
 
     const userOrderRef = doc(firestore, `users/${userId}/orders`, orderId);
-    const adminOrderRef = doc(firestore, 'allOrders', orderId);
+    const adminOrderRef = doc(firestore, 'orders', orderId);
 
     const batch = writeBatch(firestore);
 
@@ -82,7 +82,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     batch.commit().catch(err => {
         console.error("Order status update failed:", err);
         errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: `allOrders/${orderId}`,
+        path: `orders/${orderId}`,
         operation: 'update',
         requestResourceData: { status },
         }));

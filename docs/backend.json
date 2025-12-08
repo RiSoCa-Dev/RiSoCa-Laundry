@@ -291,7 +291,7 @@
         }
       },
        {
-        "path": "/allOrders/{orderId}",
+        "path": "/orders/{orderId}",
         "definition": {
           "entityName": "Order",
           "schema": {
