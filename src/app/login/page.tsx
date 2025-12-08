@@ -17,13 +17,10 @@ import { Label } from '@/components/ui/label'
 import { LogIn } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
-import { useAuth } from '@/firebase'
-import { signInWithEmailAndPassword } from 'firebase/auth'
 
 export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const auth = useAuth();
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -33,26 +30,24 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
 
-    try {
-      if (!auth) throw new Error("Auth service not available");
-      await signInWithEmailAndPassword(auth, email, password);
-      
+    // Mock login logic
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Simple mock validation
+    if (email && password) {
       toast({
         title: 'Login Successful',
         description: 'Welcome back!',
       })
-
       router.push('/');
-
-    } catch (error: any) {
+    } else {
         toast({
             variant: "destructive",
             title: 'Login Failed',
-            description: error.message || 'Please check your credentials and try again.',
+            description: 'Please check your credentials and try again.',
         })
-    } finally {
-        setLoading(false)
     }
+    setLoading(false)
   }
 
   return (

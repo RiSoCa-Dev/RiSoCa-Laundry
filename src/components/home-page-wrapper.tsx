@@ -2,10 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useOrders } from '@/context/OrderContext';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/context/AuthContext';
 
 interface GridItem {
   href: string;
@@ -20,18 +18,13 @@ interface HomePageWrapperProps {
 }
 
 export function HomePageWrapper({ children, gridItems }: HomePageWrapperProps) {
-  const { orders } = useOrders();
-  const { profile } = useAuth();
-  const isAdmin = profile?.role === 'admin';
-
-  const ongoingOrdersCount = orders.filter(
-    (order) => order.status !== 'Delivered' && order.status !== 'Success'
-  ).length;
+  // Simplified since auth and orders are removed.
+  const ongoingOrdersCount = 0;
+  const isAdmin = false;
 
   const mainContent = React.Children.map(children, (child) => {
     if (!React.isValidElement(child)) return child;
     
-    // This function recursively finds and replaces the grid container.
     const replaceGrid = (node: React.ReactNode): React.ReactNode => {
       if (!React.isValidElement(node)) return node;
 

@@ -10,25 +10,18 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from '@/context/AuthContext';
-import { useUser, useAuth as useFirebaseAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 
 export function AppHeader({ showLogo = false }: { showLogo?: boolean }) {
-    const { profile } = useAuth();
-    const { user } = useUser();
-    const auth = useFirebaseAuth();
     const router = useRouter();
 
-    const isAdmin = profile?.role === 'admin';
+    // Simplified for a non-auth state. We can add auth back later if needed.
+    const user = false; // Mock user state
+    const isAdmin = false; // Mock admin state
 
     const handleSignOut = async () => {
-      await auth.signOut();
-      if (isAdmin) {
-        router.push('/admin/login');
-      } else {
-        router.push('/login');
-      }
+      // Mock sign out
+      router.push('/login');
     };
 
     const navLinks = [

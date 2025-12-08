@@ -21,9 +21,7 @@ import { Loader2, Weight, Layers, Info, MapPin, User, Phone, Bike, PersonStandin
 import { Separator } from './ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { useOrders } from '@/context/OrderContext';
-import { useAuth } from '@/context/AuthContext';
-import { useUser } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 const packages = [
   { id: 'package1', label: 'Package 1', description: 'Wash, Dry, & Fold' },
@@ -59,13 +57,11 @@ type PendingOrder = {
 export function OrderForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useUser();
-  const { profile } = useAuth();
+  const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [pricingResult, setPricingResult] = useState<PricingResult | null>(null);
   const [calculatedLoads, setCalculatedLoads] = useState(1);
   const [showDistancePrompt, setShowDistancePrompt] = useState(false);
-  const { addOrder } = useOrders();
 
   const [isCustomerInfoDialogOpen, setIsCustomerInfoDialogOpen] = useState(false);
   const [pendingOrder, setPendingOrder] = useState<PendingOrder | null>(null);
@@ -91,13 +87,6 @@ export function OrderForm() {
         deliveryOption: 'drop-off',
     }
   });
-  
-  useEffect(() => {
-    if (profile) {
-      customerForm.setValue('customerName', `${profile.firstName || ''} ${profile.lastName || ''}`.trim());
-      customerForm.setValue('contactNumber', profile.phone || '');
-    }
-  }, [profile, customerForm]);
 
   const { watch, setValue, trigger, control } = form;
   const watchedValues = watch();
@@ -105,7 +94,6 @@ export function OrderForm() {
   const needsLocation = servicePackage === 'package2' || servicePackage === 'package3';
   const isFreeDelivery = needsLocation && watchedValues.distance > 0 && watchedValues.distance <= 0.5;
 
-  // Effect to update form distance when URL param changes
   useEffect(() => {
     if (distanceParam) {
       const numericDistance = parseFloat(distanceParam);
@@ -204,10 +192,6 @@ export function OrderForm() {
 
   const onOrderSubmit = (data: OrderFormValues) => {
     if (!pricingResult) return;
-     if (!user) {
-      router.push('/login');
-      return;
-    }
     setPendingOrder({
         orderData: data,
         pricing: pricingResult,
@@ -217,30 +201,14 @@ export function OrderForm() {
   };
 
   const onCustomerInfoSubmit = (customerData: CustomerFormValues) => {
-    if (!pendingOrder || !user) return;
-
-    let finalWeight = pendingOrder.orderData.weight;
-    if (pendingOrder.orderData.servicePackage === 'package1' && (finalWeight === undefined || finalWeight === 0)) {
-        finalWeight = 7.5;
-    } else if (isFreeDelivery) {
-        finalWeight = 7.5;
-    }
-
-    const newOrder = {
-        id: `ORD${String(Date.now()).slice(-3)}${String(Math.floor(Math.random() * 100)).padStart(2, '0')}`,
-        userId: user.uid,
-        customerName: customerData.customerName,
-        contactNumber: customerData.contactNumber,
-        load: pendingOrder.loads,
-        weight: finalWeight || 0,
-        status: 'Order Placed',
-        total: pendingOrder.pricing.computedPrice,
-        deliveryOption: customerData.deliveryOption,
-        servicePackage: pendingOrder.orderData.servicePackage,
-        distance: pendingOrder.orderData.distance,
-    };
+    if (!pendingOrder) return;
     
-    addOrder(newOrder);
+    // Mock order creation
+    toast({
+      title: 'Order Placed!',
+      description: 'Your order has been successfully submitted.'
+    });
+
     setIsCustomerInfoDialogOpen(false);
     customerForm.reset();
     form.reset();

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -49,7 +48,7 @@ export function CustomerOrderList({ orders, onOrderSelect }: CustomerOrderListPr
                  <div>
                     <CardTitle className="text-base">{order.id}</CardTitle>
                      <p className="text-xs text-muted-foreground">
-                        {order.orderDate ? format(order.orderDate.toDate(), 'PPP') : 'Date not available'}
+                        {order.orderDate ? format(order.orderDate, 'PPP') : 'Date not available'}
                     </p>
                  </div>
                 <Badge className={`${getStatusColor(order.status)} hover:${getStatusColor(order.status)} text-white`}>

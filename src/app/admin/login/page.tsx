@@ -14,15 +14,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { LogIn } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { useFirestore, useAuth as useFirebaseAuth } from '@/firebase'
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
-import { doc, getDoc } from 'firebase/firestore'
 
 export default function AdminLoginPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const auth = useFirebaseAuth()
-  const firestore = useFirestore()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -32,37 +27,23 @@ export default function AdminLoginPage() {
     e.preventDefault()
     setLoading(true)
 
-    try {
-        if (!auth || !firestore) throw new Error("Firebase services not available.");
-
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        if (!user) throw new Error("Login failed, please try again.");
-
-        const userDocRef = doc(firestore, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (!userDoc.exists() || userDoc.data().role !== 'admin') {
-            await signOut(auth);
-            throw new Error("Access denied. You are not an administrator.");
-        }
-
+    // Mock login
+    setTimeout(() => {
+      if (email === 'admin@example.com' && password === 'password') {
         toast({
             title: 'Login Successful',
             description: 'Welcome, Admin!',
         })
         router.push('/admin');
-
-    } catch (error: any) {
+      } else {
         toast({
             variant: 'destructive',
             title: 'Login Failed',
-            description: error.message || 'Invalid credentials or access denied.',
+            description: 'Invalid credentials or access denied.',
         })
-    } finally {
-        setLoading(false)
-    }
+      }
+      setLoading(false)
+    }, 1000)
   }
 
   return (

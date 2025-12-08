@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -9,10 +8,14 @@ import { CustomerOrderList } from '@/components/customer-order-list';
 import type { Order } from '@/components/order-list';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { useOrders } from '@/context/OrderContext';
+
+const mockOrders: Order[] = [
+    { id: 'ORD123', userId: 'user1', customerName: 'John Doe', contactNumber: '09123456789', load: 1, weight: 7.5, status: 'Washing', total: 180, orderDate: new Date(), servicePackage: 'package1', distance: 0 },
+    { id: 'ORD124', userId: 'user2', customerName: 'Jane Smith', contactNumber: '09987654321', load: 2, weight: 15, status: 'Ready for Pick Up', total: 360, orderDate: new Date(), servicePackage: 'package1', distance: 0 },
+];
 
 export default function OrderStatusPage() {
-    const { orders } = useOrders();
+    const [orders, setOrders] = useState(mockOrders);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
     const handleSelectOrder = (order: Order) => {

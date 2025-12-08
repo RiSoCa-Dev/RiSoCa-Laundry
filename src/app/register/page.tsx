@@ -17,15 +17,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { UserPlus } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { useAuth, useFirestore } from '@/firebase'
-import { createUserWithEmailAndPassword } from 'firebase/auth'
-import { doc, setDoc } from 'firebase/firestore'
 
 export default function RegisterPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const auth = useAuth();
-  const firestore = useFirestore();
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -35,38 +30,17 @@ export default function RegisterPage() {
     setLoading(true)
     setError(null)
 
-    const formData = new FormData(e.currentTarget)
-    const firstName = formData.get('firstName') as string
-    const lastName = formData.get('lastName') as string
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
-
+    // Mock registration
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
     try {
-      if (!auth || !firestore) throw new Error("Firebase services are not ready.");
-
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Create a user profile document in Firestore
-      await setDoc(doc(firestore, "users", user.uid), {
-        id: user.uid,
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        phone: '', // Default empty phone
-        role: 'customer' // Default role
-      });
-
-
       toast({
         variant: 'default',
         title: 'Signup Successful!',
-        description: `Please check your email to verify your account. Redirecting to login...`,
+        description: `Redirecting to login...`,
         duration: 3000,
       });
       
-      await auth.signOut(); // Sign out user until they verify email
-
       setTimeout(() => {
         router.push('/login');
       }, 3000)

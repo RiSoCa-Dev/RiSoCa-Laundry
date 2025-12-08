@@ -11,30 +11,30 @@ import { OrderList } from '@/components/order-list';
 import type { Order } from '@/components/order-list';
 import { Loader2, Inbox } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useOrders } from '@/context/OrderContext';
+import { useState } from 'react';
+
+// Mock data, as Firebase is removed
+const mockOrders: Order[] = [
+    { id: 'ORD123', userId: 'user1', customerName: 'John Doe', contactNumber: '09123456789', load: 1, weight: 7.5, status: 'Washing', total: 180, orderDate: new Date(), servicePackage: 'package1', distance: 0 },
+    { id: 'ORD124', userId: 'user2', customerName: 'Jane Smith', contactNumber: '09987654321', load: 2, weight: 15, status: 'Ready for Pick Up', total: 360, orderDate: new Date(), servicePackage: 'package1', distance: 0 },
+];
 
 export default function AdminOrdersPage() {
   const { toast } = useToast();
-  const { allOrders, loadingAdmin, updateOrderStatus } = useOrders();
+  const [allOrders, setAllOrders] = useState(mockOrders);
+  const [loadingAdmin, setLoadingAdmin] = useState(false);
+
 
   const handleUpdateOrder = async (updatedOrder: Order) => {
-    // The context needs the original userId to update the user's private collection
-    const originalOrder = allOrders.find(o => o.id === updatedOrder.id);
-    if (!originalOrder) {
-        toast({
-            variant: 'destructive',
-            title: 'Update Failed',
-            description: 'Could not find the original order to update.',
-        });
-        return;
-    }
-    
-    await updateOrderStatus(updatedOrder.id, updatedOrder.status, originalOrder.userId);
-
+    setLoadingAdmin(true);
+    // Simulate update
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setAllOrders(prevOrders => prevOrders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
     toast({
         title: 'Order Updated',
         description: `Order #${updatedOrder.id.substring(0, 7)} has been updated to ${updatedOrder.status}.`,
     });
+    setLoadingAdmin(false);
   }
 
   return (

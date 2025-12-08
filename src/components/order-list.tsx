@@ -21,7 +21,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Edit, Save, X, Loader2 } from 'lucide-react';
-import { Timestamp } from 'firebase/firestore';
 
 export type Order = {
   id: string;
@@ -32,7 +31,7 @@ export type Order = {
   weight: number;
   status: string;
   total: number;
-  orderDate: Timestamp;
+  orderDate: Date;
   deliveryOption?: string;
   servicePackage: string;
   distance: number;

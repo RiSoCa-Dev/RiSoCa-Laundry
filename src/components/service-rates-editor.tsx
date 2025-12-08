@@ -1,41 +1,37 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, Edit, Save, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch } from 'firebase/firestore';
 
 type Rate = {
   id: string;
   name: string;
   price: number;
-  type: string;
+  type: 'service' | 'delivery';
 };
+
+const mockRates: Rate[] = [
+    { id: 'service-1', name: 'Wash, Dry, Fold (per 7.5kg load)', price: 180, type: 'service'},
+    { id: 'delivery-1', name: 'First 1 km', price: 0, type: 'delivery'},
+    { id: 'delivery-2', name: 'Each additional km', price: 20, type: 'delivery'},
+];
 
 export function ServiceRatesEditor() {
   const { toast } = useToast();
-  const firestore = useFirestore();
   
-  const ratesQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'service_rates');
-  }, [firestore]);
-
-  const { data: initialRates, isLoading: loading } = useCollection<Rate>(ratesQuery);
-
+  const [initialRates, setInitialRates] = useState<Rate[]>(mockRates);
   const [rates, setRates] = useState<Rate[]>([]);
+  const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (initialRates) {
-      setRates(initialRates);
-    }
+    setRates(initialRates);
   }, [initialRates]);
 
   const handlePriceChange = (id: string, newPrice: string) => {
@@ -46,37 +42,20 @@ export function ServiceRatesEditor() {
   };
 
   const handleSave = async () => {
-    if (!firestore) return;
     setSaving(true);
-    
-    const batch = writeBatch(firestore);
-    rates.forEach(rate => {
-        const rateRef = doc(firestore, 'service_rates', rate.id);
-        batch.update(rateRef, { price: rate.price });
+    // Simulate saving
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setInitialRates(rates); // Persist changes to "DB"
+    toast({
+      title: 'Success!',
+      description: 'Service rates have been updated.',
     });
-
-    try {
-      await batch.commit();
-      toast({
-        title: 'Success!',
-        description: 'Service rates have been updated.',
-      });
-      setIsEditing(false);
-    } catch (error: any) {
-      console.error('Error saving rates:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Save Failed',
-        description: error.message || 'Could not save the new rates.',
-      });
-      if (initialRates) setRates(initialRates);
-    } finally {
-      setSaving(false);
-    }
+    setIsEditing(false);
+    setSaving(false);
   };
   
   const handleCancel = () => {
-    if (initialRates) setRates(initialRates);
+    setRates(initialRates);
     setIsEditing(false);
   };
 
