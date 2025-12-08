@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -11,31 +11,15 @@ import {
 import { OrderList, Order } from '@/components/order-list';
 import { Loader2, Inbox } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, updateDoc, doc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import { updateDoc, doc } from 'firebase/firestore';
+import { useOrders } from '@/context/OrderContext';
 
 export default function AdminOrdersPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const { allOrders, loadingAdmin: ordersLoading } = useOrders();
 
-  const ordersQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'orders');
-  }, [firestore]);
-
-  const { data: adminOrders, isLoading: ordersLoading, error } = useCollection<Order>(ordersQuery);
-
-  useEffect(() => {
-    if (error) {
-      console.error('Error fetching admin orders:', error);
-      toast({
-          variant: 'destructive',
-          title: 'Error Fetching Orders',
-          description: 'Could not fetch orders from the database.',
-      });
-    }
-  }, [error, toast]);
-  
   const handleUpdateOrder = async (updatedOrder: Order) => {
     if (!firestore) return;
     const orderDocRef = doc(firestore, 'orders', updatedOrder.id);
@@ -75,9 +59,9 @@ export default function AdminOrdersPage() {
             <Loader2 className="h-12 w-12 mb-2 animate-spin" />
             <p>Loading all orders...</p>
           </div>
-        ) : adminOrders && adminOrders.length > 0 ? (
+        ) : allOrders && allOrders.length > 0 ? (
           <OrderList 
-            orders={adminOrders} 
+            orders={allOrders} 
             onUpdateOrder={handleUpdateOrder}
           />
         ) : (

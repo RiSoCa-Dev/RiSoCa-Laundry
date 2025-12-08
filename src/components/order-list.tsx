@@ -33,6 +33,9 @@ export type Order = {
   status: string;
   total: number;
   orderDate: Timestamp;
+  deliveryOption?: string;
+  servicePackage: string;
+  distance: number;
 };
 
 type OrderListProps = {
