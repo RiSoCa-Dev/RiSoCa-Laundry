@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -11,38 +10,20 @@ import {
 import { OrderList, Order } from '@/components/order-list';
 import { Loader2, Inbox } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore } from '@/firebase';
-import { updateDoc, doc } from 'firebase/firestore';
 import { useOrders } from '@/context/OrderContext';
 
 export default function AdminOrdersPage() {
   const { toast } = useToast();
-  const firestore = useFirestore();
-  const { allOrders, loadingAdmin: ordersLoading } = useOrders();
+  const { allOrders, loadingAdmin: ordersLoading, updateOrderStatus } = useOrders();
 
   const handleUpdateOrder = async (updatedOrder: Order) => {
-    if (!firestore) return;
-    const orderDocRef = doc(firestore, 'orders', updatedOrder.id);
-    
-    try {
-        await updateDoc(orderDocRef, {
-            status: updatedOrder.status,
-            weight: updatedOrder.weight,
-            load: updatedOrder.load,
-            total: updatedOrder.total,
-        });
+    // The logic is now simplified as it's handled globally in OrderContext
+    await updateOrderStatus(updatedOrder.id, updatedOrder.status);
 
-        toast({
-            title: 'Order Updated',
-            description: `Order ${updatedOrder.id} has been successfully updated.`,
-        });
-    } catch (error) {
-        toast({
-            variant: 'destructive',
-            title: 'Update Failed',
-            description: `Could not update order ${updatedOrder.id}. Please try again.`,
-        });
-    }
+    toast({
+        title: 'Order Updated',
+        description: `Order ${updatedOrder.id} has been successfully updated.`,
+    });
   }
 
   return (
