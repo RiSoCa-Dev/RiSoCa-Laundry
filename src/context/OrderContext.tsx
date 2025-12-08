@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
@@ -21,25 +22,28 @@ const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
-  const { profile } = useAuth();
+  const { profile, loading: profileLoading } = useAuth();
   const firestore = useFirestore();
   
-  // Hook for fetching the current user's orders
   const userOrdersQuery = useMemoFirebase(() => {
-    // Only run this query for non-admin users. Admins get their data from allOrdersQuery.
-    if (!user || !firestore || profile?.role === 'admin') return null;
+    // CRITICAL FIX: Do not run any query until the user's profile (and role) is loaded.
+    if (profileLoading || !user || !firestore || profile?.role === 'admin') {
+        return null;
+    }
     return query(collection(firestore, "orders"), where("userId", "==", user.uid), orderBy("orderDate", "desc"));
-  }, [user, firestore, profile]);
+  }, [user, firestore, profile, profileLoading]);
 
-  const { data: ordersData, isLoading: loading, error: userError } = useCollection<Order>(userOrdersQuery);
+  const { data: ordersData, isLoading: loading } = useCollection<Order>(userOrdersQuery);
 
-  // Hook for fetching ALL orders for the admin
   const allOrdersQuery = useMemoFirebase(() => {
-    if (!firestore || profile?.role !== 'admin') return null;
+    // CRITICAL FIX: Do not run any query until the user's profile (and role) is loaded.
+    if (profileLoading || !firestore || profile?.role !== 'admin') {
+      return null;
+    }
     return query(collection(firestore, 'orders'), orderBy("orderDate", "desc"));
-  }, [firestore, profile]);
+  }, [firestore, profile, profileLoading]);
 
-  const { data: allOrdersData, isLoading: loadingAdmin, error: adminError } = useCollection<Order>(allOrdersQuery);
+  const { data: allOrdersData, isLoading: loadingAdmin } = useCollection<Order>(allOrdersQuery);
 
   const addOrder = async (newOrderData: Omit<Order, 'id'| 'orderDate'>) => {
     if (!user || !firestore) return;
@@ -51,7 +55,6 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       orderDate: serverTimestamp(),
     };
     
-    // Use non-blocking write with error handling
     addDoc(ordersCollectionRef, orderPayload).catch(err => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: ordersCollectionRef.path,
@@ -66,7 +69,6 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
 
     const orderDocRef = doc(firestore, 'orders', orderId);
     
-    // Use non-blocking write with error handling
     updateDoc(orderDocRef, { status }).catch(err => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: orderDocRef.path,
@@ -79,9 +81,11 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const memoizedOrders = useMemo(() => ordersData || [], [ordersData]);
   const memoizedAllOrders = useMemo(() => allOrdersData || [], [allOrdersData]);
 
+  const isLoadingCombined = profileLoading || loading;
+  const isAdminLoadingCombined = profileLoading || loadingAdmin;
 
   return (
-    <OrderContext.Provider value={{ orders: memoizedOrders, allOrders: memoizedAllOrders, addOrder, updateOrderStatus, loading, loadingAdmin }}>
+    <OrderContext.Provider value={{ orders: memoizedOrders, allOrders: memoizedAllOrders, addOrder, updateOrderStatus, loading: isLoadingCombined, loadingAdmin: isAdminLoadingCombined }}>
       {children}
     </OrderContext.Provider>
   );
