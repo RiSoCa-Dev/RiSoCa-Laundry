@@ -27,20 +27,25 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
 
   // Unified query. It will be null until all dependencies are ready.
   const ordersQuery = useMemoFirebase(() => {
-    // CRITICAL FIX: Do not proceed until profile loading is complete and we have a user and firestore instance.
-    if (profileLoading || !firestore || !user) {
+    // Do not proceed until we know the user's status and have firestore.
+    if (profileLoading || !firestore) {
+      return null;
+    }
+
+    // If there's no logged-in user, there's nothing to query.
+    if (!user) {
       return null;
     }
     
-    // At this point, `profile` is either loaded or null.
-    
-    // Admin gets all orders.
-    if (profile?.role === 'admin') {
+    // DEFINITIVE FIX:
+    // Only query for ALL orders if the profile is loaded AND the role is 'admin'.
+    if (profile && profile.role === 'admin') {
       return query(collection(firestore, 'orders'), orderBy("orderDate", "desc"));
     }
     
-    // Customer gets only their orders.
-    // This runs for customers or if the profile is somehow null after loading.
+    // For any other case (a loaded customer profile or while the profile is still loading for a logged-in user),
+    // default to the secure query that only gets the user's own orders.
+    // This prevents the race condition where the app tries to fetch all orders for a non-admin user.
     return query(collection(firestore, 'orders'), where("userId", "==", user.uid), orderBy("orderDate", "desc"));
 
   }, [user, firestore, profile, profileLoading]);
@@ -68,7 +73,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateOrderStatus = async (orderId: string, status: string) => {
-    if (!firestore || !profile || profile.role !== 'admin') return;
+    if (!firestore) return;
 
     const orderRef = doc(firestore, 'orders', orderId);
     
