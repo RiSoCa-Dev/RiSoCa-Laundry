@@ -290,6 +290,22 @@
           ]
         }
       },
+       {
+        "path": "/allOrders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "A collection containing a copy of every order from all users. This collection is intended for admin use only and is secured by Firestore rules to be readable/writable only by users with an 'admin' role.",
+          "params": [
+            {
+              "name": "orderId",
+              "description": "The unique identifier of the order."
+            }
+          ]
+        }
+      },
       {
         "path": "/services/{serviceId}",
         "definition": {

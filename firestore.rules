@@ -6,6 +6,7 @@
  *   - /addresses/{addressId}: Subcollection for a user's addresses. Owner-only access.
  *   - /notifications/{notificationId}: Subcollection for a user's notifications. Owner-only access.
  *   - /orders/{orderId}: Subcollection for a user's laundry orders. Owner-only access.
+ * - /allOrders/{orderId}: A collection containing a copy of all orders. Admin-only access.
  * - /services/{serviceId} & /service_rates: Publicly readable collections for application configuration.
  *
  * Key Security Decisions:
@@ -53,13 +54,18 @@ service cloud.firestore {
       
       // Orders are nested under the user, only the user can manage them.
       match /orders/{orderId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) || isAdmin();
       }
     }
     
     //-------------------------------------------------------------------------
     // Global & Admin-Facing Collections
     //-------------------------------------------------------------------------
+
+    // Admin-only collection for all orders.
+    match /allOrders/{orderId} {
+      allow read, list, write: if isAdmin();
+    }
 
     // Publicly readable, admin-writable services.
     match /services/{serviceId} {

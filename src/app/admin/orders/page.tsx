@@ -14,14 +14,16 @@ import { useOrders } from '@/context/OrderContext';
 
 export default function AdminOrdersPage() {
   const { toast } = useToast();
-  const { allOrders, loadingAdmin: ordersLoading, updateOrderStatus } = useOrders();
+  // Use 'allOrders' and 'loadingAdmin' from the context for the admin view.
+  const { allOrders, loadingAdmin, updateOrderStatus } = useOrders();
 
   const handleUpdateOrder = async (updatedOrder: Order) => {
+    // The context's updateOrderStatus now handles the batch write.
     await updateOrderStatus(updatedOrder.id, updatedOrder.status, updatedOrder.userId);
 
     toast({
         title: 'Order Updated',
-        description: `Order for ${updatedOrder.customerName} has been updated to ${updatedOrder.status}.`,
+        description: `Order ${updatedOrder.id} has been updated to ${updatedOrder.status}.`,
     });
   }
 
@@ -34,7 +36,7 @@ export default function AdminOrdersPage() {
         </div>
       </CardHeader>
       <CardContent>
-        {ordersLoading ? (
+        {loadingAdmin ? (
           <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
             <Loader2 className="h-12 w-12 mb-2 animate-spin" />
             <p>Loading all orders...</p>

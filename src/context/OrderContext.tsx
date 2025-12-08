@@ -1,20 +1,20 @@
 'use client';
 
-import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import type { Order } from '@/components/order-list';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, addDoc, updateDoc, doc, serverTimestamp, query, orderBy, getDocs } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, serverTimestamp, query, orderBy, writeBatch } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useAuth } from './AuthContext';
 
 interface OrderContextType {
-  orders: Order[];
-  allOrders: Order[];
+  orders: Order[]; // Customer's own orders
+  allOrders: Order[]; // Aggregated orders for admin
   addOrder: (order: Omit<Order, 'id' | 'orderDate'>) => Promise<void>;
   updateOrderStatus: (orderId: string, status: string, userId: string) => Promise<void>;
-  loading: boolean;
-  loadingAdmin: boolean;
+  loading: boolean; // Loading state for customer orders
+  loadingAdmin: boolean; // Loading state for admin orders
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
@@ -23,51 +23,22 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
   const { profile, loading: profileLoading } = useAuth();
   const firestore = useFirestore();
-  const [allOrders, setAllOrders] = useState<Order[]>([]);
-  const [loadingAdmin, setLoadingAdmin] = useState(true);
 
-  // Customer-specific orders query from their nested subcollection.
-  const ordersQuery = useMemoFirebase(() => {
-    if (!firestore || !user) {
-      return null;
-    }
+  // --- Customer-specific data fetching ---
+  const customerOrdersQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    // Securely query only the nested subcollection for the logged-in user.
     return query(collection(firestore, `users/${user.uid}/orders`), orderBy("orderDate", "desc"));
   }, [user, firestore]);
-  
-  const { data: ordersData, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
+  const { data: customerOrdersData, isLoading: customerOrdersLoading } = useCollection<Order>(customerOrdersQuery);
 
-  // Admin-specific logic for fetching all orders.
-  useEffect(() => {
-    async function fetchAllOrders() {
-      if (profileLoading || !firestore || !profile || profile.role !== 'admin') {
-        setLoadingAdmin(false);
-        setAllOrders([]);
-        return;
-      }
-      
-      setLoadingAdmin(true);
-      // In a real-world, large-scale app, this is inefficient.
-      // A better approach would be a separate 'allOrders' collection managed by backend functions.
-      // For this project, we will fetch users and then their orders.
-      const usersSnapshot = await getDocs(collection(firestore, 'users'));
-      const ordersPromises = usersSnapshot.docs.map(userDoc => 
-        getDocs(collection(firestore, `users/${userDoc.id}/orders`))
-      );
-      
-      const allOrdersSnapshots = await Promise.all(ordersPromises);
-      const fetchedOrders: Order[] = [];
-      allOrdersSnapshots.forEach(ordersSnapshot => {
-        ordersSnapshot.forEach(orderDoc => {
-          fetchedOrders.push({ id: orderDoc.id, ...orderDoc.data() } as Order);
-        });
-      });
-
-      setAllOrders(fetchedOrders.sort((a, b) => b.orderDate.toMillis() - a.orderDate.toMillis()));
-      setLoadingAdmin(false);
-    }
-
-    fetchAllOrders();
-  }, [firestore, profile, profileLoading]);
+  // --- Admin-specific data fetching ---
+  const adminOrdersQuery = useMemoFirebase(() => {
+    // Only admins should query the /allOrders collection.
+    if (!firestore || !profile || profile.role !== 'admin') return null;
+    return query(collection(firestore, 'allOrders'), orderBy("orderDate", "desc"));
+  }, [firestore, profile]);
+  const { data: allOrdersData, isLoading: adminOrdersLoading } = useCollection<Order>(adminOrdersQuery);
 
   const addOrder = async (newOrderData: Omit<Order, 'id' | 'orderDate'>) => {
     if (!user || !firestore) return;
@@ -78,10 +49,19 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       userId: user.uid,
     };
     
-    // Write ONLY to the user's nested subcollection.
-    const ordersColRef = collection(firestore, `users/${user.uid}/orders`);
-    addDoc(ordersColRef, orderPayload).catch(err => {
-      console.error("Add order failed:", err);
+    const newOrderId = doc(collection(firestore, 'id_generator')).id;
+
+    const userOrderRef = doc(firestore, `users/${user.uid}/orders`, newOrderId);
+    const adminOrderRef = doc(firestore, 'allOrders', newOrderId);
+
+    const batch = writeBatch(firestore);
+    
+    batch.set(userOrderRef, orderPayload);
+    batch.set(adminOrderRef, { ...orderPayload, id: newOrderId }); // Ensure ID is part of the admin doc
+
+    batch.commit().catch(err => {
+      console.error("Batch order creation failed:", err);
+      // It's hard to know which write failed, but we can emit a generic one.
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: `users/${user.uid}/orders`,
         operation: 'create',
@@ -93,24 +73,39 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const updateOrderStatus = async (orderId: string, status: string, userId: string) => {
     if (!firestore || !userId) return;
 
-    // Admin updates the order in the specific user's subcollection.
-    const orderRef = doc(firestore, `users/${userId}/orders`, orderId);
-    
-    updateDoc(orderRef, { status }).catch(err => {
+    const userOrderRef = doc(firestore, `users/${userId}/orders`, orderId);
+    const adminOrderRef = doc(firestore, 'allOrders', orderId);
+
+    const batch = writeBatch(firestore);
+
+    batch.update(userOrderRef, { status });
+    batch.update(adminOrderRef, { status });
+
+    batch.commit().catch(err => {
         console.error("Order status update failed:", err);
         errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: `users/${userId}/orders/${orderId}`,
+        path: `allOrders/${orderId}`, // Emit error for the more restrictive path.
         operation: 'update',
         requestResourceData: { status },
         }));
     });
   };
   
-  const memoizedOrders = useMemo(() => ordersData || [], [ordersData]);
-  const isLoadingCombined = profileLoading || ordersLoading;
+  const memoizedCustomerOrders = useMemo(() => customerOrdersData || [], [customerOrdersData]);
+  const memoizedAdminOrders = useMemo(() => allOrdersData || [], [allOrdersData]);
 
+  // Combined loading state for the user's view.
+  const isLoadingCombined = profileLoading || customerOrdersLoading;
+  
   return (
-    <OrderContext.Provider value={{ orders: memoizedOrders, allOrders, addOrder, updateOrderStatus, loading: isLoadingCombined, loadingAdmin }}>
+    <OrderContext.Provider value={{ 
+        orders: memoizedCustomerOrders, 
+        allOrders: memoizedAdminOrders,
+        addOrder, 
+        updateOrderStatus, 
+        loading: isLoadingCombined, 
+        loadingAdmin: adminOrdersLoading
+    }}>
       {children}
     </OrderContext.Provider>
   );
