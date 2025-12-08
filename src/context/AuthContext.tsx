@@ -27,32 +27,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [profileLoading, setProfileLoading] = useState(true);
 
     useEffect(() => {
+        // Always set loading to true when user or firestore instance changes.
+        setProfileLoading(true);
+
         if (isUserLoading) {
-            setProfileLoading(true);
+            // If the user object is still loading, we can't do anything yet.
+            // The loading state is already true, so we just wait.
             return;
         }
 
-        if (!user) {
+        if (!user || !firestore) {
+            // If there's no user or no firestore, we are done loading.
             setProfile(null);
             setProfileLoading(false);
             return;
         }
-
-        // CRITICAL FIX: Wait for firestore instance to be available.
-        // This prevents a race condition on login where `useFirestore()` might not be ready
-        // at the exact moment `useUser()` updates.
-        if (!firestore) {
-             setProfileLoading(false); // Stop loading, as we can't proceed.
-             return;
-        }
-
+        
+        // At this point, we have a user and a firestore instance.
+        // We subscribe to their profile document.
         const profileDocRef = doc(firestore, 'users', user.uid);
         const unsubscribe = onSnapshot(profileDocRef, (docSnap) => {
             if (docSnap.exists()) {
                 setProfile(docSnap.data() as UserProfile);
             } else {
+                // User document doesn't exist, which might be an error state
+                // or just a user that hasn't completed signup.
                 setProfile(null);
             }
+            // Once we get a response (or a confirmation of non-existence), profile loading is done.
             setProfileLoading(false);
         }, (error) => {
             console.error("Error fetching user profile:", error);
@@ -60,16 +62,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setProfileLoading(false);
         });
 
+        // Cleanup subscription on unmount or if dependencies change.
         return () => unsubscribe();
     }, [user, isUserLoading, firestore]);
 
-    const value = {
-        profile,
-        loading: profileLoading || isUserLoading,
-    };
+    // The overall loading state depends on BOTH the user object loading AND the profile document loading.
+    const isLoading = isUserLoading || profileLoading;
 
     return (
-        <AuthContext.Provider value={value}>
+        <AuthContext.Provider value={{ profile, loading: isLoading }}>
             {children}
         </AuthContext.Provider>
     );
