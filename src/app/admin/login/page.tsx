@@ -14,14 +14,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { LogIn } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { useAuth, useFirestore } from '@/firebase'
-import { signInWithEmailAndPassword, getAuth } from 'firebase/auth'
+import { useFirestore } from '@/firebase'
+import { signInWithEmailAndPassword, getAuth, signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 
 export default function AdminLoginPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const auth = useAuth()
+  const auth = getAuth()
   const firestore = useFirestore()
 
   const [email, setEmail] = useState('')
@@ -43,7 +43,7 @@ export default function AdminLoginPage() {
         const userDoc = await getDoc(userDocRef);
 
         if (!userDoc.exists() || userDoc.data().role !== 'admin') {
-            await auth.signOut(); // Log out non-admin users
+            await signOut(auth); // Log out non-admin users
             throw new Error("Access denied. You are not an administrator.");
         }
 
