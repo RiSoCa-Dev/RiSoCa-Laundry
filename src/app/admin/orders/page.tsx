@@ -14,16 +14,17 @@ import { useOrders } from '@/context/OrderContext';
 
 export default function AdminOrdersPage() {
   const { toast } = useToast();
+  // allOrders is now the single source of truth from the context
   const { allOrders, loadingAdmin: ordersLoading, updateOrderStatus } = useOrders();
 
   const handleUpdateOrder = async (updatedOrder: Order) => {
     // The logic is now simplified as it's handled globally in OrderContext
-    // We must pass the userId to construct the correct path for the batch update
-    await updateOrderStatus(updatedOrder.id, updatedOrder.status, updatedOrder.userId);
+    // We no longer need to pass the userId since the admin operates on the global list
+    await updateOrderStatus(updatedOrder.id, updatedOrder.status);
 
     toast({
         title: 'Order Updated',
-        description: `Order #${updatedOrder.id.substring(0, 7)}... has been updated.`,
+        description: `Order #${updatedOrder.id.substring(0, 7)}... has been updated to ${updatedOrder.status}.`,
     });
   }
 
