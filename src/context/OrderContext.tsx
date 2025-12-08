@@ -3,7 +3,7 @@
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import type { Order } from '@/components/order-list';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, writeBatch, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, writeBatch, doc, serverTimestamp, query, orderBy, where } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useAuth } from './AuthContext';
@@ -26,9 +26,9 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
 
   // --- Customer-specific data fetching ---
   const customerOrdersQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (!firestore || !user || (profile && profile.role === 'admin')) return null;
     return query(collection(firestore, `users/${user.uid}/orders`), orderBy("orderDate", "desc"));
-  }, [user, firestore]);
+  }, [firestore, user, profile]);
   const { data: customerOrdersData, isLoading: customerOrdersLoading } = useCollection<Order>(customerOrdersQuery);
 
   // --- Admin-specific data fetching ---
@@ -37,6 +37,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     return query(collection(firestore, 'allOrders'), orderBy("orderDate", "desc"));
   }, [firestore, profile]);
   const { data: allOrdersData, isLoading: adminOrdersLoading } = useCollection<Order>(adminOrdersQuery);
+
 
   const addOrder = async (newOrderData: Omit<Order, 'id' | 'orderDate'>) => {
     if (!user || !firestore) return;
@@ -91,10 +92,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const memoizedCustomerOrders = useMemo(() => customerOrdersData || [], [customerOrdersData]);
   const memoizedAdminOrders = useMemo(() => allOrdersData || [], [allOrdersData]);
 
-  // Combined loading state for customer orders. It's loading if we are checking auth or fetching orders.
   const isLoading = isUserLoading || customerOrdersLoading;
-  
-  // Loading state for admin. It's loading if the profile is loading (to check the role) or if admin-specific data is fetching.
   const isAdminLoading = profileLoading || adminOrdersLoading;
 
   return (
