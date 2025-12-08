@@ -26,11 +26,12 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   
   // Hook for fetching the current user's orders
   const userOrdersQuery = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
+    // Only run this query for non-admin users. Admins get their data from allOrdersQuery.
+    if (!user || !firestore || profile?.role === 'admin') return null;
     return query(collection(firestore, "orders"), where("userId", "==", user.uid), orderBy("orderDate", "desc"));
-  }, [user, firestore]);
+  }, [user, firestore, profile]);
 
-  const { data: orders, isLoading: loading, error: userError } = useCollection<Order>(userOrdersQuery);
+  const { data: ordersData, isLoading: loading, error: userError } = useCollection<Order>(userOrdersQuery);
 
   // Hook for fetching ALL orders for the admin
   const allOrdersQuery = useMemoFirebase(() => {
@@ -75,7 +76,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     });
   };
   
-  const memoizedOrders = useMemo(() => orders || [], [orders]);
+  const memoizedOrders = useMemo(() => ordersData || [], [ordersData]);
   const memoizedAllOrders = useMemo(() => allOrdersData || [], [allOrdersData]);
 
 
