@@ -25,27 +25,24 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const { profile, loading: profileLoading } = useAuth();
   const firestore = useFirestore();
 
-  // Unified query. It will be null until all dependencies are ready.
+  // DEFINITIVE FIX: This logic is now stricter. It will not return any query
+  // until it knows for sure what the user's role is.
   const ordersQuery = useMemoFirebase(() => {
-    // Do not proceed until we know the user's status and have firestore.
-    if (profileLoading || !firestore) {
+    // 1. Wait for all dependencies to be ready.
+    // If profile is loading, or firestore/user aren't available, do nothing.
+    if (profileLoading || !firestore || !user) {
       return null;
     }
 
-    // If there's no logged-in user, there's nothing to query.
-    if (!user) {
-      return null;
-    }
-    
-    // DEFINITIVE FIX:
-    // Only query for ALL orders if the profile is loaded AND the role is 'admin'.
+    // 2. We now have a loaded profile or null. Check the role EXPLICITLY.
     if (profile && profile.role === 'admin') {
+      // User is an admin, fetch all orders.
       return query(collection(firestore, 'orders'), orderBy("orderDate", "desc"));
     }
     
-    // For any other case (a loaded customer profile or while the profile is still loading for a logged-in user),
-    // default to the secure query that only gets the user's own orders.
-    // This prevents the race condition where the app tries to fetch all orders for a non-admin user.
+    // 3. If it's not an admin, it MUST be a customer. Fetch only their orders.
+    // This runs even if the profile is null for a split second after login,
+    // ensuring we never try to fetch all orders for a non-admin.
     return query(collection(firestore, 'orders'), where("userId", "==", user.uid), orderBy("orderDate", "desc"));
 
   }, [user, firestore, profile, profileLoading]);
@@ -58,7 +55,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     const orderPayload = {
       ...newOrderData,
       orderDate: serverTimestamp(),
-      userId: user.uid, // Ensure userId is always set
+      userId: user.uid,
     };
     
     const ordersColRef = collection(firestore, 'orders');

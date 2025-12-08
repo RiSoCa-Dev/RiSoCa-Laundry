@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Package, FileText, MapPin, Phone, HelpCircle, UserPlus, ArrowRight, ClipboardList, Bike, Download, WashingMachine, DollarSign, User, ShieldCheck, Loader2 } from 'lucide-react';
@@ -36,12 +36,14 @@ export default function Home() {
   const loading = profileLoading || isUserLoading;
 
   useEffect(() => {
+    // Wait until loading is finished before trying to redirect.
     if (!loading && profile?.role === 'admin') {
       router.replace('/admin');
     }
   }, [loading, profile, router]);
 
-  if (loading || (!isUserLoading && profile?.role === 'admin')) {
+  // Combined loading state. Show loader if auth is still checking OR if profile is loading.
+  if (loading) {
      return (
       <div className="flex flex-col h-screen">
         <AppHeader showLogo={true} />
@@ -53,7 +55,21 @@ export default function Home() {
     );
   }
   
-  const gridItems = profile?.role === 'admin' ? adminGridItems : customerGridItems;
+  // If the profile is loaded and the user is an admin, show a loader while redirecting.
+  // This prevents the customer dashboard from flashing before the redirect happens.
+  if (profile?.role === 'admin') {
+     return (
+      <div className="flex flex-col h-screen">
+        <AppHeader showLogo={true} />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </main>
+        <AppFooter />
+      </div>
+    );
+  }
+  
+  const gridItems = customerGridItems;
 
   return (
       <HomePageWrapper gridItems={gridItems}>
