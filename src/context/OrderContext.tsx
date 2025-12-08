@@ -21,7 +21,7 @@ const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
-  const { profile, loading: profileLoading } = useAuth();
+  const { profile } = useAuth();
   const firestore = useFirestore();
 
   // --- Customer-specific data fetching ---
@@ -49,6 +49,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       userId: user.uid,
     };
     
+    // Generate a new ID once for both documents.
     const newOrderId = doc(collection(firestore, 'id_generator')).id;
 
     const userOrderRef = doc(firestore, `users/${user.uid}/orders`, newOrderId);
@@ -56,8 +57,9 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
 
     const batch = writeBatch(firestore);
     
+    // Use the same payload but ensure the ID is set for the admin copy
     batch.set(userOrderRef, orderPayload);
-    batch.set(adminOrderRef, { ...orderPayload, id: newOrderId }); // Ensure ID is part of the admin doc
+    batch.set(adminOrderRef, { ...orderPayload, id: newOrderId });
 
     batch.commit().catch(err => {
       console.error("Batch order creation failed:", err);
@@ -94,16 +96,13 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const memoizedCustomerOrders = useMemo(() => customerOrdersData || [], [customerOrdersData]);
   const memoizedAdminOrders = useMemo(() => allOrdersData || [], [allOrdersData]);
 
-  // Combined loading state for the user's view.
-  const isLoadingCombined = profileLoading || customerOrdersLoading;
-  
   return (
     <OrderContext.Provider value={{ 
         orders: memoizedCustomerOrders, 
         allOrders: memoizedAdminOrders,
         addOrder, 
         updateOrderStatus, 
-        loading: isLoadingCombined, 
+        loading: customerOrdersLoading, 
         loadingAdmin: adminOrdersLoading
     }}>
       {children}
