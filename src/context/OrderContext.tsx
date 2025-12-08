@@ -28,21 +28,26 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   // DEFINITIVE FIX: This logic is now stricter. It will not return any query
   // until it knows for sure what the user's role is.
   const ordersQuery = useMemoFirebase(() => {
-    // 1. Wait for all dependencies to be ready.
-    // If profile is loading, or firestore/user aren't available, do nothing.
-    if (profileLoading || !firestore || !user) {
+    // 1. If the profile is still loading, or we don't have a firestore instance,
+    // we MUST return null. Do not proceed. This is the key to preventing the race condition.
+    if (profileLoading || !firestore) {
       return null;
     }
 
-    // 2. We now have a loaded profile or null. Check the role EXPLICITLY.
+    // 2. If loading is done, but there is no user, there are no orders to fetch.
+    if (!user) {
+      return null;
+    }
+    
+    // 3. At this point, loading is finished and we have a user.
+    // Now we can safely check the role from the loaded profile.
     if (profile && profile.role === 'admin') {
-      // User is an admin, fetch all orders.
+      // User is a confirmed admin, fetch all orders.
       return query(collection(firestore, 'orders'), orderBy("orderDate", "desc"));
     }
     
-    // 3. If it's not an admin, it MUST be a customer. Fetch only their orders.
-    // This runs even if the profile is null for a split second after login,
-    // ensuring we never try to fetch all orders for a non-admin.
+    // 4. If not an admin, they must be a customer. Fetch only their orders.
+    // This query is safe because `list` is disallowed, but querying with `where` is allowed by the rules.
     return query(collection(firestore, 'orders'), where("userId", "==", user.uid), orderBy("orderDate", "desc"));
 
   }, [user, firestore, profile, profileLoading]);
