@@ -123,5 +123,26 @@ body {
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
     overflow-x: hidden;
+    overscroll-behavior: contain;
+    /* Ensure scrolling is visible on mobile */
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground)) transparent;
+  }
+  
+  .scrollable::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollable::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollable::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground));
+    border-radius: 3px;
+  }
+  
+  .scrollable::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--foreground) / 0.5);
   }
 }
