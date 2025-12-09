@@ -15,20 +15,15 @@ const adminGridItems = [
 export default function AdminDashboardPage() {
   return (
       <HomePageWrapper gridItems={adminGridItems}>
-        <div className="flex flex-col h-full select-none">
-          <main className="flex-1 overflow-y-auto overflow-x-hidden scrollable pb-20">
-            <div className="container mx-auto px-4 py-4 md:py-8 flex flex-col items-center text-center min-h-full">
-            
-            <div className="flex flex-col items-center mb-8">
-                <h1 className="font-bold text-primary text-4xl md:text-5xl">Admin Dashboard</h1>
-                <p className="text-lg md:text-xl text-muted-foreground mt-1 max-w-sm">Select an option to manage the application.</p>
-            </div>
+        <div className="flex flex-col items-center text-center w-full">
+          <div className="flex flex-col items-center mb-6 md:mb-8">
+            <h1 className="font-bold text-primary text-3xl sm:text-4xl md:text-5xl">Admin Dashboard</h1>
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mt-1 max-w-sm">Select an option to manage the application.</p>
+          </div>
 
-            <div className="grid grid-cols-3 gap-4 w-full max-w-md">
-              {/* Grid items will be rendered by HomePageWrapper */}
-            </div>
-            </div>
-          </main>
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full max-w-md">
+            {/* Grid items will be rendered by HomePageWrapper */}
+          </div>
         </div>
       </HomePageWrapper>
   );

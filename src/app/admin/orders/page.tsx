@@ -175,7 +175,7 @@ export default function AdminOrdersPage() {
 
   return (
     <>
-      <Card className="w-full flex flex-col">
+      <Card className="w-full flex flex-col max-h-[calc(100vh-12rem)] sm:max-h-[calc(100vh-14rem)]">
         <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-background z-10 border-b rounded-t-lg">
           <div>
             <CardTitle>Orders</CardTitle>

@@ -84,11 +84,13 @@ export default function AdminBranchesPage() {
   };
 
   return (
-    <div className="w-full max-w-5xl px-2 sm:px-0 space-y-6">
-      <div className="flex flex-col items-center text-center">
+    <div className="w-full flex flex-col items-center space-y-6">
+      <div className="flex flex-col items-center text-center w-full mb-2">
         <h1 className="text-2xl md:text-4xl font-bold text-primary">Branches</h1>
         <p className="text-sm md:text-lg text-muted-foreground mt-2">Manage branch info and activation.</p>
       </div>
+      
+      <div className="w-full max-w-5xl space-y-6">
 
       <Card>
         <CardHeader>
@@ -167,6 +169,7 @@ export default function AdminBranchesPage() {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
