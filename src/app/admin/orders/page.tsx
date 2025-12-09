@@ -15,6 +15,30 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ManualOrderDialog } from '@/components/manual-order-dialog';
 
+// Function to generate a sequential RKR order ID for admin
+const generateAdminOrderId = (orders: Order[]) => {
+  try {
+    if (orders.length === 0) {
+      return 'RKR000';
+    }
+
+    const latestOrderNumber = orders
+      .map(o => parseInt(o.id.replace('RKR', ''), 10))
+      .filter(n => !isNaN(n))
+      .sort((a, b) => b - a)[0];
+
+    const nextOrderNumber = isFinite(latestOrderNumber) ? latestOrderNumber + 1 : 0;
+    
+    return `RKR${String(nextOrderNumber).padStart(3, '0')}`;
+  } catch (error) {
+    console.error("Failed to generate order ID from existing orders", error);
+    // Fallback to random if parsing fails
+    const orderNumber = Math.floor(Math.random() * 1000);
+    return `RKR${String(orderNumber).padStart(3, '0')}`;
+  }
+};
+
+
 export default function AdminOrdersPage() {
   const { toast } = useToast();
   const [allOrders, setAllOrders] = useState<Order[]>([]);
@@ -50,7 +74,7 @@ export default function AdminOrdersPage() {
   const handleAddOrder = async (newOrder: Omit<Order, 'id' | 'orderDate' | 'userId'>) => {
     const orderToAdd: Order = {
       ...newOrder,
-      id: `RKR${String(Math.floor(Math.random() * 900) + 100).padStart(3, '0')}`,
+      id: generateAdminOrderId(allOrders),
       userId: 'admin-manual',
       orderDate: new Date(),
     };

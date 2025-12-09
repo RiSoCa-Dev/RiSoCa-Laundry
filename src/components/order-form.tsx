@@ -55,11 +55,32 @@ type PendingOrder = {
     loads: number;
 };
 
-// Function to generate a random RKR order ID
+// Function to generate a sequential RKR order ID
 const generateOrderId = () => {
-  const orderNumber = Math.floor(Math.random() * 900) + 100; // Random number between 100 and 999
-  return `RKR${String(orderNumber).padStart(3, '0')}`;
+  try {
+    const storedOrders = localStorage.getItem('rkr-orders');
+    const orders: Order[] = storedOrders ? JSON.parse(storedOrders) : [];
+    
+    if (orders.length === 0) {
+      return 'RKR000';
+    }
+
+    const latestOrderNumber = orders
+      .map(o => parseInt(o.id.replace('RKR', ''), 10))
+      .filter(n => !isNaN(n))
+      .sort((a, b) => b - a)[0];
+
+    const nextOrderNumber = isFinite(latestOrderNumber) ? latestOrderNumber + 1 : 0;
+    
+    return `RKR${String(nextOrderNumber).padStart(3, '0')}`;
+  } catch (error) {
+    console.error("Failed to generate order ID from localStorage", error);
+    // Fallback to random if parsing fails
+    const orderNumber = Math.floor(Math.random() * 1000);
+    return `RKR${String(orderNumber).padStart(3, '0')}`;
+  }
 };
+
 
 export function OrderForm() {
   const router = useRouter();
