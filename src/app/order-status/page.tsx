@@ -18,19 +18,7 @@ export default function OrderStatusPage() {
   const [searchedOrder, setSearchedOrder] = useState<Order | null>(null);
   const [searchAttempted, setSearchAttempted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [allOrders, setAllOrders] = useState<Order[]>([]);
   const { toast } = useToast();
-
-  useEffect(() => {
-    try {
-      const storedOrders = localStorage.getItem('rkr-orders');
-      if (storedOrders) {
-        setAllOrders(JSON.parse(storedOrders).map((o: Order) => ({...o, orderDate: new Date(o.orderDate)})));
-      }
-    } catch (error) {
-      console.error("Failed to parse orders from localStorage", error);
-    }
-  }, []);
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -48,6 +36,16 @@ export default function OrderStatusPage() {
 
     // Simulate API call to find the order
     setTimeout(() => {
+      let allOrders: Order[] = [];
+      try {
+        const storedOrders = localStorage.getItem('rkr-orders');
+        if (storedOrders) {
+          allOrders = JSON.parse(storedOrders).map((o: Order) => ({...o, orderDate: new Date(o.orderDate)}));
+        }
+      } catch (error) {
+        console.error("Failed to parse orders from localStorage during search", error);
+      }
+      
       const foundOrder = allOrders.find(o => {
         const orderIdMatch = o.id.toLowerCase() === orderId.trim().toLowerCase();
         if (!orderIdMatch) return false;
