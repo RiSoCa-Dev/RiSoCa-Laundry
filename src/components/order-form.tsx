@@ -243,6 +243,7 @@ export function OrderForm() {
         status: 'Order Placed',
         total: pendingOrder.pricing.computedPrice,
         orderDate: new Date(),
+        isPaid: false,
         servicePackage: pendingOrder.orderData.servicePackage,
         distance: pendingOrder.orderData.distance,
         deliveryOption: customerData.deliveryOption

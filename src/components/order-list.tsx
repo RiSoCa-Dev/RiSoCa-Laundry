@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Edit, Save, X, Loader2 } from 'lucide-react';
+import { Switch } from './ui/switch';
 
 export type Order = {
   id: string;
@@ -32,6 +33,7 @@ export type Order = {
   status: string;
   total: number;
   orderDate: Date;
+  isPaid: boolean;
   deliveryOption?: string;
   servicePackage: string;
   distance: number;
@@ -73,12 +75,16 @@ const getStatusColor = (status: string) => {
   }
 };
 
+const getPaymentStatusColor = (isPaid: boolean) => {
+    return isPaid ? 'bg-green-500' : 'bg-red-500';
+}
+
 function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: OrderListProps['onUpdateOrder'] }) {
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [editableOrder, setEditableOrder] = useState(order);
 
-    const handleFieldChange = (field: keyof Order, value: string | number) => {
+    const handleFieldChange = (field: keyof Order, value: string | number | boolean) => {
         const numericFields = ['weight', 'load', 'total'];
         const isNumeric = numericFields.includes(field as string);
         setEditableOrder(prev => ({
@@ -123,6 +129,19 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                     <Input type="number" value={editableOrder.total.toString()} onChange={e => handleFieldChange('total', e.target.value)} className="h-8 w-28" disabled={isSaving}/>
                 ) : (
                     `₱${order.total.toFixed(2)}`
+                )}
+            </TableCell>
+             <TableCell>
+                {isEditing ? (
+                    <Switch
+                        checked={editableOrder.isPaid}
+                        onCheckedChange={(checked) => handleFieldChange('isPaid', checked)}
+                        disabled={isSaving}
+                    />
+                ) : (
+                   <Badge className={`${getPaymentStatusColor(order.isPaid)} hover:${getPaymentStatusColor(order.isPaid)} text-white`}>
+                       {order.isPaid ? 'Paid' : 'Unpaid'}
+                    </Badge>
                 )}
             </TableCell>
             <TableCell>
@@ -170,7 +189,7 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
     const [isSaving, setIsSaving] = useState(false);
     const [editableOrder, setEditableOrder] = useState(order);
 
-    const handleFieldChange = (field: keyof Order, value: string | number) => {
+    const handleFieldChange = (field: keyof Order, value: string | number | boolean) => {
         const numericFields = ['weight', 'load', 'total'];
         const isNumeric = numericFields.includes(field as string);
         setEditableOrder(prev => ({
@@ -239,6 +258,20 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                     <Label htmlFor={`total-mob-${order.id}`}>Total (₱)</Label>
                     <Input id={`total-mob-${order.id}`} type="number" value={editableOrder.total.toString()} onChange={e => handleFieldChange('total', e.target.value)} className="h-8" disabled={!isEditing || isSaving} />
                 </div>
+                <div className="text-sm flex items-center justify-between">
+                    <Label>Payment</Label>
+                    {isEditing ? (
+                        <Switch
+                            checked={editableOrder.isPaid}
+                            onCheckedChange={(checked) => handleFieldChange('isPaid', checked)}
+                            disabled={isSaving}
+                        />
+                    ) : (
+                    <Badge className={`${getPaymentStatusColor(order.isPaid)} hover:${getPaymentStatusColor(order.isPaid)} text-white`}>
+                        {order.isPaid ? 'Paid' : 'Unpaid'}
+                        </Badge>
+                    )}
+                </div>
             </CardContent>
             <CardFooter className="p-4 pt-0 flex justify-end gap-2">
                 {isEditing ? (
@@ -277,6 +310,7 @@ export function OrderList({ orders, onUpdateOrder }: OrderListProps) {
               <TableHead>Weight (kg)</TableHead>
               <TableHead>Load</TableHead>
               <TableHead>Total (₱)</TableHead>
+              <TableHead>Payment</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Action</TableHead>
             </TableRow>

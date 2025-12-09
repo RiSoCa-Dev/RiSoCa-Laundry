@@ -46,7 +46,7 @@ export function OrderStatusTracker({ order }: { order: Order }) {
   }, [order]);
 
   const CurrentIcon = statuses[currentStatusIndex]?.icon || CircleCheck;
-  const isPaid = order.status === 'Success' || order.status === 'Delivered';
+  const isPaid = order.isPaid || order.status === 'Success' || order.status === 'Delivered';
 
   return (
     <Card className="shadow-lg h-full">

@@ -59,6 +59,7 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
       weight: data.weight,
       status: 'Order Placed', // Always start with Order Placed
       total: data.total,
+      isPaid: data.isPaid,
       servicePackage: 'package1',
       distance: 0,
     };
