@@ -19,10 +19,10 @@ export default function AdminDashboardPage() {
             
             <div className="flex flex-col items-center mb-8">
                 <h1 className="font-bold text-primary text-4xl md:text-5xl">Admin Dashboard</h1>
-                <p className="text-lg md:text-xl text-muted-foreground mt-1">Select an option to manage the application.</p>
+                <p className="text-lg md:text-xl text-muted-foreground mt-1 max-w-sm">Select an option to manage the application.</p>
             </div>
 
-            <div className="grid gap-x-2 gap-y-2 sm:gap-x-4 sm:gap-y-4 w-full max-w-sm sm:max-w-md pb-4 grid-cols-3">
+            <div className="grid gap-x-2 gap-y-2 sm:gap-x-4 sm:gap-y-4 w-full max-w-sm sm:max-w-md pb-4 grid-cols-2">
               {/* Grid items will be rendered by HomePageWrapper */}
             </div>
 
