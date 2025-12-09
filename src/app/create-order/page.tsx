@@ -9,11 +9,11 @@ import { Loader2 } from 'lucide-react';
 
 function CreateOrderForm() {
     return (
-        <div className="flex flex-col h-screen">
+        <div className="flex flex-col h-screen overflow-hidden">
           <AppHeader />
           <PromoBanner />
-          <main className="flex-1 flex items-center justify-center container mx-auto px-4 py-4 pb-14 overflow-hidden">
-            <div className="w-full max-w-2xl h-full flex items-center">
+          <main className="flex-1 flex items-center justify-center container mx-auto px-4 py-2 sm:py-4 pb-14 overflow-hidden min-h-0">
+            <div className="w-full max-w-2xl h-full max-h-full flex items-stretch">
               <OrderForm />
             </div>
           </main>
