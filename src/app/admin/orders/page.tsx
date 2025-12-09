@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -9,9 +10,10 @@ import {
 } from '@/components/ui/card';
 import { OrderList } from '@/components/order-list';
 import type { Order } from '@/components/order-list';
-import { Loader2, Inbox } from 'lucide-react';
+import { Loader2, Inbox, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 export default function AdminOrdersPage() {
   const { toast } = useToast();
@@ -38,6 +40,12 @@ export default function AdminOrdersPage() {
           <CardTitle>Orders</CardTitle>
           <CardDescription>View and update all customer orders.</CardDescription>
         </div>
+        <Link href="/create-order" passHref>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            New Order
+          </Button>
+        </Link>
       </CardHeader>
       <CardContent>
         {loadingAdmin ? (
