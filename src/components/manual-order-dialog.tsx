@@ -86,6 +86,10 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
 
   const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = parseFloat(e.target.value);
+    if (isNaN(value)) {
+        form.setValue('weight', undefined, { shouldValidate: true, shouldDirty: true });
+        return;
+    }
     if (value > 75) {
       value = 75;
     }
