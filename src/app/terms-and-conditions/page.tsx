@@ -11,12 +11,11 @@ export default function TermsAndConditionsPage() {
       <PromoBanner />
       <main className="flex-1 relative">
         <Image
-          src="https://picsum.photos/seed/terms/1200/800"
+          src="/terms_and_conditions.jpg"
           alt="Terms and Conditions"
           fill
           style={{ objectFit: "contain" }}
           quality={100}
-          data-ai-hint="document agreement"
         />
       </main>
       <AppFooter />
