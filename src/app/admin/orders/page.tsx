@@ -94,8 +94,8 @@ export default function AdminOrdersPage() {
 
   return (
     <>
-      <Card className="w-full">
-        <CardHeader className="flex flex-row items-center justify-between">
+      <Card className="w-full h-[calc(100vh-10rem)] flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-background z-10 border-b">
           <div>
             <CardTitle>Orders</CardTitle>
             <CardDescription>View and update all customer orders.</CardDescription>
@@ -105,7 +105,7 @@ export default function AdminOrdersPage() {
             New Order
           </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 overflow-y-auto">
           {loadingAdmin ? (
             <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
               <Loader2 className="h-12 w-12 mb-2 animate-spin" />
