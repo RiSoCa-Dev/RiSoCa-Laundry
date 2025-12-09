@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Edit, Save, X, Loader2, ChevronDown } from 'lucide-react';
+import { Edit, Save, X, Loader2 } from 'lucide-react';
 import { Switch } from './ui/switch';
 import {
     Accordion,
@@ -222,7 +222,7 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
             <Accordion type="single" collapsible>
                 <AccordionItem value={order.id} className="border-b-0">
                     <AccordionTrigger className="p-4 hover:no-underline">
-                         <div className="flex flex-col items-start text-left w-full">
+                         <div className="flex flex-col items-start text-left w-full gap-1">
                             <div className='flex items-center justify-between w-full'>
                                 <span className="font-bold text-lg">{order.id}</span>
                                 <Badge className={cn(
@@ -233,7 +233,12 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                     {order.status}
                                 </Badge>
                             </div>
-                            <span className="text-sm text-muted-foreground">Name: {order.customerName}</span>
+                            <div className="flex flex-wrap items-center gap-x-4 text-sm text-foreground/90">
+                                <span>{order.customerName}</span>
+                                {order.contactNumber && order.contactNumber !== 'N/A' && (
+                                    <span className="text-xs">{order.contactNumber}</span>
+                                )}
+                            </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="p-4 pt-0">
