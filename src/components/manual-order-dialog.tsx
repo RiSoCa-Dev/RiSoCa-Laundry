@@ -23,7 +23,10 @@ import { cn } from '@/lib/utils';
 const manualOrderSchema = z.object({
   customerName: z.string().min(2, 'Name is required.'),
   contactNumber: z.string().optional(),
-  weight: z.coerce.number().min(0.1, 'Weight must be greater than 0.'),
+  weight: z.preprocess(
+    (val) => (String(val).trim() === '' ? undefined : Number(val)),
+    z.number({invalid_type_error: "Invalid number"}).min(0.1, "Weight must be greater than 0.").max(75, "Exceeds Maximum Load")
+  ),
   total: z.coerce.number().min(0, 'Price must be 0 or greater.'),
   isPaid: z.boolean().optional(),
 });
@@ -47,6 +50,7 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
       total: undefined,
       isPaid: undefined,
     },
+    mode: 'onChange',
   });
 
   const watchedWeight = form.watch('weight');
@@ -80,23 +84,6 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
         form.setValue('total', undefined);
     }
   }, [loads, form])
-
-  const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value;
-    let value = parseFloat(rawValue);
-
-    if (isNaN(value)) {
-        form.setValue('weight', undefined, { shouldValidate: true });
-        return;
-    }
-    
-    if (value > 75) {
-      value = 75;
-      form.setValue('weight', value, { shouldValidate: true });
-    } else {
-      form.setValue('weight', value, { shouldValidate: true });
-    }
-  }
 
   const onSubmit = async (data: ManualOrderFormValues) => {
     setIsSaving(true);
@@ -166,8 +153,8 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
                   step="0.1"
                   placeholder=" "
                   {...field}
-                  onChange={handleWeightChange}
-                  value={field.value || ''}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  value={field.value ?? ''}
                   disabled={isSaving}
                   className="form-input text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
@@ -208,7 +195,7 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
                         step="0.01"
                         placeholder=" "
                         {...field}
-                        value={field.value || ''}
+                        value={field.value ?? ''}
                         disabled={isSaving}
                         className="form-input text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
