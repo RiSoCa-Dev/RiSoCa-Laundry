@@ -21,6 +21,7 @@ import { Loader2, Weight, Layers, Info, MapPin, User, Phone, Bike, PersonStandin
 import { Separator } from './ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import type { Order } from './order-list';
 import { useAuthSession } from '@/hooks/use-auth-session';
@@ -69,6 +70,7 @@ export function OrderForm() {
 
   const [isCustomerInfoDialogOpen, setIsCustomerInfoDialogOpen] = useState(false);
   const [pendingOrder, setPendingOrder] = useState<PendingOrder | null>(null);
+  const [showAccountPromptDialog, setShowAccountPromptDialog] = useState(false);
   
   const distanceParam = searchParams.get('distance');
   const packageParam = searchParams.get('servicePackage');
@@ -193,16 +195,11 @@ export function OrderForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watch]);
 
-
   const onOrderSubmit = (data: OrderFormValues) => {
     if (authLoading) return;
     if (!user) {
-        toast({
-            variant: 'destructive',
-            title: 'Please log in',
-            description: 'Create an account or log in to place an order.',
-        });
-        router.push('/login');
+        // Show dialog prompting to create account first
+        setShowAccountPromptDialog(true);
         return;
     }
     if (!pricingResult) return;
@@ -467,6 +464,51 @@ export function OrderForm() {
         </CardFooter>
       </form>
     </Card>
+    
+    {/* Account Required Dialog */}
+    <Dialog open={showAccountPromptDialog} onOpenChange={setShowAccountPromptDialog}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create an Account to Continue</DialogTitle>
+          <DialogDescription>
+            Creating an account allows you to easily track your orders and view your order history. It only takes a minute!
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+            <p className="text-sm font-semibold">Benefits of creating an account:</p>
+            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+              <li>Track all your orders in one place</li>
+              <li>View order history and status updates</li>
+              <li>Faster checkout for future orders</li>
+              <li>Receive order notifications</li>
+            </ul>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button 
+              asChild
+              className="flex-1 bg-gradient-to-r from-amber-400 to-yellow-500 text-white hover:from-amber-500 hover:to-yellow-600"
+              onClick={() => setShowAccountPromptDialog(false)}
+            >
+              <Link href="/register">
+                Create Account
+              </Link>
+            </Button>
+            <Button 
+              asChild
+              variant="outline"
+              className="flex-1"
+              onClick={() => setShowAccountPromptDialog(false)}
+            >
+              <Link href="/login">
+                Already have an account? Log in
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+
     <Dialog open={isCustomerInfoDialogOpen} onOpenChange={setIsCustomerInfoDialogOpen}>
         <DialogContent>
             <DialogHeader>

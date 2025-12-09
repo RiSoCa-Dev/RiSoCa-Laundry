@@ -20,7 +20,7 @@ export function ServiceRatesEditor() {
 
   useEffect(() => {
     const load = async () => {
-      setLoading(true);
+    setLoading(true);
       const { data, error } = await fetchServiceRates();
       if (error) {
         console.error('Failed to load rates', error);
@@ -31,7 +31,7 @@ export function ServiceRatesEditor() {
       const fetched = data ?? [];
       setInitialRates(fetched);
       setRates(fetched);
-      setLoading(false);
+    setLoading(false);
     };
     load();
   }, []);
