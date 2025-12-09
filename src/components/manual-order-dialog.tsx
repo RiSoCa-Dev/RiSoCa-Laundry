@@ -1,0 +1,155 @@
+'use client';
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import type { Order } from './order-list';
+import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
+
+const manualOrderSchema = z.object({
+  customerName: z.string().min(2, 'Name is required.'),
+  load: z.coerce.number().min(0.1, 'Load must be greater than 0.'),
+  weight: z.coerce.number().min(0.1, 'Weight must be greater than 0.'),
+  total: z.coerce.number().min(0, 'Price must be 0 or greater.'),
+  isPaid: z.boolean(),
+});
+
+type ManualOrderFormValues = z.infer<typeof manualOrderSchema>;
+
+type ManualOrderDialogProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  onAddOrder: (order: Omit<Order, 'id' | 'orderDate' | 'userId'>) => Promise<void>;
+};
+
+export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDialogProps) {
+  const [isSaving, setIsSaving] = useState(false);
+  const form = useForm<ManualOrderFormValues>({
+    resolver: zodResolver(manualOrderSchema),
+    defaultValues: {
+      customerName: '',
+      load: 1,
+      weight: 7.5,
+      total: 180,
+      isPaid: false,
+    },
+  });
+
+  const onSubmit = async (data: ManualOrderFormValues) => {
+    setIsSaving(true);
+    const newOrder: Omit<Order, 'id' | 'orderDate' | 'userId'> = {
+      customerName: data.customerName,
+      contactNumber: 'N/A',
+      load: data.load,
+      weight: data.weight,
+      status: data.isPaid ? 'Success' : 'Ready for Pick Up',
+      total: data.total,
+      servicePackage: 'package1',
+      distance: 0,
+    };
+    await onAddOrder(newOrder);
+    setIsSaving(false);
+    form.reset();
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create Manual Order</DialogTitle>
+          <DialogDescription>
+            Enter the details for the new order.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="customerName">Customer Name</Label>
+            <Input
+              id="customerName"
+              placeholder="e.g., John Doe"
+              {...form.register('customerName')}
+              disabled={isSaving}
+            />
+            {form.formState.errors.customerName && (
+              <p className="text-xs text-destructive">{form.formState.errors.customerName.message}</p>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="load">Load</Label>
+              <Input
+                id="load"
+                type="number"
+                step="1"
+                {...form.register('load')}
+                disabled={isSaving}
+              />
+               {form.formState.errors.load && (
+                <p className="text-xs text-destructive">{form.formState.errors.load.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="weight">Weight (kg)</Label>
+              <Input
+                id="weight"
+                type="number"
+                step="0.1"
+                {...form.register('weight')}
+                disabled={isSaving}
+              />
+              {form.formState.errors.weight && (
+                <p className="text-xs text-destructive">{form.formState.errors.weight.message}</p>
+              )}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="total">Price to Pay (₱)</Label>
+            <Input
+              id="total"
+              type="number"
+              step="0.01"
+              {...form.register('total')}
+              disabled={isSaving}
+            />
+             {form.formState.errors.total && (
+              <p className="text-xs text-destructive">{form.formState.errors.total.message}</p>
+            )}
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="isPaid"
+              checked={form.watch('isPaid')}
+              onCheckedChange={(checked) => form.setValue('isPaid', checked)}
+              disabled={isSaving}
+            />
+            <Label htmlFor="isPaid">Mark as Paid</Label>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Add Order
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
