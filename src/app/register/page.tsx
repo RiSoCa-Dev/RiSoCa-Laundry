@@ -26,17 +26,27 @@ export default function RegisterPage() {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
   
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setPasswordError(null)
 
     const formData = new FormData(e.currentTarget)
     const email = String(formData.get('email') || '').trim()
     const password = String(formData.get('password') || '')
+    const confirmPassword = String(formData.get('confirmPassword') || '')
     const firstName = String(formData.get('firstName') || '').trim()
     const lastName = String(formData.get('lastName') || '').trim()
+
+    // Validate password match
+    if (password !== confirmPassword) {
+      setPasswordError('Passwords do not match')
+      setLoading(false)
+      return
+    }
 
     const { error: signUpError } = await signUpWithEmail(email, password, {
       first_name: firstName,
@@ -131,6 +141,21 @@ export default function RegisterPage() {
                   required
                   disabled={loading}
                 />
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  minLength={6}
+                  required
+                  disabled={loading}
+                />
+                {passwordError && (
+                  <p className="text-xs text-destructive">{passwordError}</p>
+                )}
               </div>
 
               <Button
