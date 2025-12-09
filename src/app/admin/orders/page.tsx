@@ -105,7 +105,7 @@ export default function AdminOrdersPage() {
             New Order
           </Button>
         </CardHeader>
-        <CardContent className="flex-1 overflow-y-auto">
+        <CardContent className="flex-1 overflow-y-auto pt-4">
           {loadingAdmin ? (
             <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
               <Loader2 className="h-12 w-12 mb-2 animate-spin" />
