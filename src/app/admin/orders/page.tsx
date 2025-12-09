@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/card';
 import { OrderList } from '@/components/order-list';
 import type { Order, StatusHistory } from '@/components/order-list';
-import { Loader2, Inbox, Plus } from 'lucide-react';
+import { Loader2, Inbox } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -95,13 +95,12 @@ export default function AdminOrdersPage() {
   return (
     <>
       <Card className="w-full h-[calc(100vh-10rem)] flex flex-col">
-        <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-background z-10 border-b">
+        <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-background z-10 border-b rounded-t-lg">
           <div>
             <CardTitle>Orders</CardTitle>
             <CardDescription>View and update all customer orders.</CardDescription>
           </div>
           <Button onClick={() => setIsDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
             New Order
           </Button>
         </CardHeader>
