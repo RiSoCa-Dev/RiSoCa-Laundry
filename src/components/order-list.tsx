@@ -233,10 +233,10 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                     {order.status}
                                 </Badge>
                             </div>
-                            <div className="flex flex-wrap items-center gap-x-4 text-sm text-foreground/90">
-                                <span>{order.customerName}</span>
+                            <div className="flex flex-wrap items-baseline gap-x-3 text-foreground/90">
+                                <span className="text-base font-medium">{order.customerName}</span>
                                 {order.contactNumber && order.contactNumber !== 'N/A' && (
-                                    <span className="text-xs">{order.contactNumber}</span>
+                                    <span className="text-sm">{order.contactNumber}</span>
                                 )}
                             </div>
                         </div>
