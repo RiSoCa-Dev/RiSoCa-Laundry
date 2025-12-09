@@ -283,13 +283,13 @@ export function OrderForm() {
 
   return (
     <>
-    <Card className="shadow-lg w-full h-full max-h-[calc(100vh-10rem)] sm:max-h-[calc(100vh-12rem)] flex flex-col min-h-0">
-      <form onSubmit={form.handleSubmit(onOrderSubmit)} className="flex flex-col h-full min-h-0">
+    <Card className="shadow-lg w-full flex flex-col">
+      <form onSubmit={form.handleSubmit(onOrderSubmit)} className="flex flex-col">
         <CardHeader className="p-4 flex-shrink-0">
           <CardTitle>Create Order</CardTitle>
           <CardDescription className="text-xs">Select a package to calculate the price.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 p-4 pt-0 flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollable" style={{ maxHeight: '100%' }}>
+        <CardContent className="space-y-4 p-4 pt-0">
           
           <div className="space-y-2">
             <Label className="text-base font-semibold">1. Select a Package</Label>

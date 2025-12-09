@@ -12,9 +12,11 @@ function CreateOrderForm() {
         <div className="flex flex-col h-screen overflow-hidden">
           <AppHeader />
           <PromoBanner />
-          <main className="flex-1 flex items-center justify-center container mx-auto px-4 py-2 sm:py-4 pb-14 overflow-hidden min-h-0">
-            <div className="w-full max-w-2xl h-full max-h-full flex items-stretch">
-              <OrderForm />
+          <main className="flex-1 overflow-y-auto overflow-x-hidden scrollable pb-20">
+            <div className="container mx-auto px-4 py-4 sm:py-6 flex items-start justify-center min-h-full">
+              <div className="w-full max-w-2xl my-auto">
+                <OrderForm />
+              </div>
             </div>
           </main>
           <AppFooter />
