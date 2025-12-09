@@ -1,30 +1,15 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.rkrlaundry.twa",
       "sha256_cert_fingerprints": [
-        "B1:9A:00:E5:41:F3:30:91:35:92:F6:0A:05:54:AF:48:25:26:C5:85:4D:F2:CC:D0:7F:5A:37:6B:1C:79:97:5A"
+        "CF:54:EF:EB:C4:0B:C8:21:72:9F:7C:58:47:21:7A:50:E8:44:CF:01:0B:C1:82:CB:C7:85:CB:B0:FA:73:1C:83"
       ]
-    }
-  },
-  {
-    "relation": ["delegate_permission/common.get_login_creds"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "com.rkrlaundry.twa",
-      "sha256_cert_fingerprints": [
-        "B1:9A:00:E5:41:F3:30:91:35:92:F6:0A:05:54:AF:48:25:26:C5:85:4D:F2:CC:D0:7F:5A:37:6B:1C:79:97:5A"
-      ]
-    }
-  },
-  {
-    "relation": ["delegate_permission/common.get_login_creds"],
-    "target": {
-      "namespace": "web",
-      "site": "https://rkrlaundry.com"
     }
   }
 ]
-
