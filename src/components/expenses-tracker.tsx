@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -24,7 +24,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Inbox } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
@@ -36,16 +36,9 @@ const expenseSchema = z.object({
 
 type Expense = z.infer<typeof expenseSchema>;
 
-const mockExpenses: Expense[] = [
-  { description: 'Rent', amount: 5000, date: new Date('2024-07-01') },
-  { description: 'Detergent', amount: 800, date: new Date('2024-07-05') },
-  { description: 'Fabric Softener', amount: 500, date: new Date('2024-07-05') },
-  { description: 'Electricity Bill', amount: 3500, date: new Date('2024-07-15') },
-];
-
 export function ExpensesTracker() {
   const { toast } = useToast();
-  const [expenses, setExpenses] = useState<Expense[]>(mockExpenses);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<{description: string, amount: string}>({
     defaultValues: {
@@ -110,6 +103,7 @@ export function ExpensesTracker() {
                 <CardDescription>A list of all recorded business expenses.</CardDescription>
             </CardHeader>
             <CardContent>
+              {expenses.length > 0 ? (
                 <div className="max-h-[400px] overflow-auto">
                     <Table>
                         <TableHeader className="sticky top-0 bg-muted">
@@ -143,6 +137,12 @@ export function ExpensesTracker() {
                         </TableFooter>
                     </Table>
                 </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
+                  <Inbox className="h-12 w-12 mb-2" />
+                  <p>No expenses have been logged yet.</p>
+                </div>
+              )}
             </CardContent>
         </Card>
     </div>

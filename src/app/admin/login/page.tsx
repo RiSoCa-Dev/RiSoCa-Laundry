@@ -27,21 +27,13 @@ export default function AdminLoginPage() {
     e.preventDefault()
     setLoading(true)
 
-    // Mock login
+    // Mock login removed for real backend integration.
     setTimeout(() => {
-      if (email === 'admin@example.com' && password === 'password') {
-        toast({
-            title: 'Login Successful',
-            description: 'Welcome, Admin!',
-        })
-        router.push('/admin');
-      } else {
         toast({
             variant: 'destructive',
-            title: 'Login Failed',
-            description: 'Invalid credentials or access denied.',
+            title: 'Login Disabled',
+            description: 'Please integrate a backend authentication service.',
         })
-      }
       setLoading(false)
     }, 1000)
   }

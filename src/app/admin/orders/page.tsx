@@ -13,15 +13,9 @@ import { Loader2, Inbox } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 
-// Mock data, as Firebase is removed
-const mockOrders: Order[] = [
-    { id: 'ORD123', userId: 'user1', customerName: 'John Doe', contactNumber: '09123456789', load: 1, weight: 7.5, status: 'Washing', total: 180, orderDate: new Date(), servicePackage: 'package1', distance: 0 },
-    { id: 'ORD124', userId: 'user2', customerName: 'Jane Smith', contactNumber: '09987654321', load: 2, weight: 15, status: 'Ready for Pick Up', total: 360, orderDate: new Date(), servicePackage: 'package1', distance: 0 },
-];
-
 export default function AdminOrdersPage() {
   const { toast } = useToast();
-  const [allOrders, setAllOrders] = useState(mockOrders);
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [loadingAdmin, setLoadingAdmin] = useState(false);
 
 
@@ -41,7 +35,7 @@ export default function AdminOrdersPage() {
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Manage All Orders</CardTitle>
+          <CardTitle>Orders</CardTitle>
           <CardDescription>View and update all customer orders.</CardDescription>
         </div>
       </CardHeader>

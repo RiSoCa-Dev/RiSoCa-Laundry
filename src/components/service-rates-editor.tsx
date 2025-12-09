@@ -15,7 +15,7 @@ type Rate = {
   type: 'service' | 'delivery';
 };
 
-const mockRates: Rate[] = [
+const initialRatesData: Rate[] = [
     { id: 'service-1', name: 'Wash, Dry, Fold (per 7.5kg load)', price: 180, type: 'service'},
     { id: 'delivery-1', name: 'First 1 km', price: 0, type: 'delivery'},
     { id: 'delivery-2', name: 'Each additional km', price: 20, type: 'delivery'},
@@ -24,15 +24,20 @@ const mockRates: Rate[] = [
 export function ServiceRatesEditor() {
   const { toast } = useToast();
   
-  const [initialRates, setInitialRates] = useState<Rate[]>(mockRates);
+  const [initialRates, setInitialRates] = useState<Rate[]>([]);
   const [rates, setRates] = useState<Rate[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start with loading true
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setRates(initialRates);
-  }, [initialRates]);
+    // Simulate fetching data
+    setTimeout(() => {
+        setInitialRates(initialRatesData);
+        setRates(initialRatesData);
+        setLoading(false);
+    }, 500);
+  }, []);
 
   const handlePriceChange = (id: string, newPrice: string) => {
     const numericPrice = parseFloat(newPrice) || 0;

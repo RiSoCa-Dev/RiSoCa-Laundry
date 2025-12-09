@@ -7,15 +7,10 @@ import { OrderStatusTracker } from '@/components/order-status-tracker';
 import { CustomerOrderList } from '@/components/customer-order-list';
 import type { Order } from '@/components/order-list';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-
-const mockOrders: Order[] = [
-    { id: 'ORD123', userId: 'user1', customerName: 'John Doe', contactNumber: '09123456789', load: 1, weight: 7.5, status: 'Washing', total: 180, orderDate: new Date(), servicePackage: 'package1', distance: 0 },
-    { id: 'ORD124', userId: 'user2', customerName: 'Jane Smith', contactNumber: '09987654321', load: 2, weight: 15, status: 'Ready for Pick Up', total: 360, orderDate: new Date(), servicePackage: 'package1', distance: 0 },
-];
+import { ArrowLeft, Inbox } from 'lucide-react';
 
 export default function OrderStatusPage() {
-    const [orders, setOrders] = useState(mockOrders);
+    const [orders, setOrders] = useState<Order[]>([]);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
     const handleSelectOrder = (order: Order) => {
@@ -38,8 +33,14 @@ export default function OrderStatusPage() {
                 </Button>
                 <OrderStatusTracker order={selectedOrder} />
             </>
-          ) : (
+          ) : orders.length > 0 ? (
             <CustomerOrderList orders={orders} onOrderSelect={handleSelectOrder} />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground border rounded-lg bg-card p-8">
+                <Inbox className="h-12 w-12 mb-2" />
+                <h3 className="text-lg font-semibold">No Orders Found</h3>
+                <p>You haven't placed any orders yet.</p>
+            </div>
           )}
         </div>
       </main>

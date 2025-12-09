@@ -27,15 +27,6 @@ import { Loader2, Inbox } from 'lucide-react';
 import type { Order } from '@/components/order-list';
 import { format, startOfDay } from 'date-fns';
 
-// Mock data, as Firebase is removed
-const mockOrders: Order[] = [
-    { id: 'ORD123', userId: 'user1', customerName: 'John Doe', contactNumber: '09123456789', load: 1, weight: 7.5, status: 'Success', total: 180, orderDate: new Date(), servicePackage: 'package1', distance: 0 },
-    { id: 'ORD124', userId: 'user2', customerName: 'Jane Smith', contactNumber: '09987654321', load: 2, weight: 15, status: 'Success', total: 360, orderDate: new Date(), servicePackage: 'package1', distance: 0 },
-    { id: 'ORD125', userId: 'user3', customerName: 'Peter Jones', contactNumber: '09171234567', load: 1, weight: 8, status: 'Delivered', total: 180, orderDate: new Date(new Date().setDate(new Date().getDate() - 1)), servicePackage: 'package1', distance: 0 },
-    { id: 'ORD126', userId: 'user4', customerName: 'Mary Anne', contactNumber: '09281234567', load: 3, weight: 22, status: 'Washing', total: 540, orderDate: new Date(), servicePackage: 'package1', distance: 0 },
-    { id: 'ORD127', userId: 'user5', customerName: 'Chris Green', contactNumber: '09179876543', load: 4, weight: 30, status: 'Delivered', total: 720, orderDate: new Date(new Date().setDate(new Date().getDate() - 1)), servicePackage: 'package1', distance: 0 },
-];
-
 const SALARY_PER_LOAD = 30;
 
 type DailySalary = {
@@ -46,7 +37,7 @@ type DailySalary = {
 };
 
 export function EmployeeSalary() {
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
 
   const completedOrdersByDate = orders
