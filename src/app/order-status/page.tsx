@@ -12,35 +12,8 @@ import { Label } from '@/components/ui/label';
 import { Search, Inbox, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-// Mock data for demonstration purposes. In a real application, this would be fetched from a backend.
-const mockOrders: Order[] = [
-  {
-    id: 'ORDER-123',
-    userId: 'user-1',
-    customerName: 'Jane Doe',
-    contactNumber: '09123456789',
-    load: 1,
-    weight: 7.5,
-    status: 'Washing',
-    total: 180,
-    orderDate: new Date(),
-    servicePackage: 'package1',
-    distance: 0,
-  },
-  {
-    id: 'ORDER-456',
-    userId: 'user-2',
-    customerName: 'John Smith',
-    contactNumber: '09987654321',
-    load: 2,
-    weight: 15,
-    status: 'Ready for Pick Up',
-    total: 360,
-    orderDate: new Date(),
-    servicePackage: 'package3',
-    distance: 5,
-  },
-];
+// Mock data has been removed to prepare for backend integration.
+const mockOrders: Order[] = [];
 
 export default function OrderStatusPage() {
   const [orderId, setOrderId] = useState('');
@@ -90,7 +63,7 @@ export default function OrderStatusPage() {
                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="orderId"
-                      placeholder="e.g., ORDER-123"
+                      placeholder="e.g., RKR001"
                       value={orderId}
                       onChange={(e) => setOrderId(e.target.value)}
                       className="pl-10"

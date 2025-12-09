@@ -54,6 +54,12 @@ type PendingOrder = {
     loads: number;
 };
 
+// Function to generate a random RKR order ID
+const generateOrderId = () => {
+  const orderNumber = Math.floor(Math.random() * 900) + 100; // Random number between 100 and 999
+  return `RKR${orderNumber}`;
+};
+
 export function OrderForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -203,10 +209,12 @@ export function OrderForm() {
   const onCustomerInfoSubmit = (customerData: CustomerFormValues) => {
     if (!pendingOrder) return;
     
+    const newOrderId = generateOrderId();
+    
     // Mock order creation
     toast({
       title: 'Order Placed!',
-      description: 'Your order has been successfully submitted.'
+      description: `Your order #${newOrderId} has been successfully submitted.`
     });
 
     setIsCustomerInfoDialogOpen(false);
