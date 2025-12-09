@@ -45,7 +45,7 @@ export function LocationConfirmation({
 
   return (
     <Card className="h-full w-full rounded-none border-0 md:border-r shadow-none flex flex-col">
-      <CardHeader className="p-4">
+      <CardHeader className="p-4 flex-shrink-0">
         <CardTitle className="flex items-center gap-2">
           <LocateFixed /> Confirm Your Location
         </CardTitle>
@@ -69,7 +69,7 @@ export function LocationConfirmation({
         </div>
       </CardContent>
 
-      <CardFooter className="p-4">
+      <CardFooter className="p-4 pb-20 md:pb-4 flex-shrink-0">
         <Button
           onClick={handleConfirm}
           className="w-full text-base py-6"
