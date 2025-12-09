@@ -11,7 +11,8 @@ export default function DownloadAppPage() {
     <div className="flex flex-col h-screen">
       <AppHeader />
       <PromoBanner />
-      <main className="flex-1 scrollable flex items-start justify-center container mx-auto px-4 py-8 pb-14">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden scrollable pb-20">
+        <div className="container mx-auto px-4 py-8 flex items-start justify-center min-h-full">
         <div className="flex flex-col items-center text-center">
             <h1 className="text-2xl md:text-4xl font-bold text-primary">Download Our App</h1>
             <p className="text-sm md:text-lg text-muted-foreground mt-2 max-w-2xl">Get the full RKR Laundry experience on your mobile device. Track orders, get exclusive deals, and more.</p>
@@ -29,6 +30,7 @@ export default function DownloadAppPage() {
                    <p className="text-muted-foreground text-sm">QR Code</p>
                 </div>
             </div>
+        </div>
         </div>
       </main>
       <AppFooter />

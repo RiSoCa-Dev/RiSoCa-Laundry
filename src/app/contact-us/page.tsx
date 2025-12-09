@@ -14,7 +14,8 @@ export default function ContactUsPage() {
     <div className="flex flex-col h-screen">
       <AppHeader />
       <PromoBanner />
-      <main className="flex-1 scrollable flex items-start justify-center container mx-auto px-4 py-8 pb-14">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden scrollable pb-20">
+        <div className="container mx-auto px-4 py-8 flex items-start justify-center min-h-full">
         <Card className="w-full max-w-lg">
             <CardHeader className="p-4">
                 <CardTitle className="text-2xl">Contact Us</CardTitle>
@@ -39,6 +40,7 @@ export default function ContactUsPage() {
                 </form>
             </CardContent>
         </Card>
+        </div>
       </main>
       <AppFooter />
     </div>

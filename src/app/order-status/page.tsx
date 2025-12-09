@@ -76,7 +76,8 @@ export default function OrderStatusPage() {
     <div className="flex flex-col h-screen">
       <AppHeader />
       <PromoBanner />
-      <main className="flex-1 scrollable flex items-start justify-center container mx-auto px-4 py-8 pb-14">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden scrollable pb-20">
+        <div className="container mx-auto px-4 py-8 flex items-start justify-center min-h-full">
         <div className="w-full max-w-2xl">
           <Card>
             <CardHeader>
@@ -140,6 +141,7 @@ export default function OrderStatusPage() {
               )}
             </CardContent>
           </Card>
+        </div>
         </div>
       </main>
       <AppFooter />

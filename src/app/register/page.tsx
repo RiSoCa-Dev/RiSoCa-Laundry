@@ -73,7 +73,8 @@ export default function RegisterPage() {
     <div className="flex flex-col min-h-screen">
       <AppHeader />
       <PromoBanner />
-      <main className="flex-1 scrollable flex items-start justify-center px-4 py-8 pb-14">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden scrollable pb-20">
+        <div className="container mx-auto px-4 py-8 flex items-start justify-center min-h-full">
         <Card className="mx-auto w-full max-w-sm">
           <CardHeader className="p-4">
             <CardTitle className="text-xl">Sign Up</CardTitle>
@@ -156,6 +157,7 @@ export default function RegisterPage() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </main>
 
       <AppFooter />

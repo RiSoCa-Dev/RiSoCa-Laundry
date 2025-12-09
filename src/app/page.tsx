@@ -33,7 +33,8 @@ export default function Home() {
       <HomePageWrapper gridItems={gridItems}>
         <div className="flex flex-col h-screen select-none overflow-hidden">
           <AppHeader />
-          <main className="flex-1 scrollable flex flex-col items-center container mx-auto px-4 text-center pt-2 md:pt-4 pb-14">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden scrollable pb-20">
+            <div className="container mx-auto px-4 py-2 md:py-4 flex flex-col items-center text-center min-h-full">
             {/* Logo in body - homepage only */}
             <div className="flex flex-col items-center mb-4 pt-4 md:pt-8">
               <div className="flex items-center gap-2 md:gap-3 mb-2">
@@ -73,6 +74,7 @@ export default function Home() {
               <div className="grid grid-cols-3 gap-2 md:gap-4 w-full max-w-md">
                 {/* Grid items will be rendered by HomePageWrapper */}
               </div>
+            </div>
             </div>
           </main>
           <AppFooter />

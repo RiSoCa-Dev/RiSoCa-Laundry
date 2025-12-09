@@ -16,7 +16,8 @@ export default function AdminDashboardPage() {
   return (
       <HomePageWrapper gridItems={adminGridItems}>
         <div className="flex flex-col h-full select-none">
-          <main className="flex-1 scrollable flex flex-col items-center container mx-auto px-4 text-center pt-4 md:pt-8 pb-14">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden scrollable pb-20">
+            <div className="container mx-auto px-4 py-4 md:py-8 flex flex-col items-center text-center min-h-full">
             
             <div className="flex flex-col items-center mb-8">
                 <h1 className="font-bold text-primary text-4xl md:text-5xl">Admin Dashboard</h1>
@@ -26,7 +27,7 @@ export default function AdminDashboardPage() {
             <div className="grid grid-cols-3 gap-4 w-full max-w-md">
               {/* Grid items will be rendered by HomePageWrapper */}
             </div>
-
+            </div>
           </main>
         </div>
       </HomePageWrapper>

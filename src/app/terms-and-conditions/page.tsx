@@ -9,7 +9,7 @@ export default function TermsAndConditionsPage() {
     <div className="flex flex-col h-screen">
       <AppHeader />
       <PromoBanner />
-      <main className="flex-1 relative pb-14 scrollable">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden scrollable pb-20 relative">
         <Image
           src="/terms_and_conditions.jpg"
           alt="Terms and Conditions"
