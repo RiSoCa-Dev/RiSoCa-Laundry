@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -16,13 +16,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import type { Order } from './order-list';
-import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { Loader2, Layers } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Separator } from './ui/separator';
 
 const manualOrderSchema = z.object({
   customerName: z.string().min(2, 'Name is required.'),
   contactNumber: z.string().optional(),
-  load: z.coerce.number().min(0.1, 'Load must be greater than 0.'),
   weight: z.coerce.number().min(0.1, 'Weight must be greater than 0.'),
   total: z.coerce.number().min(0, 'Price must be 0 or greater.'),
   isPaid: z.boolean(),
@@ -43,12 +43,41 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
     defaultValues: {
       customerName: '',
       contactNumber: '',
-      load: undefined,
       weight: undefined,
       total: undefined,
       isPaid: false,
     },
   });
+
+  const watchedWeight = form.watch('weight');
+
+  const { loads, distribution } = useMemo(() => {
+    const weight = watchedWeight || 0;
+    if (weight <= 0) {
+      return { loads: 0, distribution: [] };
+    }
+
+    const numLoads = Math.ceil(weight / 7.5);
+    const dist: {load: number, weight: number}[] = [];
+
+    let remainingWeight = weight;
+    for (let i = 1; i <= numLoads; i++) {
+        const loadWeight = Math.min(remainingWeight, 7.5);
+        dist.push({ load: i, weight: loadWeight });
+        remainingWeight -= loadWeight;
+    }
+
+    return { loads: numLoads, distribution: dist };
+  }, [watchedWeight]);
+  
+  useEffect(() => {
+    const calculatedPrice = loads * 180;
+    if(calculatedPrice > 0){
+        form.setValue('total', calculatedPrice);
+    } else {
+        form.setValue('total', undefined);
+    }
+  }, [loads, form])
 
   const onSubmit = async (data: ManualOrderFormValues) => {
     setIsSaving(true);
@@ -56,7 +85,7 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
     const newOrder: Omit<Order, 'id' | 'orderDate' | 'userId'> = {
       customerName: data.customerName,
       contactNumber: data.contactNumber || 'N/A',
-      load: data.load,
+      load: loads,
       weight: data.weight,
       status: initialStatus,
       total: data.total,
@@ -72,7 +101,7 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) form.reset(); onClose(); }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create Manual Order</DialogTitle>
@@ -105,48 +134,57 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
               <p className="text-xs text-destructive">{form.formState.errors.contactNumber.message}</p>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="load">Load</Label>
-              <Input
-                id="load"
-                type="number"
-                step="1"
-                placeholder="e.g., 1"
-                {...form.register('load')}
-                disabled={isSaving}
-                className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-               {form.formState.errors.load && (
-                <p className="text-xs text-destructive">{form.formState.errors.load.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="weight">Weight (kg)</Label>
-              <Input
-                id="weight"
-                type="number"
-                step="0.1"
-                placeholder="e.g., 7.5"
-                {...form.register('weight')}
-                disabled={isSaving}
-                className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-              {form.formState.errors.weight && (
-                <p className="text-xs text-destructive">{form.formState.errors.weight.message}</p>
-              )}
-            </div>
-          </div>
           <div className="space-y-2">
-            <Label htmlFor="total">Price to Pay (₱)</Label>
+            <Label htmlFor="weight">Total Weight (kg)</Label>
             <Input
-              id="total"
+              id="weight"
               type="number"
-              step="0.01"
-              placeholder="e.g., 180"
-              {...form.register('total')}
+              step="0.1"
+              placeholder="e.g., 9"
+              {...form.register('weight')}
               disabled={isSaving}
               className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            {form.formState.errors.weight && (
+              <p className="text-xs text-destructive">{form.formState.errors.weight.message}</p>
+            )}
+          </div>
+            
+          {distribution.length > 0 && (
+              <div className="space-y-3 rounded-lg bg-muted p-3">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-sm font-medium flex items-center gap-2"><Layers className="h-4 w-4" />Calculated Loads</h4>
+                    <span className="text-lg font-bold text-primary">{loads}</span>
+                  </div>
+                  <Separator/>
+                   <div className="text-xs text-muted-foreground grid grid-cols-2 gap-x-4 gap-y-1">
+                      {distribution.map(d => (
+                          <div key={d.load} className="flex justify-between">
+                            <span>Load {d.load}:</span>
+                            <span className="font-medium text-foreground">{d.weight.toFixed(1)} kg</span>
+                          </div>
+                      ))}
+                   </div>
+              </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="total">Price to Pay (₱)</Label>
+            <Controller
+                name="total"
+                control={form.control}
+                render={({ field }) => (
+                     <Input
+                        id="total"
+                        type="number"
+                        step="0.01"
+                        placeholder="e.g., 180"
+                        {...field}
+                        value={field.value || ''}
+                        disabled={isSaving}
+                        className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                )}
             />
              {form.formState.errors.total && (
               <p className="text-xs text-destructive">{form.formState.errors.total.message}</p>
@@ -163,7 +201,7 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
+            <Button type="button" variant="outline" onClick={() => { form.reset(); onClose(); }} disabled={isSaving}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSaving}>
