@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label'
 import { LogIn } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
+import { signInWithEmail } from '@/lib/auth'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -30,23 +31,22 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
 
-    // Mock login logic
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Simple mock validation
-    if (email && password) {
+    const { error } = await signInWithEmail(email, password)
+    if (error) {
       toast({
-        title: 'Login Successful',
-        description: 'Welcome back!',
+        variant: "destructive",
+        title: 'Login Failed',
+        description: error.message || 'Please check your credentials and try again.',
       })
-      router.push('/');
-    } else {
-        toast({
-            variant: "destructive",
-            title: 'Login Failed',
-            description: 'Please check your credentials and try again.',
-        })
+      setLoading(false)
+      return
     }
+
+    toast({
+      title: 'Login Successful',
+      description: 'Welcome back!',
+    })
+    router.push('/');
     setLoading(false)
   }
 

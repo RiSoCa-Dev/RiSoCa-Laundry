@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { UserPlus } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { signUpWithEmail } from '@/lib/auth'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -30,14 +31,29 @@ export default function RegisterPage() {
     setLoading(true)
     setError(null)
 
-    // Mock registration
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    const formData = new FormData(e.currentTarget)
+    const email = String(formData.get('email') || '').trim()
+    const password = String(formData.get('password') || '')
+    const firstName = String(formData.get('firstName') || '').trim()
+    const lastName = String(formData.get('lastName') || '').trim()
+
+    const { error: signUpError } = await signUpWithEmail(email, password, {
+      first_name: firstName,
+      last_name: lastName,
+      role: 'customer',
+    })
+
+    if (signUpError) {
+      setError(signUpError.message)
+      setLoading(false)
+      return
+    }
+
     try {
       toast({
         variant: 'default',
         title: 'Signup Successful!',
-        description: `Redirecting to login...`,
+        description: `Check your email to verify. Redirecting to login...`,
         duration: 3000,
       });
       
