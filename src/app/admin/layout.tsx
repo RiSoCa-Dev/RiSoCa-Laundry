@@ -1,5 +1,6 @@
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
+import { PromoBanner } from '@/components/promo-banner';
 
 export default function AdminLayout({
   children,
@@ -8,7 +9,8 @@ export default function AdminLayout({
 }) {
   return (
     <div className="flex flex-col h-screen">
-      <AppHeader showLogo={true} />
+      <AppHeader />
+      <PromoBanner />
       <main className="flex-1 overflow-y-auto container mx-auto px-4 py-8">
         {children}
       </main>

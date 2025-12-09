@@ -1,6 +1,7 @@
 
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
+import { PromoBanner } from '@/components/promo-banner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Phone, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -22,7 +23,8 @@ const branches = [
 export default function BranchesPage() {
   return (
     <div className="flex flex-col h-screen">
-      <AppHeader showLogo={true} />
+      <AppHeader />
+      <PromoBanner />
       <main className="flex-1 overflow-y-auto container mx-auto px-4 flex flex-col items-center justify-center">
         <div className="flex flex-col items-center text-center mb-8">
             <h1 className="text-2xl md:text-4xl font-bold text-primary">Our Branches</h1>

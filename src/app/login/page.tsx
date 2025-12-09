@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppHeader } from '@/components/app-header'
 import { AppFooter } from '@/components/app-footer'
+import { PromoBanner } from '@/components/promo-banner'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -52,8 +53,8 @@ export default function LoginPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <AppHeader showLogo />
-
+      <AppHeader />
+      <PromoBanner />
       <main className="flex-1 flex items-center justify-center px-4">
         <Card className="mx-auto w-full max-w-sm">
           <CardHeader className="p-4">

@@ -1,6 +1,7 @@
 
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
+import { PromoBanner } from '@/components/promo-banner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -16,7 +17,8 @@ const deliverySurcharges = [
 export default function ServiceRatesPage() {
   return (
     <div className="flex flex-col h-screen">
-      <AppHeader showLogo={true} />
+      <AppHeader />
+      <PromoBanner />
       <main className="flex-1 overflow-hidden container mx-auto px-4 flex flex-col items-center justify-center">
         <div className="flex flex-col items-center text-center mb-8">
             <h1 className="text-2xl md:text-4xl font-bold text-primary">Service Rates</h1>

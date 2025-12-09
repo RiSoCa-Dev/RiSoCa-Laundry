@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
+import { PromoBanner } from '@/components/promo-banner';
 import { OrderStatusTracker } from '@/components/order-status-tracker';
 import type { Order } from '@/components/order-list';
 import { Button } from '@/components/ui/button';
@@ -73,7 +74,8 @@ export default function OrderStatusPage() {
 
   return (
     <div className="flex flex-col h-screen">
-      <AppHeader showLogo={true} />
+      <AppHeader />
+      <PromoBanner />
       <main className="flex-1 overflow-y-auto flex items-center justify-center container mx-auto px-4 py-8">
         <div className="w-full max-w-2xl">
           <Card>

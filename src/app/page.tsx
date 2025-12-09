@@ -34,26 +34,35 @@ export default function Home() {
         <div className="flex flex-col h-screen select-none">
           <AppHeader />
           <main className="flex-1 overflow-y-auto flex flex-col items-center container mx-auto px-4 text-center pt-2 md:pt-4">
-            <div className="flex flex-col items-center mb-4 pt-8">
-              <div className="flex flex-row items-center justify-center gap-4 mb-4 h-16">
+            {/* Logo in body - homepage only */}
+            <div className="flex flex-col items-center mb-4 pt-4 md:pt-8">
+              <div className="flex items-center gap-2 md:gap-3 mb-2">
+                <WashingMachine className="h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20 text-primary" />
+                <span className="font-bold text-primary text-3xl sm:text-4xl md:text-5xl">RKR Laundry</span>
+              </div>
+              <p className="text-sm sm:text-base md:text-lg text-muted-foreground">Fast. Clean. Convenient.</p>
+            </div>
+
+            <div className="flex flex-col items-center mb-4 w-full">
+              <div className="flex flex-row items-center justify-center gap-2 sm:gap-3 md:gap-4 mb-4 min-h-[4rem]">
                 {user ? (
                   <div className="flex flex-col items-center gap-2">
-                    <div className="flex items-center justify-center h-14 w-14 rounded-full bg-blue-600 text-white text-2xl font-bold shadow-lg">
+                    <div className="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-blue-600 text-white text-xl sm:text-2xl font-bold shadow-lg">
                       {initial}
                     </div>
-                    <div className="text-sm font-semibold text-primary">{displayName}</div>
+                    <div className="text-xs sm:text-sm font-semibold text-primary text-center px-2">{displayName}</div>
                   </div>
                 ) : (
                   <>
-                    <Link href="/login" passHref>
-                      <Button size="lg" className="w-32 h-11 text-base rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-shadow">
-                        <ArrowRight className="mr-2 h-4 w-4" />
+                    <Link href="/login" passHref className="flex-shrink-0">
+                      <Button size="lg" className="w-28 sm:w-32 h-10 sm:h-11 text-sm sm:text-base rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-shadow">
+                        <ArrowRight className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                         Log In
                       </Button>
                     </Link>
-                    <Link href="/register" passHref>
-                      <Button size="lg" className="w-32 h-11 text-base rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-lg hover:shadow-xl transition-shadow">
-                        <UserPlus className="mr-2 h-4 w-4" />
+                    <Link href="/register" passHref className="flex-shrink-0">
+                      <Button size="lg" className="w-28 sm:w-32 h-10 sm:h-11 text-sm sm:text-base rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-lg hover:shadow-xl transition-shadow">
+                        <UserPlus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                         Register
                       </Button>
                     </Link>

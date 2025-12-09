@@ -2,11 +2,13 @@
 import Image from 'next/image';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
+import { PromoBanner } from '@/components/promo-banner';
 
 export default function TermsAndConditionsPage() {
   return (
     <div className="flex flex-col h-screen">
-      <AppHeader showLogo={true} />
+      <AppHeader />
+      <PromoBanner />
       <main className="flex-1 relative">
         <Image
           src="https://picsum.photos/seed/terms/1200/800"

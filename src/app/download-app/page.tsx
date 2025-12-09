@@ -1,6 +1,7 @@
 
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
+import { PromoBanner } from '@/components/promo-banner';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import Image from 'next/image';
@@ -8,7 +9,8 @@ import Image from 'next/image';
 export default function DownloadAppPage() {
   return (
     <div className="flex flex-col h-screen">
-      <AppHeader showLogo={true} />
+      <AppHeader />
+      <PromoBanner />
       <main className="flex-1 overflow-hidden flex items-center justify-center container mx-auto px-4">
         <div className="flex flex-col items-center text-center">
             <h1 className="text-2xl md:text-4xl font-bold text-primary">Download Our App</h1>

@@ -6,6 +6,13 @@ export const metadata: Metadata = {
   title: 'RKR Laundry Service',
   description: 'Fast, clean, and convenient laundry service at rkrlaundry.com. Real-time tracking and smart pricing for your laundry needs.',
   manifest: '/manifest.json',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+    viewportFit: 'cover',
+  },
   icons: {
     icon: [
       { rel: 'icon', url: '/favicon.ico' },
@@ -17,6 +24,11 @@ export const metadata: Metadata = {
     ],
   },
   themeColor: '#6d28d9',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'RKR Laundry',
+  },
 };
 
 export default function RootLayout({

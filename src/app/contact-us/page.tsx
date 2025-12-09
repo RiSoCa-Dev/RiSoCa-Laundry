@@ -1,6 +1,7 @@
 
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
+import { PromoBanner } from '@/components/promo-banner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +12,8 @@ import { Send } from 'lucide-react';
 export default function ContactUsPage() {
   return (
     <div className="flex flex-col h-screen">
-      <AppHeader showLogo={true} />
+      <AppHeader />
+      <PromoBanner />
       <main className="flex-1 overflow-hidden flex items-center justify-center container mx-auto px-4">
         <Card className="w-full max-w-lg">
             <CardHeader className="p-4">
