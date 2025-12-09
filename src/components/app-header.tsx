@@ -76,11 +76,11 @@ export function AppHeader({ showLogo = false }: { showLogo?: boolean }) {
         </DropdownMenu>
       </div>
       {!isAdminPage && (
-        <div className="bg-accent/80 text-accent-foreground py-2 px-4 text-center text-xs sm:text-sm">
+        <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-2 px-4 text-center text-xs sm:text-sm shadow-inner">
             <div className="container mx-auto flex items-center justify-center gap-2">
                 <Megaphone className="h-5 w-5" />
                 <p>
-                    <span className="font-bold">Promo:</span> On <span className="font-semibold">December 17, 2025</span>, our price will be <span className="font-bold">₱150 per load!</span>
+                    <span className="font-medium">PROMO:</span> On <span className="font-bold underline">December 17, 2025</span>, our price will be <span className="font-bold text-yellow-300">₱150 per load!</span>
                 </p>
             </div>
         </div>
