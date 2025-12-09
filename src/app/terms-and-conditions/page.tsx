@@ -9,7 +9,7 @@ export default function TermsAndConditionsPage() {
     <div className="flex flex-col h-screen">
       <AppHeader />
       <PromoBanner />
-      <main className="flex-1 relative pb-14 overflow-y-auto overflow-x-hidden" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <main className="flex-1 relative pb-14 scrollable">
         <Image
           src="/terms_and_conditions.jpg"
           alt="Terms and Conditions"

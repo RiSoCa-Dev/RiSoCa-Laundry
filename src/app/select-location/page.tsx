@@ -91,7 +91,7 @@ function SelectLocationContent() {
   /* ---------- MAIN UI ---------- */
 
   return (
-    <div className="h-screen w-screen flex flex-col md:flex-row bg-background">
+    <div className="h-screen w-screen flex flex-col md:flex-row bg-background overflow-hidden">
       {/* Side panel */}
       <div className="w-full md:w-1/4 h-1/3 md:h-full order-2 md:order-1 border-t md:border-t-0 md:border-r">
         <LocationConfirmation

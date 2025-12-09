@@ -144,7 +144,7 @@ export function ExpensesTracker() {
                   <p>Loading expenses...</p>
                 </div>
               ) : expenses.length > 0 ? (
-                <div className="max-h-[400px] overflow-auto">
+                <div className="max-h-[400px] overflow-y-auto overflow-x-hidden scrollable">
                     <Table>
                         <TableHeader className="sticky top-0 bg-muted">
                         <TableRow>

@@ -54,7 +54,7 @@ export function LocationConfirmation({
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="flex-grow flex flex-col items-center justify-center p-4">
+      <CardContent className="flex-grow flex flex-col items-center justify-center p-4 overflow-y-auto scrollable">
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
             Calculated Distance

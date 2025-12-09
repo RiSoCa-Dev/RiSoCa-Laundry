@@ -141,7 +141,7 @@ export default function AdminOrdersPage() {
 
   return (
     <>
-      <Card className="w-full h-[calc(100vh-10rem)] flex flex-col">
+      <Card className="w-full h-full max-h-[calc(100vh-12rem)] sm:max-h-[calc(100vh-14rem)] flex flex-col min-h-0">
         <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-background z-10 border-b rounded-t-lg">
           <div>
             <CardTitle>Orders</CardTitle>
@@ -151,7 +151,7 @@ export default function AdminOrdersPage() {
             New Order
           </Button>
         </CardHeader>
-        <CardContent className="flex-1 overflow-y-auto pt-4">
+        <CardContent className="flex-1 overflow-y-auto overflow-x-hidden scrollable pt-4" style={{ maxHeight: '100%' }}>
           {loadingAdmin ? (
             <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
               <Loader2 className="h-12 w-12 mb-2 animate-spin" />
