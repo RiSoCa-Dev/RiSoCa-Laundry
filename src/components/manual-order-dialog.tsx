@@ -112,43 +112,45 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="customerName">Customer Name</Label>
+          <div className="form-group">
             <Input
               id="customerName"
-              placeholder="e.g., John Doe"
+              placeholder=" "
               {...form.register('customerName')}
               disabled={isSaving}
+              className="form-input"
             />
+            <Label htmlFor="customerName" className="form-label">Customer Name</Label>
             {form.formState.errors.customerName && (
-              <p className="text-xs text-destructive">{form.formState.errors.customerName.message}</p>
+              <p className="text-xs text-destructive pt-1">{form.formState.errors.customerName.message}</p>
             )}
           </div>
-           <div className="space-y-2">
-            <Label htmlFor="contactNumber">Contact Number (Optional)</Label>
+           <div className="form-group">
             <Input
               id="contactNumber"
-              placeholder="e.g., 09123456789"
+              placeholder=" "
               {...form.register('contactNumber')}
               disabled={isSaving}
+              className="form-input"
             />
+             <Label htmlFor="contactNumber" className="form-label">Contact Number (Optional)</Label>
             {form.formState.errors.contactNumber && (
-              <p className="text-xs text-destructive">{form.formState.errors.contactNumber.message}</p>
+              <p className="text-xs text-destructive pt-1">{form.formState.errors.contactNumber.message}</p>
             )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="weight">Total Weight (kg)</Label>
+          <div className="form-group">
             <Input
               id="weight"
               type="number"
               step="0.1"
-              placeholder="e.g., 7.5 kg"
+              placeholder=" "
               {...form.register('weight')}
               disabled={isSaving}
-              className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="form-input text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
+            <Label htmlFor="weight" className="form-label">Total Weight (e.g., 7.5 kg)</Label>
             {form.formState.errors.weight && (
-              <p className="text-xs text-destructive">{form.formState.errors.weight.message}</p>
+              <p className="text-xs text-destructive pt-1">{form.formState.errors.weight.message}</p>
             )}
           </div>
             
@@ -170,8 +172,7 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
               </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="total">Price to Pay (₱)</Label>
+          <div className="form-group">
             <Controller
                 name="total"
                 control={form.control}
@@ -180,16 +181,17 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
                         id="total"
                         type="number"
                         step="0.01"
-                        placeholder="e.g., ₱180 / Load"
+                        placeholder=" "
                         {...field}
                         value={field.value || ''}
                         disabled={isSaving}
-                        className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="form-input text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                 )}
             />
+            <Label htmlFor="total" className="form-label">Price to Pay (e.g., ₱180 / Load)</Label>
              {form.formState.errors.total && (
-              <p className="text-xs text-destructive">{form.formState.errors.total.message}</p>
+              <p className="text-xs text-destructive pt-1">{form.formState.errors.total.message}</p>
             )}
           </div>
           
