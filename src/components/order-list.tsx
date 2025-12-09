@@ -20,8 +20,15 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Edit, Save, X, Loader2 } from 'lucide-react';
+import { Edit, Save, X, Loader2, ChevronDown } from 'lucide-react';
 import { Switch } from './ui/switch';
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion";
+import { cn } from '@/lib/utils';
 
 export type Order = {
   id: string;
@@ -211,82 +218,100 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
     };
 
     return (
-         <Card key={order.id} className="w-full">
-            <CardHeader className="p-4 flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">{order.id}</CardTitle>
-                 {isEditing ? (
-                    <div className="relative w-[150px]">
-                        <Select
-                            value={editableOrder.status}
-                            onValueChange={(value) => handleFieldChange('status', value)}
-                            disabled={isSaving}
-                        >
-                            <SelectTrigger className="h-9">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {statusOptions.map((status) => (
-                                    <SelectItem key={status} value={status}>{status}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                 ) : (
-                    <Badge className={`${getStatusColor(order.status)} hover:${getStatusColor(order.status)} text-white`}>
-                       {order.status}
-                    </Badge>
-                 )}
-            </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-3">
-                 <div className="text-sm text-muted-foreground">
-                    <span className="font-semibold text-foreground">Customer:</span> {order.customerName}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                    <span className="font-semibold text-foreground">Contact:</span> {order.contactNumber}
-                </div>
-                 <div className="grid grid-cols-2 gap-3">
-                    <div className="text-sm">
-                        <Label htmlFor={`weight-mob-${order.id}`}>Weight (kg)</Label>
-                        <Input id={`weight-mob-${order.id}`} type="number" value={editableOrder.weight} onChange={e => handleFieldChange('weight', e.target.value)} className="h-8" disabled={!isEditing || isSaving} />
-                    </div>
-                    <div className="text-sm">
-                        <Label htmlFor={`load-mob-${order.id}`}>Load</Label>
-                        <Input id={`load-mob-${order.id}`} type="number" value={editableOrder.load} onChange={e => handleFieldChange('load', e.target.value)} className="h-8" disabled={!isEditing || isSaving} />
-                    </div>
-                </div>
-                <div className="text-sm">
-                    <Label htmlFor={`total-mob-${order.id}`}>Total (₱)</Label>
-                    <Input id={`total-mob-${order.id}`} type="number" value={editableOrder.total.toString()} onChange={e => handleFieldChange('total', e.target.value)} className="h-8" disabled={!isEditing || isSaving} />
-                </div>
-                <div className="text-sm flex items-center justify-between">
-                    <Label>Payment</Label>
-                    {isEditing ? (
-                        <Switch
-                            checked={editableOrder.isPaid}
-                            onCheckedChange={(checked) => handleFieldChange('isPaid', checked)}
-                            disabled={isSaving}
-                        />
-                    ) : (
-                    <Badge className={`${getPaymentStatusColor(order.isPaid)} hover:${getPaymentStatusColor(order.isPaid)} text-white`}>
-                        {order.isPaid ? 'Paid' : 'Unpaid'}
-                        </Badge>
-                    )}
-                </div>
-            </CardContent>
-            <CardFooter className="p-4 pt-0 flex justify-end gap-2">
-                {isEditing ? (
-                    <>
-                        <Button variant="ghost" onClick={handleCancel} disabled={isSaving}><X className="h-4 w-4" /> Cancel</Button>
-                        <Button onClick={handleSave} disabled={isSaving}>
-                            {isSaving ? <Loader2 className="animate-spin h-4 w-4"/> : <Save className="h-4 w-4" />} Save
-                        </Button>
-                    </>
-                ) : (
-                    <Button variant="outline" onClick={() => setIsEditing(true)}><Edit className="h-4 w-4" /> Edit</Button>
-                )}
-            </CardFooter>
+        <Card>
+            <Accordion type="single" collapsible>
+                <AccordionItem value={order.id} className="border-b-0">
+                    <AccordionTrigger className="p-4 hover:no-underline [&[data-state=open]>svg]:-rotate-180">
+                         <div className="flex flex-col items-start text-left w-full">
+                            <div className='flex items-center justify-between w-full'>
+                                <span className="font-bold text-lg">{order.id}</span>
+                                <Badge className={cn(
+                                    getStatusColor(order.status),
+                                    "hover:" + getStatusColor(order.status),
+                                    "text-white text-xs"
+                                )}>
+                                    {order.status}
+                                </Badge>
+                            </div>
+                            <span className="text-sm text-muted-foreground">{order.customerName}</span>
+                        </div>
+                        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 ml-2" />
+                    </AccordionTrigger>
+                    <AccordionContent className="p-4 pt-0">
+                        <div className="space-y-4">
+                            <div className="text-sm text-muted-foreground">
+                                <span className="font-semibold text-foreground">Contact:</span> {order.contactNumber}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <Label htmlFor={`load-mob-${order.id}`}>Load</Label>
+                                    <Input id={`load-mob-${order.id}`} type="number" value={editableOrder.load} onChange={e => handleFieldChange('load', e.target.value)} className="h-8" disabled={!isEditing || isSaving} />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor={`weight-mob-${order.id}`}>Weight (kg)</Label>
+                                    <Input id={`weight-mob-${order.id}`} type="number" value={editableOrder.weight} onChange={e => handleFieldChange('weight', e.target.value)} className="h-8" disabled={!isEditing || isSaving} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 items-end">
+                                <div className="space-y-1">
+                                    <Label htmlFor={`total-mob-${order.id}`}>Total (₱)</Label>
+                                    <Input id={`total-mob-${order.id}`} type="number" value={editableOrder.total.toString()} onChange={e => handleFieldChange('total', e.target.value)} className="h-8" disabled={!isEditing || isSaving} />
+                                </div>
+                                <div className="flex flex-col items-start space-y-1">
+                                    <Label>Payment</Label>
+                                    {isEditing ? (
+                                        <Switch
+                                            checked={editableOrder.isPaid}
+                                            onCheckedChange={(checked) => handleFieldChange('isPaid', checked)}
+                                            disabled={isSaving}
+                                        />
+                                    ) : (
+                                        <Badge className={`${getPaymentStatusColor(order.isPaid)} hover:${getPaymentStatusColor(order.isPaid)} text-white`}>
+                                            {order.isPaid ? 'Paid' : 'Unpaid'}
+                                        </Badge>
+                                    )}
+                                </div>
+                            </div>
+                             {isEditing && (
+                                <div className="relative w-full">
+                                    <Label>Status</Label>
+                                    <Select
+                                        value={editableOrder.status}
+                                        onValueChange={(value) => handleFieldChange('status', value)}
+                                        disabled={isSaving}
+                                    >
+                                        <SelectTrigger className="h-9">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {statusOptions.map((status) => (
+                                                <SelectItem key={status} value={status}>{status}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
+
+                            <div className="flex justify-center gap-2 pt-2">
+                                {isEditing ? (
+                                    <>
+                                        <Button variant="ghost" onClick={handleCancel} disabled={isSaving}><X className="mr-2 h-4 w-4" /> Cancel</Button>
+                                        <Button onClick={handleSave} disabled={isSaving}>
+                                            {isSaving ? <Loader2 className="animate-spin mr-2 h-4 w-4"/> : <Save className="mr-2 h-4 w-4" />}
+                                            Save
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <Button variant="outline" onClick={() => setIsEditing(true)} className="w-full"><Edit className="mr-2 h-4 w-4" /> Edit</Button>
+                                )}
+                            </div>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
         </Card>
-    )
+    );
 }
 
 export function OrderList({ orders, onUpdateOrder }: OrderListProps) {
