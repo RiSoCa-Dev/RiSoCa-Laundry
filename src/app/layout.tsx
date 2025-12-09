@@ -4,7 +4,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'RKR Laundry Service',
-  description: 'Fast, clean, and convenient laundry service at rkrlaundry.com. Real-time tracking and smart pricing for your laundry needs.',
+  description: 'Fast, clean, and convenient laundry service at rkrlaundry.com. Real-time tracking for your laundry needs.',
   manifest: '/manifest.json',
   viewport: {
     width: 'device-width',
@@ -29,6 +29,28 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'RKR Laundry',
   },
+  openGraph: {
+    title: 'RKR Laundry Service',
+    description: 'Fast, clean, and convenient laundry service at rkrlaundry.com. Real-time tracking and smart pricing for your laundry needs.',
+    url: 'https://rkrlaundry.com',
+    siteName: 'RKR Laundry',
+    images: [
+      {
+        url: 'https://rkrlaundry.com/icons/android-chrome-512x512.png',
+        width: 512,
+        height: 512,
+        alt: 'RKR Laundry Service',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'RKR Laundry Service',
+    description: 'Fast, clean, and convenient laundry service at rkrlaundry.com. Real-time tracking and smart pricing for your laundry needs.',
+    images: ['https://rkrlaundry.com/icons/android-chrome-512x512.png'],
+  },
 };
 
 export default function RootLayout({
@@ -47,6 +69,20 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        {/* Open Graph / Facebook / Messenger */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://rkrlaundry.com" />
+        <meta property="og:title" content="RKR Laundry Service" />
+        <meta property="og:description" content="Fast, clean, and convenient laundry service at rkrlaundry.com. Real-time tracking and smart pricing for your laundry needs." />
+        <meta property="og:image" content="https://rkrlaundry.com/icons/android-chrome-512x512.png" />
+        <meta property="og:image:width" content="512" />
+        <meta property="og:image:height" content="512" />
+        <meta property="og:image:alt" content="RKR Laundry Service" />
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="RKR Laundry Service" />
+        <meta name="twitter:description" content="Fast, clean, and convenient laundry service at rkrlaundry.com. Real-time tracking and smart pricing for your laundry needs." />
+        <meta name="twitter:image" content="https://rkrlaundry.com/icons/android-chrome-512x512.png" />
       </head>
       <body className="font-body antialiased flex flex-col h-screen overflow-hidden">
         {children}
