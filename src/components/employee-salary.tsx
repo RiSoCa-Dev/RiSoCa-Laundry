@@ -17,10 +17,13 @@ import {
   TableRow,
   TableFooter
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { Loader2, Inbox, Calendar as CalendarIcon } from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { Loader2, Inbox } from 'lucide-react';
 import type { Order } from '@/components/order-list';
 import { format, startOfDay } from 'date-fns';
 
@@ -30,92 +33,106 @@ const mockOrders: Order[] = [
     { id: 'ORD124', userId: 'user2', customerName: 'Jane Smith', contactNumber: '09987654321', load: 2, weight: 15, status: 'Success', total: 360, orderDate: new Date(), servicePackage: 'package1', distance: 0 },
     { id: 'ORD125', userId: 'user3', customerName: 'Peter Jones', contactNumber: '09171234567', load: 1, weight: 8, status: 'Delivered', total: 180, orderDate: new Date(new Date().setDate(new Date().getDate() - 1)), servicePackage: 'package1', distance: 0 },
     { id: 'ORD126', userId: 'user4', customerName: 'Mary Anne', contactNumber: '09281234567', load: 3, weight: 22, status: 'Washing', total: 540, orderDate: new Date(), servicePackage: 'package1', distance: 0 },
+    { id: 'ORD127', userId: 'user5', customerName: 'Chris Green', contactNumber: '09179876543', load: 4, weight: 30, status: 'Delivered', total: 720, orderDate: new Date(new Date().setDate(new Date().getDate() - 1)), servicePackage: 'package1', distance: 0 },
 ];
 
 const SALARY_PER_LOAD = 30;
 
+type DailySalary = {
+    date: Date;
+    orders: Order[];
+    totalLoads: number;
+    totalSalary: number;
+};
+
 export function EmployeeSalary() {
   const [orders, setOrders] = useState(mockOrders);
   const [loading, setLoading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  const completedOrders = orders.filter(
-    (order) => (order.status === 'Success' || order.status === 'Delivered') &&
-               startOfDay(order.orderDate).getTime() === startOfDay(selectedDate).getTime()
-  );
+  const completedOrdersByDate = orders
+    .filter((order) => order.status === 'Success' || order.status === 'Delivered')
+    .reduce((acc, order) => {
+        const dateStr = startOfDay(order.orderDate).toISOString();
+        if (!acc[dateStr]) {
+            acc[dateStr] = [];
+        }
+        acc[dateStr].push(order);
+        return acc;
+    }, {} as Record<string, Order[]>);
 
-  const totalLoads = completedOrders.reduce((acc, order) => acc + order.load, 0);
-  const totalSalary = totalLoads * SALARY_PER_LOAD;
+  const dailySalaries: DailySalary[] = Object.entries(completedOrdersByDate)
+    .map(([dateStr, orders]) => {
+        const totalLoads = orders.reduce((sum, o) => sum + o.load, 0);
+        return {
+            date: new Date(dateStr),
+            orders: orders,
+            totalLoads: totalLoads,
+            totalSalary: totalLoads * SALARY_PER_LOAD,
+        };
+    })
+    .sort((a, b) => b.date.getTime() - a.date.getTime());
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex-1">
-          <CardTitle>Daily Salary Calculation</CardTitle>
-          <CardDescription>Salary is calculated at ₱{SALARY_PER_LOAD} per completed load for the selected day.</CardDescription>
-        </div>
-        <Popover>
-            <PopoverTrigger asChild>
-                <Button
-                variant={"outline"}
-                className="w-full md:w-auto justify-start text-left font-normal"
-                >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {format(selectedDate, "PPP")}
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-                <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(day) => day && setSelectedDate(day)}
-                initialFocus
-                />
-            </PopoverContent>
-        </Popover>
-        <div className="text-right flex-shrink-0 bg-muted p-3 rounded-lg">
-            <div className="text-sm text-muted-foreground">Total Salary for {format(selectedDate, "MMM d")}</div>
-            <div className="text-2xl font-bold text-primary">₱{totalSalary.toFixed(2)}</div>
-        </div>
+      <CardHeader>
+        <CardTitle>Daily Salary Calculation</CardTitle>
+        <CardDescription>Salary is calculated at ₱{SALARY_PER_LOAD} per completed load for each day.</CardDescription>
       </CardHeader>
       <CardContent>
         {loading ? (
           <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
             <Loader2 className="h-12 w-12 mb-2 animate-spin" />
-            <p>Loading orders...</p>
+            <p>Loading salary data...</p>
           </div>
-        ) : completedOrders.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead className="text-center">Loads</TableHead>
-                <TableHead className="text-right">Salary Earned</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {completedOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell>{order.id}</TableCell>
-                  <TableCell>{order.customerName}</TableCell>
-                  <TableCell className="text-center">{order.load}</TableCell>
-                  <TableCell className="text-right">₱{(order.load * SALARY_PER_LOAD).toFixed(2)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-            <TableFooter>
-                <TableRow>
-                    <TableCell colSpan={2} className="font-bold">Total</TableCell>
-                    <TableCell className="text-center font-bold">{totalLoads}</TableCell>
-                    <TableCell className="text-right font-bold">₱{totalSalary.toFixed(2)}</TableCell>
-                </TableRow>
-            </TableFooter>
-          </Table>
+        ) : dailySalaries.length > 0 ? (
+          <Accordion type="single" collapsible className="w-full">
+            {dailySalaries.map(({ date, orders, totalLoads, totalSalary }) => (
+              <AccordionItem key={date.toISOString()} value={date.toISOString()}>
+                <AccordionTrigger>
+                    <div className="flex justify-between w-full pr-4">
+                        <span className="font-semibold">{format(date, 'PPP')}</span>
+                        <div className="flex gap-4 text-sm text-right">
+                           <span>Loads: <span className="font-bold">{totalLoads}</span></span>
+                           <span className="text-primary">Salary: <span className="font-bold">₱{totalSalary.toFixed(2)}</span></span>
+                        </div>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                   <Table>
+                        <TableHeader>
+                        <TableRow>
+                            <TableHead>Order ID</TableHead>
+                            <TableHead>Customer</TableHead>
+                            <TableHead className="text-center">Loads</TableHead>
+                            <TableHead className="text-right">Salary Earned</TableHead>
+                        </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        {orders.map((order) => (
+                            <TableRow key={order.id}>
+                            <TableCell className="text-xs">{order.id}</TableCell>
+                            <TableCell className="text-xs">{order.customerName}</TableCell>
+                            <TableCell className="text-center text-xs">{order.load}</TableCell>
+                            <TableCell className="text-right text-xs">₱{(order.load * SALARY_PER_LOAD).toFixed(2)}</TableCell>
+                            </TableRow>
+                        ))}
+                        </TableBody>
+                         <TableFooter>
+                            <TableRow>
+                                <TableCell colSpan={2} className="font-bold text-xs">Total</TableCell>
+                                <TableCell className="text-center font-bold text-xs">{totalLoads}</TableCell>
+                                <TableCell className="text-right font-bold text-xs">₱{totalSalary.toFixed(2)}</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
             <Inbox className="h-12 w-12 mb-2" />
-            <p>No completed orders found for {format(selectedDate, "PPP")}.</p>
+            <p>No completed orders found.</p>
           </div>
         )}
       </CardContent>
