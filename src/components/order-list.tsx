@@ -243,10 +243,6 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                     </AccordionTrigger>
                     <AccordionContent className="p-4 pt-0">
                         <div className="space-y-4">
-                            <div className="text-sm text-muted-foreground">
-                                <span className="font-semibold text-foreground">Contact:</span> {order.contactNumber}
-                            </div>
-
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
                                     <Label htmlFor={`load-mob-${order.id}`}>Load</Label>
