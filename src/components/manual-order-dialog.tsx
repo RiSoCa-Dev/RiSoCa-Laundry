@@ -57,7 +57,7 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
       contactNumber: data.contactNumber || 'N/A',
       load: data.load,
       weight: data.weight,
-      status: data.isPaid ? 'Success' : 'Ready for Pick Up',
+      status: 'Order Placed', // Always start with Order Placed
       total: data.total,
       servicePackage: 'package1',
       distance: 0,
