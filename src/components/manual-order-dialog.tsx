@@ -16,9 +16,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import type { Order } from './order-list';
-import { Loader2, Layers } from 'lucide-react';
+import { Loader2, Layers, CreditCard, CheckCircle } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { Separator } from './ui/separator';
+import { cn } from '@/lib/utils';
 
 const manualOrderSchema = z.object({
   customerName: z.string().min(2, 'Name is required.'),
@@ -50,6 +51,7 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
   });
 
   const watchedWeight = form.watch('weight');
+  const isPaid = form.watch('isPaid');
 
   const { loads, distribution } = useMemo(() => {
     const weight = watchedWeight || 0;
@@ -190,15 +192,22 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
               <p className="text-xs text-destructive">{form.formState.errors.total.message}</p>
             )}
           </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="isPaid"
-              checked={form.watch('isPaid')}
-              onCheckedChange={(checked) => form.setValue('isPaid', checked)}
+          
+          <div className="flex justify-center">
+            <Button
+              type="button"
+              onClick={() => form.setValue('isPaid', !isPaid)}
+              className={cn(
+                "w-full",
+                isPaid ? "bg-green-500 hover:bg-green-600" : "bg-destructive hover:bg-destructive/90"
+              )}
               disabled={isSaving}
-            />
-            <Label htmlFor="isPaid">Mark as Paid</Label>
+            >
+              {isPaid ? <CheckCircle className="mr-2 h-4 w-4" /> : <CreditCard className="mr-2 h-4 w-4" />}
+              {isPaid ? 'Mark as Unpaid' : 'Mark as Paid'}
+            </Button>
           </div>
+
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => { form.reset(); onClose(); }} disabled={isSaving}>
