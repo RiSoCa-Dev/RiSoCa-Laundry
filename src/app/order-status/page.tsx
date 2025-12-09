@@ -4,44 +4,125 @@ import { useState } from 'react';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
 import { OrderStatusTracker } from '@/components/order-status-tracker';
-import { CustomerOrderList } from '@/components/customer-order-list';
 import type { Order } from '@/components/order-list';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Inbox } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Search, Inbox, AlertTriangle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+// Mock data for demonstration purposes. In a real application, this would be fetched from a backend.
+const mockOrders: Order[] = [
+  {
+    id: 'ORDER-123',
+    userId: 'user-1',
+    customerName: 'Jane Doe',
+    contactNumber: '09123456789',
+    load: 1,
+    weight: 7.5,
+    status: 'Washing',
+    total: 180,
+    orderDate: new Date(),
+    servicePackage: 'package1',
+    distance: 0,
+  },
+  {
+    id: 'ORDER-456',
+    userId: 'user-2',
+    customerName: 'John Smith',
+    contactNumber: '09987654321',
+    load: 2,
+    weight: 15,
+    status: 'Ready for Pick Up',
+    total: 360,
+    orderDate: new Date(),
+    servicePackage: 'package3',
+    distance: 5,
+  },
+];
 
 export default function OrderStatusPage() {
-    const [orders, setOrders] = useState<Order[]>([]);
-    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orderId, setOrderId] = useState('');
+  const [searchedOrder, setSearchedOrder] = useState<Order | null>(null);
+  const [searchAttempted, setSearchAttempted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
-    const handleSelectOrder = (order: Order) => {
-        setSelectedOrder(order);
-    };
-
-    const handleBackToList = () => {
-        setSelectedOrder(null);
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!orderId) {
+      toast({
+        variant: 'destructive',
+        title: 'Order ID Required',
+        description: 'Please enter an order ID to search.',
+      });
+      return;
     }
+
+    setLoading(true);
+    setSearchAttempted(false);
+
+    // Simulate API call to find the order
+    setTimeout(() => {
+      const foundOrder = mockOrders.find(o => o.id.toLowerCase() === orderId.toLowerCase());
+      setSearchedOrder(foundOrder || null);
+      setSearchAttempted(true);
+      setLoading(false);
+    }, 1000);
+  };
 
   return (
     <div className="flex flex-col h-screen">
       <AppHeader showLogo={true} />
       <main className="flex-1 overflow-y-auto flex items-center justify-center container mx-auto px-4 py-8">
         <div className="w-full max-w-2xl">
-          {selectedOrder ? (
-            <>
-                <Button variant="ghost" onClick={handleBackToList} className="mb-4">
-                    <ArrowLeft className="mr-2 h-4 w-4" /> Back to All Orders
+          <Card>
+            <CardHeader>
+              <CardTitle>Check Order Status</CardTitle>
+              <CardDescription>Enter your order ID to see the real-time progress of your laundry.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSearch} className="flex flex-col sm:flex-row items-end gap-3 mb-6">
+                <div className="w-full grid gap-1.5">
+                  <Label htmlFor="orderId">Order ID</Label>
+                   <div className="relative">
+                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="orderId"
+                      placeholder="e.g., ORDER-123"
+                      value={orderId}
+                      onChange={(e) => setOrderId(e.target.value)}
+                      className="pl-10"
+                      disabled={loading}
+                    />
+                   </div>
+                </div>
+                <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+                    {loading ? 'Searching...' : 'Check Status'}
                 </Button>
-                <OrderStatusTracker order={selectedOrder} />
-            </>
-          ) : orders.length > 0 ? (
-            <CustomerOrderList orders={orders} onOrderSelect={handleSelectOrder} />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground border rounded-lg bg-card p-8">
-                <Inbox className="h-12 w-12 mb-2" />
-                <h3 className="text-lg font-semibold">No Orders Found</h3>
-                <p>You haven't placed any orders yet.</p>
-            </div>
-          )}
+              </form>
+
+              {searchAttempted && searchedOrder && (
+                <OrderStatusTracker order={searchedOrder} />
+              )}
+              
+              {searchAttempted && !searchedOrder && (
+                <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground border rounded-lg bg-card p-8">
+                    <AlertTriangle className="h-12 w-12 mb-2 text-destructive" />
+                    <h3 className="text-lg font-semibold">Order Not Found</h3>
+                    <p>No order was found with the ID <span className="font-semibold text-primary">{orderId}</span>. Please check the ID and try again.</p>
+                </div>
+              )}
+
+              {!searchAttempted && !searchedOrder && (
+                <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground border-2 border-dashed rounded-lg bg-transparent p-8">
+                    <Inbox className="h-12 w-12 mb-2" />
+                    <p>Your order status will appear here.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </main>
       <AppFooter />
