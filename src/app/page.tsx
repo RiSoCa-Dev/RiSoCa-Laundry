@@ -182,7 +182,8 @@ export default function Home() {
   // Always log for debugging on live site
   useEffect(() => {
     if (mounted) {
-      console.log('🔍 Profile Debug:', {
+      const shouldShowProfile = (!authLoading && hasUser) || !!profileData;
+      const conditionCheck = {
         mounted,
         authLoading,
         hasUser: !!user,
@@ -193,8 +194,22 @@ export default function Home() {
         initial,
         userEmail: user?.email,
         sessionUserEmail: session?.user?.email,
-        willShowProfile: (!authLoading && hasUser) || !!profileData
-      });
+        willShowProfile: shouldShowProfile,
+        condition1: !authLoading,
+        condition2: hasUser,
+        condition3: !!profileData,
+        finalCondition: `mounted(${mounted}) && ((!authLoading(${!authLoading}) && hasUser(${hasUser})) || profileData(${!!profileData}))`
+      };
+      console.log('🔍 Profile Debug:', conditionCheck);
+      
+      // Also log if condition should be true but profile might not show
+      if (shouldShowProfile && !profileData && !currentUser) {
+        console.warn('⚠️ Profile should show but user data missing!', {
+          user,
+          session,
+          currentUser
+        });
+      }
     }
   }, [mounted, authLoading, user, session, currentUser, profileData, displayName, initial, hasUser]);
 
@@ -217,31 +232,47 @@ export default function Home() {
               <div className="flex flex-row items-center justify-center gap-2 sm:gap-3 md:gap-4 mb-4 min-h-[4rem]">
                 {/* Show profile if we have a user and not loading, OR if we have profileData */}
                 {/* Only render after mount to avoid hydration issues */}
-                {mounted && ((!authLoading && hasUser) || profileData) ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="flex flex-col items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg p-1">
-                        <div className="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-blue-600 text-white text-xl sm:text-2xl font-bold shadow-lg">
-                          {initial}
-                        </div>
-                        <div className="text-xs sm:text-sm font-semibold text-primary text-center px-2">{displayName}</div>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="center" className="w-48">
-                      <DropdownMenuItem asChild>
-                        <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
-                          <User className="h-4 w-4" />
-                          <span>Profile</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive">
-                        <LogOut className="h-4 w-4" />
-                        <span>Logout</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : mounted && !authLoading ? (
+                {(() => {
+                  const shouldShow = mounted && !authLoading && (hasUser || !!profileData);
+                  if (mounted && !authLoading) {
+                    console.log('🎯 Rendering decision:', {
+                      shouldShow,
+                      mounted,
+                      authLoading,
+                      hasUser,
+                      hasProfileData: !!profileData,
+                      currentUser: !!currentUser,
+                      user: !!user,
+                      session: !!session
+                    });
+                  }
+                  return shouldShow ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="flex flex-col items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg p-1">
+                          <div className="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-blue-600 text-white text-xl sm:text-2xl font-bold shadow-lg">
+                            {initial || '?'}
+                          </div>
+                          <div className="text-xs sm:text-sm font-semibold text-primary text-center px-2">{displayName || 'User'}</div>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="center" className="w-48">
+                        <DropdownMenuItem asChild>
+                          <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
+                            <User className="h-4 w-4" />
+                            <span>Profile</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive">
+                          <LogOut className="h-4 w-4" />
+                          <span>Logout</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : null;
+                })()}
+                {mounted && !authLoading && !hasUser && !profileData ? (
                   <>
                     <Link href="/login" passHref className="flex-shrink-0">
                       <Button size="lg" className="w-28 sm:w-32 h-10 sm:h-11 text-sm sm:text-base rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-shadow">
