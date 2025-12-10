@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,9 @@ export default function Home() {
   const { user, loading: authLoading, session } = useAuthSession();
   const { toast } = useToast();
   const gridItems = customerGridItems;
+  const [profileData, setProfileData] = useState<{ firstName: string; displayName: string; initial: string } | null>(null);
+  const fetchedUserIdRef = useRef<string | null>(null);
+  const isFetchingRef = useRef(false);
 
   // Refresh session on mount to ensure it's up to date
   useEffect(() => {
@@ -57,6 +60,87 @@ export default function Home() {
 
     checkAdminRedirect();
   }, [user, authLoading, router]);
+
+  // Fetch profile data from profiles table
+  useEffect(() => {
+    async function fetchProfile() {
+      if (!user || authLoading) {
+        if (user === null && fetchedUserIdRef.current !== null) {
+          setProfileData(null);
+          fetchedUserIdRef.current = null;
+          isFetchingRef.current = false;
+        }
+        return;
+      }
+
+      // Prevent refetching if we already have data for this user
+      if (user.id === fetchedUserIdRef.current && profileData) {
+        return;
+      }
+
+      // Prevent multiple simultaneous fetches
+      if (isFetchingRef.current) {
+        return;
+      }
+
+      isFetchingRef.current = true;
+      fetchedUserIdRef.current = user.id;
+
+      // Set initial profile data from user metadata/email immediately
+      const initialFirstName = (user.user_metadata?.first_name as string | undefined) || 
+        (user.user_metadata?.firstName as string | undefined) || 
+        '';
+      const initialDisplayName = initialFirstName || 
+        (user.user_metadata?.name as string | undefined) || 
+        user.email?.split('@')[0] || 
+        'Customer';
+      const initialInitial = (initialFirstName || initialDisplayName || user.email?.[0] || 'C').charAt(0).toUpperCase();
+      
+      // Set immediately so it shows right away
+      const initialProfileData = { 
+        firstName: initialFirstName, 
+        displayName: initialDisplayName, 
+        initial: initialInitial 
+      };
+      setProfileData(initialProfileData);
+
+      try {
+        // Fetch from profiles table to get updated data
+        const { data: profileDataFromDb, error } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, email')
+          .eq('id', user.id)
+          .single();
+
+        // If profile exists, use it; otherwise keep the initial data
+        if (!error && profileDataFromDb) {
+          const firstName = profileDataFromDb.first_name || initialFirstName;
+          const displayName = firstName || 
+            (user.user_metadata?.name as string | undefined) || 
+            user.email?.split('@')[0] || 
+            'Customer';
+          const initial = (firstName || displayName || user.email?.[0] || 'C').charAt(0).toUpperCase();
+          
+          setProfileData({ firstName, displayName, initial });
+        }
+        // If error is "no rows" (PGRST116), that's fine - profile doesn't exist yet
+        // We already set the initial data above, so we keep it
+      } catch (error) {
+        // Error fetching profile - keep the initial data we already set
+        console.error('Error fetching profile:', error);
+      } finally {
+        isFetchingRef.current = false;
+      }
+    }
+
+    if (!authLoading && user) {
+      fetchProfile();
+    } else if (!authLoading && !user) {
+      setProfileData(null);
+      fetchedUserIdRef.current = null;
+      isFetchingRef.current = false;
+    }
+  }, [user?.id, authLoading]);
 
   const handleLogout = async () => {
     try {
@@ -77,14 +161,16 @@ export default function Home() {
 
   // Get user data - use session user if available, fallback to user from hook
   const currentUser = session?.user || user;
-  const firstName = (currentUser?.user_metadata?.first_name as string | undefined) || 
+  
+  // Use profile data if available, otherwise fallback to user metadata/email
+  const displayName = profileData?.displayName || 
+    (currentUser?.user_metadata?.first_name as string | undefined) || 
     (currentUser?.user_metadata?.firstName as string | undefined) || 
-    '';
-  const displayName = firstName || 
     (currentUser?.user_metadata?.name as string | undefined) || 
-    currentUser?.email || 
+    currentUser?.email?.split('@')[0] || 
     'Customer';
-  const initial = (firstName || displayName || 'C').charAt(0).toUpperCase();
+  const initial = profileData?.initial || 
+    (displayName || currentUser?.email?.[0] || 'C').charAt(0).toUpperCase();
 
   return (
       <HomePageWrapper gridItems={gridItems}>
@@ -104,29 +190,40 @@ export default function Home() {
             <div className="flex flex-col items-center mb-4 w-full">
               <div className="flex flex-row items-center justify-center gap-2 sm:gap-3 md:gap-4 mb-4 min-h-[4rem]">
                 {!authLoading && currentUser ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="flex flex-col items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg p-1">
-                        <div className="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-blue-600 text-white text-xl sm:text-2xl font-bold shadow-lg">
-                          {initial}
-                        </div>
-                        <div className="text-xs sm:text-sm font-semibold text-primary text-center px-2">{displayName}</div>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="center" className="w-48">
-                      <DropdownMenuItem asChild>
-                        <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
-                          <User className="h-4 w-4" />
-                          <span>Profile</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive">
-                        <LogOut className="h-4 w-4" />
-                        <span>Logout</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  // Show profile icon - use profileData if available, otherwise use currentUser fallback
+                  (profileData || currentUser) ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="flex flex-col items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg p-1">
+                          <div className="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-blue-600 text-white text-xl sm:text-2xl font-bold shadow-lg">
+                            {initial}
+                          </div>
+                          <div className="text-xs sm:text-sm font-semibold text-primary text-center px-2">{displayName}</div>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="center" className="w-48">
+                        <DropdownMenuItem asChild>
+                          <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
+                            <User className="h-4 w-4" />
+                            <span>Profile</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive">
+                          <LogOut className="h-4 w-4" />
+                          <span>Logout</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    // Fallback while profile is loading
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-blue-600 text-white text-xl sm:text-2xl font-bold shadow-lg">
+                        {(currentUser.email?.[0] || 'C').toUpperCase()}
+                      </div>
+                      <div className="text-xs sm:text-sm font-semibold text-primary text-center px-2">{currentUser.email?.split('@')[0] || 'Customer'}</div>
+                    </div>
+                  )
                 ) : !authLoading ? (
                   <>
                     <Link href="/login" passHref className="flex-shrink-0">
