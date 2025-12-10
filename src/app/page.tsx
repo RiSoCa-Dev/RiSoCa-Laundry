@@ -204,13 +204,13 @@ export default function Home() {
               ) : mounted && !authLoading ? (
                 <>
                   <Link href="/login">
-                    <Button>
+                    <Button className="h-12 w-32 sm:w-36 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all">
                       <ArrowRight className="h-4 w-4 mr-2" />
-                      Log In
+                      Log in
                     </Button>
                   </Link>
                   <Link href="/register">
-                    <Button variant="secondary">
+                    <Button className="h-12 w-32 sm:w-36 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-white hover:from-yellow-500 hover:to-yellow-600 shadow-lg hover:shadow-xl transition-all">
                       <UserPlus className="h-4 w-4 mr-2" />
                       Register
                     </Button>
