@@ -191,9 +191,9 @@ export default function Home() {
        (displayName || currentUser?.email?.[0] || 'C').charAt(0).toUpperCase())
     : '';
   
-  // Debug logging in useEffect to avoid spam
+  // Enhanced debug logging - always enabled for troubleshooting
   useEffect(() => {
-    if (mounted && process.env.NODE_ENV === 'development') {
+    if (mounted) {
       console.log('🔍 Profile Debug:', {
         mounted,
         authLoading,
@@ -203,10 +203,21 @@ export default function Home() {
         hasProfileData: !!profileData,
         shouldShowProfile,
         displayName: shouldShowProfile ? displayName : '(not calculated)',
-        initial: shouldShowProfile ? initial : '(not calculated)'
+        initial: shouldShowProfile ? initial : '(not calculated)',
+        userEmail: user?.email,
+        sessionUserEmail: session?.user?.email,
+        currentUserEmail: currentUser?.email,
+        conditionBreakdown: {
+          'mounted': mounted,
+          '!authLoading': !authLoading,
+          'hasSession': hasSession,
+          'hasUser': hasUser,
+          'hasCurrentUser': hasCurrentUser,
+          'ALL_TRUE': mounted && !authLoading && hasSession && hasUser && hasCurrentUser
+        }
       });
     }
-  }, [mounted, authLoading, hasSession, hasUser, hasCurrentUser, profileData, shouldShowProfile, displayName, initial]);
+  }, [mounted, authLoading, hasSession, hasUser, hasCurrentUser, profileData, shouldShowProfile, displayName, initial, user, session, currentUser]);
 
   return (
       <HomePageWrapper gridItems={gridItems}>
@@ -227,31 +238,42 @@ export default function Home() {
               <div className="flex flex-row items-center justify-center gap-2 sm:gap-3 md:gap-4 mb-4 min-h-[4rem]">
                 {/* Strict condition: only render when ALL auth states are ready */}
                 {shouldShowProfile ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="flex flex-col items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg p-1">
-                        <div className="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-blue-600 text-white text-xl sm:text-2xl font-bold shadow-lg">
-                          {initial}
-                        </div>
-                        <div className="text-xs sm:text-sm font-semibold text-primary text-center px-2">
-                          {displayName}
-                        </div>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="center" className="w-48">
-                      <DropdownMenuItem asChild>
-                        <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
-                          <User className="h-4 w-4" />
-                          <span>Profile</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive">
-                        <LogOut className="h-4 w-4" />
-                        <span>Logout</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <>
+                    {/* Debug indicator - remove after fixing */}
+                    {process.env.NODE_ENV === 'development' && (
+                      <div className="absolute top-0 left-0 bg-green-500 text-white text-xs p-1 z-50">
+                        PROFILE RENDERING
+                      </div>
+                    )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button 
+                          className="flex flex-col items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg p-1"
+                          data-testid="profile-button"
+                        >
+                          <div className="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-blue-600 text-white text-xl sm:text-2xl font-bold shadow-lg">
+                            {initial}
+                          </div>
+                          <div className="text-xs sm:text-sm font-semibold text-primary text-center px-2">
+                            {displayName}
+                          </div>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="center" className="w-48">
+                        <DropdownMenuItem asChild>
+                          <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
+                            <User className="h-4 w-4" />
+                            <span>Profile</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive">
+                          <LogOut className="h-4 w-4" />
+                          <span>Logout</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </>
                 ) : mounted && !authLoading ? (
                   // Show login/register buttons only when auth is fully loaded and user is not logged in
                   <>
