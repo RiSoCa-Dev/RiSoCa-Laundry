@@ -180,7 +180,13 @@ export default function LoginPage() {
       title: 'Login Successful',
       description: 'Welcome back!',
     })
-    router.push('/');
+    
+    // Wait a moment for session to be established before redirecting
+    setTimeout(() => {
+      router.push('/');
+      router.refresh(); // Force a refresh to ensure session is loaded
+    }, 100);
+    
     setLoading(false)
   }
 

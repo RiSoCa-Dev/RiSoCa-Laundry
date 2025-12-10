@@ -20,6 +20,7 @@ import { useAuthSession } from '@/hooks/use-auth-session';
 import { isAdmin } from '@/lib/auth-helpers';
 import { signOut } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase-client';
 
 const customerGridItems = [
   { href: '/order-status', label: 'Order Status', icon: Package },
@@ -35,9 +36,14 @@ const customerGridItems = [
 
 export default function Home() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuthSession();
+  const { user, loading: authLoading, session } = useAuthSession();
   const { toast } = useToast();
   const gridItems = customerGridItems;
+
+  // Refresh session on mount to ensure it's up to date
+  useEffect(() => {
+    supabase.auth.getSession();
+  }, []);
 
   useEffect(() => {
     async function checkAdminRedirect() {
@@ -69,8 +75,15 @@ export default function Home() {
     }
   };
 
-  const firstName = (user?.user_metadata?.first_name as string | undefined) || (user?.user_metadata?.firstName as string | undefined) || '';
-  const displayName = firstName || (user?.user_metadata?.name as string | undefined) || user?.email || 'Customer';
+  // Get user data - use session user if available, fallback to user from hook
+  const currentUser = session?.user || user;
+  const firstName = (currentUser?.user_metadata?.first_name as string | undefined) || 
+    (currentUser?.user_metadata?.firstName as string | undefined) || 
+    '';
+  const displayName = firstName || 
+    (currentUser?.user_metadata?.name as string | undefined) || 
+    currentUser?.email || 
+    'Customer';
   const initial = (firstName || displayName || 'C').charAt(0).toUpperCase();
 
   return (
@@ -90,7 +103,7 @@ export default function Home() {
 
             <div className="flex flex-col items-center mb-4 w-full">
               <div className="flex flex-row items-center justify-center gap-2 sm:gap-3 md:gap-4 mb-4 min-h-[4rem]">
-                {user ? (
+                {!authLoading && currentUser ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="flex flex-col items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg p-1">
@@ -114,7 +127,7 @@ export default function Home() {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                ) : (
+                ) : !authLoading ? (
                   <>
                     <Link href="/login" passHref className="flex-shrink-0">
                       <Button size="lg" className="w-28 sm:w-32 h-10 sm:h-11 text-sm sm:text-base rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-shadow">
@@ -129,7 +142,7 @@ export default function Home() {
                       </Button>
                     </Link>
                   </>
-                )}
+                ) : null}
             </div>
 
             <div className="grid grid-cols-3 gap-2 md:gap-4 w-full max-w-md">
