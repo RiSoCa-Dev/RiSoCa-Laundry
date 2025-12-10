@@ -6,7 +6,7 @@
     ],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.rkrlaundry.twa",
+      "package_name": "com.rkrlaundry.app",
       "sha256_cert_fingerprints": [
         "24:78:7D:90:59:EB:00:4F:9B:B4:2E:BE:55:DF:F8:B0:E7:47:D3:B4:DB:11:23:8D:E1:5C:83:2E:7A:D6:E5:50"
       ]
