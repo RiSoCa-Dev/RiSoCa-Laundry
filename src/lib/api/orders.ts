@@ -115,14 +115,60 @@ export async function fetchOrderWithHistory(orderId: string) {
     .maybeSingle();
 }
 
+/**
+ * Fetches an order by ID and customer name.
+ * This function uses an RPC call to bypass RLS restrictions,
+ * allowing anyone (logged in or not) to search for orders by ID and name.
+ * This is necessary for the order status page where customers need to
+ * search for orders created by admins.
+ */
 export async function fetchOrderForCustomer(orderId: string, name: string) {
-  const { data, error } = await fetchOrderWithHistory(orderId);
-  if (error || !data) return { data: null, error };
+  // Use RPC call to bypass RLS - allows searching admin-created orders
+  const { data, error } = await supabase.rpc('search_order_by_id_and_name', {
+    p_order_id: orderId.trim(),
+    p_customer_name: name.trim(),
+  });
 
-  const customerNameLower = data.customer_name.toLowerCase();
-  const inputNameLower = name.trim().toLowerCase();
-  const matches = customerNameLower.includes(inputNameLower);
-  return { data: matches ? data : null, error: null };
+  if (error) {
+    // Fallback to direct query if RPC function doesn't exist (for backwards compatibility)
+    const { data: fallbackData, error: fallbackError } = await fetchOrderWithHistory(orderId);
+    if (fallbackError || !fallbackData) return { data: null, error: fallbackError };
+
+    const customerNameLower = fallbackData.customer_name.toLowerCase();
+    const inputNameLower = name.trim().toLowerCase();
+    const matches = customerNameLower.includes(inputNameLower);
+    return { data: matches ? fallbackData : null, error: null };
+  }
+
+  // RPC returns array, get first result
+  if (!data || data.length === 0) {
+    return { data: null, error: null };
+  }
+
+  const orderData = data[0];
+  
+  // Transform the RPC result to match the expected format
+  return {
+    data: {
+      id: orderData.id,
+      customer_id: orderData.customer_id,
+      branch_id: orderData.branch_id,
+      customer_name: orderData.customer_name,
+      contact_number: orderData.contact_number,
+      service_package: orderData.service_package,
+      weight: orderData.weight,
+      loads: orderData.loads,
+      distance: orderData.distance,
+      delivery_option: orderData.delivery_option,
+      status: orderData.status,
+      total: orderData.total,
+      is_paid: orderData.is_paid,
+      created_at: orderData.created_at,
+      updated_at: orderData.updated_at,
+      order_status_history: (orderData.order_status_history as any[]) || [],
+    },
+    error: null,
+  };
 }
 
 export async function updateOrderStatus(orderId: string, status: string, note?: string) {

@@ -173,7 +173,7 @@ export default function OrderStatusPage() {
               <CardDescription>
                 {user 
                   ? 'View your orders below or search for a specific order.'
-                  : 'Enter your order ID and name to see the real-time progress of your laundry.'}
+                  : 'Enter the Order ID and Name provided by the admin to track your laundry order status.'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -321,12 +321,12 @@ export default function OrderStatusPage() {
                        </div>
                     </div>
                      <div className="w-full grid gap-1.5">
-                      <Label htmlFor="name">Any Part of Your Name</Label>
+                      <Label htmlFor="name">Customer Name</Label>
                        <div className="relative">
                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="name"
-                          placeholder="e.g., Jane"
+                          placeholder="Enter the name on the order"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
                           className="pl-10"
