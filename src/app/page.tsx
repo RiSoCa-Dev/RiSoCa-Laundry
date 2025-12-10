@@ -231,47 +231,33 @@ export default function Home() {
             <div className="flex flex-col items-center mb-4 w-full">
               <div className="flex flex-row items-center justify-center gap-2 sm:gap-3 md:gap-4 mb-4 min-h-[4rem]">
                 {/* Show profile if we have a user and not loading, OR if we have profileData */}
-                {/* Only render after mount to avoid hydration issues */}
-                {(() => {
-                  const shouldShow = mounted && !authLoading && (hasUser || !!profileData);
-                  if (mounted && !authLoading) {
-                    console.log('🎯 Rendering decision:', {
-                      shouldShow,
-                      mounted,
-                      authLoading,
-                      hasUser,
-                      hasProfileData: !!profileData,
-                      currentUser: !!currentUser,
-                      user: !!user,
-                      session: !!session
-                    });
-                  }
-                  return shouldShow ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="flex flex-col items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg p-1">
-                          <div className="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-blue-600 text-white text-xl sm:text-2xl font-bold shadow-lg">
-                            {initial || '?'}
-                          </div>
-                          <div className="text-xs sm:text-sm font-semibold text-primary text-center px-2">{displayName || 'User'}</div>
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="center" className="w-48">
-                        <DropdownMenuItem asChild>
-                          <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
-                            <User className="h-4 w-4" />
-                            <span>Profile</span>
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive">
-                          <LogOut className="h-4 w-4" />
-                          <span>Logout</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : null;
-                })()}
+                {mounted && !authLoading && (hasUser || !!profileData) && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex flex-col items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg p-1">
+                        <div className="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-blue-600 text-white text-xl sm:text-2xl font-bold shadow-lg">
+                          {initial || '?'}
+                        </div>
+                        <div className="text-xs sm:text-sm font-semibold text-primary text-center px-2">
+                          {displayName || 'User'}
+                        </div>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="center" className="w-48">
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
+                          <User className="h-4 w-4" />
+                          <span>Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive">
+                        <LogOut className="h-4 w-4" />
+                        <span>Logout</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
                 {mounted && !authLoading && !hasUser && !profileData ? (
                   <>
                     <Link href="/login" passHref className="flex-shrink-0">
