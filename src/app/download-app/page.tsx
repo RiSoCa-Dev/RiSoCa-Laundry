@@ -99,9 +99,9 @@ export default function DownloadAppPage() {
             {isInstalled ? (
               <div className="flex flex-col items-center gap-4">
                 <CheckCircle2 className="h-16 w-16 text-green-500" />
-                <p className="text-lg font-semibold text-primary">App is Installed</p>
-                <p className="text-sm text-muted-foreground">
-                  You can access the app from your home screen or app drawer.
+                <p className="text-lg font-semibold text-primary">Thank You for Installing!</p>
+                <p className="text-sm text-muted-foreground text-center">
+                  RKR Laundry is already installed on your device. You can access it from your home screen or app drawer for quick and easy access to all our services.
                 </p>
               </div>
             ) : isInstallable ? (
@@ -115,11 +115,11 @@ export default function DownloadAppPage() {
               </Button>
             ) : (
               <div className="flex flex-col items-center gap-4">
-                <p className="text-muted-foreground">
-                  Installation is not available on this device or browser.
+                <p className="text-muted-foreground text-center">
+                  To install RKR Laundry on your device, please use your browser's install option.
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  Look for the install option in your browser menu (usually in the address bar or settings).
+                <p className="text-sm text-muted-foreground text-center">
+                  On mobile devices, look for the install icon in your browser's address bar. On desktop, check your browser menu for "Install" or "Add to Home Screen" options.
                 </p>
               </div>
             )}
