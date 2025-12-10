@@ -43,10 +43,7 @@ export default function Home() {
   const fetchedUserIdRef = useRef<string | null>(null);
   const isFetchingRef = useRef(false);
 
-  // Refresh session on mount to ensure it's up to date
-  useEffect(() => {
-    supabase.auth.getSession();
-  }, []);
+  // Remove this - useAuthSession already handles session management
 
   useEffect(() => {
     async function checkAdminRedirect() {
@@ -160,9 +157,11 @@ export default function Home() {
   };
 
   // Get user data - use session user if available, fallback to user from hook
+  // This ensures we always have a user if one exists, even if session hasn't loaded yet
   const currentUser = session?.user || user;
   
   // Use profile data if available, otherwise fallback to user metadata/email
+  // Calculate these values even if profileData is null, so we always have something to display
   const displayName = profileData?.displayName || 
     (currentUser?.user_metadata?.first_name as string | undefined) || 
     (currentUser?.user_metadata?.firstName as string | undefined) || 
@@ -171,6 +170,19 @@ export default function Home() {
     'Customer';
   const initial = profileData?.initial || 
     (displayName || currentUser?.email?.[0] || 'C').charAt(0).toUpperCase();
+  
+  // Debug logging (remove in production)
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    console.log('Home page render:', {
+      authLoading,
+      hasUser: !!user,
+      hasSession: !!session,
+      hasCurrentUser: !!currentUser,
+      hasProfileData: !!profileData,
+      displayName,
+      initial
+    });
+  }
 
   return (
       <HomePageWrapper gridItems={gridItems}>
