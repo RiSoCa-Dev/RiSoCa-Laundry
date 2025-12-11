@@ -250,6 +250,8 @@ export default function LoginPage() {
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false)
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
   const [sendingReset, setSendingReset] = useState(false)
+  const [resetLockoutTime, setResetLockoutTime] = useState<number | null>(null)
+  const [resetRemainingSeconds, setResetRemainingSeconds] = useState(0)
 
   useEffect(() => {
     // Check lockout status when email changes
