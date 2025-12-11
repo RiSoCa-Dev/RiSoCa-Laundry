@@ -37,10 +37,16 @@ export function EmployeeMenu() {
     return null;
   }
 
+  // Center menu if only one item
+  const isSingleItem = employeeMenuItems.length === 1;
+
   return (
     <nav className="w-full border-b bg-background/95 sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+        <div className={cn(
+          "flex items-center gap-1 overflow-x-auto scrollbar-hide",
+          isSingleItem && "justify-center"
+        )}>
           {employeeMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');

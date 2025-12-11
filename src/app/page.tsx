@@ -28,7 +28,6 @@ import {
   DollarSign,
   Wallet,
   CreditCard,
-  LayoutDashboard,
 } from 'lucide-react';
 
 import { AppHeader } from '@/components/app-header';
@@ -54,7 +53,6 @@ const customerGridItems = [
 ];
 
 const adminGridItems = [
-  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/orders', label: 'Orders', icon: ClipboardList },
   { href: '/admin/rates', label: 'Service Rates', icon: DollarSign },
   { href: '/admin/salary', label: 'Employee Salary', icon: Wallet },
