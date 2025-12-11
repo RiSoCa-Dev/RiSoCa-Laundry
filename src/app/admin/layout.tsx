@@ -32,10 +32,8 @@ export default function AdminLayout({
       setIsUserAdmin(adminStatus);
       setCheckingRole(false);
 
-      if (!adminStatus) {
-        // Not an admin, redirect to home
-        router.push('/');
-      }
+      // Don't redirect if not admin - just show 404
+      // This allows admin menu to be visible on all pages
     }
 
     checkAdminAccess();

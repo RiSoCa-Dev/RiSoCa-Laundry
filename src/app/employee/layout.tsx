@@ -32,10 +32,8 @@ export default function EmployeeLayout({
       setIsUserEmployee(employeeStatus);
       setCheckingRole(false);
 
-      if (!employeeStatus) {
-        // Not an employee, redirect to home
-        router.push('/');
-      }
+      // Don't redirect if not employee - just show 404
+      // This allows employee menu to be visible on all pages
     }
 
     checkEmployeeAccess();
