@@ -140,19 +140,21 @@ export default function EmployeeSalaryPage() {
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto overflow-x-hidden scrollable pt-4 pb-4">
         {/* Calendar Date Range Filter */}
-        <div className="mb-6 p-4 border rounded-lg bg-muted/50">
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="mb-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
               <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
+                    size="lg"
                     className={cn(
-                      "w-[280px] justify-start text-left font-normal",
-                      !dateRange.start && "text-muted-foreground"
+                      "w-full sm:w-[320px] justify-start text-left font-medium shadow-sm hover:shadow-md transition-shadow",
+                      !dateRange.start && "text-muted-foreground",
+                      "border-2 hover:border-primary/50"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-2 h-5 w-5" />
                     {dateRange.start 
                       ? dateRange.end && dateRange.end.getTime() !== dateRange.start.getTime()
                         ? `${format(dateRange.start, "MMM dd, yyyy")} - ${format(dateRange.end, "MMM dd, yyyy")}`
@@ -161,18 +163,23 @@ export default function EmployeeSalaryPage() {
                     }
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0" align="start" sideOffset={8}>
                   <SalaryCalendar onApply={handleCalendarApply} onClose={() => setCalendarOpen(false)} />
                 </PopoverContent>
               </Popover>
               {dateRange.start && (
-                <Button onClick={handleClearFilter} variant="outline" size="sm">
+                <Button 
+                  onClick={handleClearFilter} 
+                  variant="outline" 
+                  size="lg"
+                  className="shadow-sm hover:shadow-md transition-shadow border-2"
+                >
                   Clear Filter
                 </Button>
               )}
             </div>
             {dateRange.start && (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground bg-muted/30 px-3 py-2 rounded-md">
                 Showing salaries for: <span className="font-semibold text-foreground">
                   {dateRange.end && dateRange.end.getTime() !== dateRange.start.getTime()
                     ? `${format(dateRange.start, "MMM dd, yyyy")} - ${format(dateRange.end, "MMM dd, yyyy")}`
