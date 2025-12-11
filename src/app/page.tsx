@@ -54,10 +54,9 @@ const customerGridItems = [
 
 const adminGridItems = [
   { href: '/admin/orders', label: 'Orders', icon: ClipboardList },
-  { href: '/admin/rates', label: 'Service Rates', icon: DollarSign },
-  { href: '/admin/salary', label: 'Employee Salary', icon: Wallet },
   { href: '/admin/expenses', label: 'Expenses', icon: CreditCard },
-  { href: '/admin/branches', label: 'Branches', icon: MapPin },
+  { href: '/admin/salary', label: 'Employee Salary', icon: Wallet },
+  { href: '/admin/rates', label: 'Service Rates', icon: DollarSign },
 ];
 
 const employeeGridItems = [
