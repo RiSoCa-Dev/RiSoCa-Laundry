@@ -25,6 +25,10 @@ import {
   WashingMachine,
   User,
   LogOut,
+  DollarSign,
+  Wallet,
+  CreditCard,
+  LayoutDashboard,
 } from 'lucide-react';
 
 import { AppHeader } from '@/components/app-header';
@@ -36,7 +40,6 @@ import { isAdmin, isEmployee } from '@/lib/auth-helpers';
 import { signOut } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase-client';
-import { DollarSign, Wallet, CreditCard, MapPin, LayoutDashboard } from 'lucide-react';
 
 const customerGridItems = [
   { href: '/order-status', label: 'Order Status', icon: Package },
