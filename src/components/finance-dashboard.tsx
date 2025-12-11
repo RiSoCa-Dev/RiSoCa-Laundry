@@ -33,6 +33,8 @@ type OrderData = {
   total: number;
   is_paid: boolean;
   created_at: string;
+  loads: number;
+  weight: number;
 };
 
 type ExpenseData = {
@@ -43,11 +45,21 @@ type ExpenseData = {
   created_at: string;
 };
 
+type SalaryPaymentData = {
+  id: string;
+  employee_id: string;
+  amount: number;
+  is_paid: boolean;
+  date: string;
+  created_at: string;
+};
+
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 export function FinanceDashboard() {
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [expenses, setExpenses] = useState<ExpenseData[]>([]);
+  const [salaryPayments, setSalaryPayments] = useState<SalaryPaymentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<'all' | 'month' | '3months' | '6months' | 'year'>('all');
 
@@ -58,11 +70,10 @@ export function FinanceDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch paid orders (revenue)
+      // Fetch all orders (for revenue, loads, and weight)
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('id, total, is_paid, created_at')
-        .eq('is_paid', true);
+        .select('id, total, is_paid, created_at, loads, weight');
 
       if (ordersError) {
         console.error('Failed to load orders', ordersError);
@@ -82,6 +93,18 @@ export function FinanceDashboard() {
           incurred_on: e.incurred_on || e.created_at,
           created_at: e.created_at,
         })));
+      }
+
+      // Fetch employee salary payments (where is_paid = true)
+      const { data: salaryData, error: salaryError } = await supabase
+        .from('daily_salary_payments')
+        .select('id, employee_id, amount, is_paid, date, created_at')
+        .eq('is_paid', true);
+
+      if (salaryError) {
+        console.error('Failed to load salary payments', salaryError);
+      } else {
+        setSalaryPayments(salaryData || []);
       }
     } catch (error) {
       console.error('Error fetching data', error);
@@ -120,13 +143,27 @@ export function FinanceDashboard() {
       ? expenses.filter((e) => new Date(e.incurred_on) >= startDate!)
       : expenses;
 
-    return { orders: filteredOrders, expenses: filteredExpenses };
-  }, [orders, expenses, dateRange]);
+    const filteredSalaryPayments = startDate
+      ? salaryPayments.filter((s) => new Date(s.date) >= startDate!)
+      : salaryPayments;
+
+    return { orders: filteredOrders, expenses: filteredExpenses, salaryPayments: filteredSalaryPayments };
+  }, [orders, expenses, salaryPayments, dateRange]);
 
   // Calculate totals
-  const totalRevenue = filteredData.orders.reduce((sum, o) => sum + (o.total || 0), 0);
-  const totalExpenses = filteredData.expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+  const paidOrders = filteredData.orders.filter(o => o.is_paid === true);
+  const totalRevenue = paidOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  
+  // Expenses = Regular Expenses + Employee Salaries
+  const regularExpenses = filteredData.expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+  const employeeSalaries = filteredData.salaryPayments.reduce((sum, s) => sum + (s.amount || 0), 0);
+  const totalExpenses = regularExpenses + employeeSalaries;
+  
   const netIncome = totalRevenue - totalExpenses;
+
+  // Calculate total loads and weight from all orders
+  const totalLoads = filteredData.orders.reduce((sum, o) => sum + (o.loads || 0), 0);
+  const totalWeight = filteredData.orders.reduce((sum, o) => sum + (o.weight || 0), 0);
 
   // Prepare monthly data for charts
   const monthlyData = useMemo(() => {
@@ -169,11 +206,23 @@ export function FinanceDashboard() {
         }
       );
 
+      const monthSalaries = filteredData.salaryPayments.filter(
+        (s) => {
+          const salaryDate = new Date(s.date);
+          return salaryDate >= monthStart && salaryDate <= monthEnd;
+        }
+      );
+
+      const monthRevenue = monthOrders.filter(o => o.is_paid === true).reduce((sum, o) => sum + (o.total || 0), 0);
+      const monthRegularExpenses = monthExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+      const monthEmployeeSalaries = monthSalaries.reduce((sum, s) => sum + (s.amount || 0), 0);
+      const monthTotalExpenses = monthRegularExpenses + monthEmployeeSalaries;
+
       return {
         month: monthKey,
-        revenue: monthOrders.reduce((sum, o) => sum + (o.total || 0), 0),
-        expenses: monthExpenses.reduce((sum, e) => sum + (e.amount || 0), 0),
-        net: monthOrders.reduce((sum, o) => sum + (o.total || 0), 0) - monthExpenses.reduce((sum, e) => sum + (e.amount || 0), 0),
+        revenue: monthRevenue,
+        expenses: monthTotalExpenses,
+        net: monthRevenue - monthTotalExpenses,
       };
     }).filter(d => d.revenue > 0 || d.expenses > 0);
   }, [filteredData, dateRange]);
@@ -227,7 +276,7 @@ export function FinanceDashboard() {
       </Card>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -236,7 +285,7 @@ export function FinanceDashboard() {
           <CardContent>
             <div className="text-2xl font-bold text-green-600">₱{totalRevenue.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              From {filteredData.orders.length} paid order{filteredData.orders.length !== 1 ? 's' : ''}
+              From {paidOrders.length} paid order{paidOrders.length !== 1 ? 's' : ''}
             </p>
           </CardContent>
         </Card>
@@ -249,7 +298,7 @@ export function FinanceDashboard() {
           <CardContent>
             <div className="text-2xl font-bold text-red-600">₱{totalExpenses.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {filteredData.expenses.length} expense{filteredData.expenses.length !== 1 ? 's' : ''} recorded
+              {filteredData.expenses.length} expense{filteredData.expenses.length !== 1 ? 's' : ''} + {filteredData.salaryPayments.length} salary payment{filteredData.salaryPayments.length !== 1 ? 's' : ''}
             </p>
           </CardContent>
         </Card>
@@ -265,6 +314,19 @@ export function FinanceDashboard() {
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               {netIncome >= 0 ? 'Profit' : 'Loss'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Loads & Weight</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">{totalLoads}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {totalWeight.toFixed(2)} kg total weight
             </p>
           </CardContent>
         </Card>
