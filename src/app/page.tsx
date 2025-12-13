@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -68,6 +68,7 @@ const employeeGridItems = [
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading: authLoading, session } = useAuthSession();
   const { toast } = useToast();
 
@@ -197,12 +198,17 @@ export default function Home() {
   const displayName = shouldShowProfile ? profileData?.displayName ?? '' : '';
   const initial = shouldShowProfile ? profileData?.initial ?? '' : '';
 
+  // Check if admin wants to view as customer
+  const viewAsCustomer = searchParams?.get('view') === 'customer';
+
   // Combine grid items based on user role
-  const gridItems = [
-    ...(userIsAdmin ? adminGridItems : []),
-    ...(userIsEmployee ? employeeGridItems : []),
-    ...(userIsAdmin || userIsEmployee ? [] : customerGridItems), // Only show customer items if not admin/employee
-  ];
+  const gridItems = viewAsCustomer
+    ? customerGridItems // Show customer items if view=customer parameter is present
+    : [
+        ...(userIsAdmin ? adminGridItems : []),
+        ...(userIsEmployee ? employeeGridItems : []),
+        ...(userIsAdmin || userIsEmployee ? [] : customerGridItems), // Only show customer items if not admin/employee
+      ];
 
   return (
     <HomePageWrapper gridItems={gridItems}>

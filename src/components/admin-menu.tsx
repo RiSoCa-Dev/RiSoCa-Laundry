@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ClipboardList, DollarSign, Wallet, CreditCard, MapPin } from 'lucide-react';
+import { ClipboardList, DollarSign, Wallet, CreditCard, MapPin, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthSession } from '@/hooks/use-auth-session';
 import { isAdmin } from '@/lib/auth-helpers';
@@ -14,6 +14,7 @@ const adminMenuItems = [
   { href: '/admin/salary', label: 'Employee Salary', icon: Wallet },
   { href: '/admin/expenses', label: 'Expenses', icon: CreditCard },
   { href: '/admin/branches', label: 'Branches', icon: MapPin },
+  { href: '/?view=customer', label: 'Customer View', icon: Home },
 ];
 
 export function AdminMenu() {
@@ -47,7 +48,9 @@ export function AdminMenu() {
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
           {adminMenuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            // Extract pathname from href (remove query params for comparison)
+            const itemPath = item.href.split('?')[0];
+            const isActive = pathname === itemPath || (itemPath !== '/' && pathname.startsWith(itemPath + '/'));
             return (
               <Link
                 key={item.href}
