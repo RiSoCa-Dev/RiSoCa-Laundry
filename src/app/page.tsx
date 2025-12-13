@@ -30,6 +30,8 @@ import {
   CreditCard,
   TrendingUp,
   Home,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 import { AppHeader } from '@/components/app-header';
@@ -60,7 +62,6 @@ const adminGridItems = [
   { href: '/admin/salary', label: 'Employee Salary', icon: Wallet },
   { href: '/admin/finance', label: 'Finance', icon: TrendingUp },
   { href: '/admin/rates', label: 'Service Rates', icon: DollarSign },
-  { href: '/?view=customer', label: 'Customer View', icon: Home },
 ];
 
 const employeeGridItems = [
@@ -68,7 +69,7 @@ const employeeGridItems = [
   { href: '/employee/salary', label: 'Salary', icon: Wallet },
 ];
 
-function HomeContent({ viewAsCustomer }: { viewAsCustomer: boolean }) {
+function HomeContent({ viewAsCustomer: initialViewAsCustomer }: { viewAsCustomer: boolean }) {
   const router = useRouter();
   const { user, loading: authLoading, session } = useAuthSession();
   const { toast } = useToast();
@@ -80,6 +81,7 @@ function HomeContent({ viewAsCustomer }: { viewAsCustomer: boolean }) {
   } | null>(null);
   const [userIsAdmin, setUserIsAdmin] = useState(false);
   const [userIsEmployee, setUserIsEmployee] = useState(false);
+  const [viewAsCustomer, setViewAsCustomer] = useState(initialViewAsCustomer);
 
   const fetchedUserIdRef = useRef<string | null>(null);
   const isFetchingRef = useRef(false);
@@ -199,9 +201,17 @@ function HomeContent({ viewAsCustomer }: { viewAsCustomer: boolean }) {
   const displayName = shouldShowProfile ? profileData?.displayName ?? '' : '';
   const initial = shouldShowProfile ? profileData?.initial ?? '' : '';
 
+  // Toggle customer view
+  const handleToggleCustomerView = () => {
+    setViewAsCustomer(!viewAsCustomer);
+    // Update URL without navigation
+    const newUrl = viewAsCustomer ? '/' : '/?view=customer';
+    window.history.pushState({}, '', newUrl);
+  };
+
   // Combine grid items based on user role
   const gridItems = viewAsCustomer
-    ? customerGridItems // Show customer items if view=customer parameter is present
+    ? customerGridItems // Show customer items if view=customer is toggled
     : [
         ...(userIsAdmin ? adminGridItems : []),
         ...(userIsEmployee ? employeeGridItems : []),
@@ -276,6 +286,34 @@ function HomeContent({ viewAsCustomer }: { viewAsCustomer: boolean }) {
                 </>
               ) : null}
             </div>
+
+            {/* Customer View Toggle Button (Admin Only) */}
+            {userIsAdmin && !viewAsCustomer && (
+              <div className="flex justify-center w-full mt-4">
+                <Button
+                  onClick={handleToggleCustomerView}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  View as Customer
+                </Button>
+              </div>
+            )}
+
+            {/* Admin View Toggle Button (When viewing as customer) */}
+            {userIsAdmin && viewAsCustomer && (
+              <div className="flex justify-center w-full mt-4">
+                <Button
+                  onClick={handleToggleCustomerView}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <EyeOff className="h-4 w-4" />
+                  Back to Admin View
+                </Button>
+              </div>
+            )}
 
             {/* Grid Menu */}
             <div className="flex justify-center w-full mt-6">
