@@ -29,6 +29,7 @@ import {
   Wallet,
   CreditCard,
   TrendingUp,
+  Home,
 } from 'lucide-react';
 
 import { AppHeader } from '@/components/app-header';
@@ -59,6 +60,7 @@ const adminGridItems = [
   { href: '/admin/salary', label: 'Employee Salary', icon: Wallet },
   { href: '/admin/finance', label: 'Finance', icon: TrendingUp },
   { href: '/admin/rates', label: 'Service Rates', icon: DollarSign },
+  { href: '/?view=customer', label: 'Customer View', icon: Home },
 ];
 
 const employeeGridItems = [
