@@ -11,7 +11,7 @@ import {
 import { Loader2, TrendingUp, TrendingDown, DollarSign, Calendar, Package, Scale, Users, ClipboardList } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 import { fetchExpenses } from '@/lib/api/expenses';
-import { format, startOfMonth, endOfMonth, subMonths, eachMonthOfInterval, differenceInDays } from 'date-fns';
+import { format, startOfMonth, endOfMonth, subMonths, eachMonthOfInterval, differenceInDays, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfYear, endOfYear, eachDayOfInterval, eachWeekOfInterval, eachYearOfInterval, subDays, subWeeks, subYears } from 'date-fns';
 import {
   BarChart,
   Bar,
@@ -61,7 +61,7 @@ export function FinanceDashboard() {
   const [totalUsers, setTotalUsers] = useState<number>(0);
   const [businessStartDate, setBusinessStartDate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState<'all' | 'month' | '3months' | '6months' | 'year'>('all');
+  const [chartPeriod, setChartPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
 
   useEffect(() => {
     fetchData();
@@ -129,42 +129,11 @@ export function FinanceDashboard() {
     }
   };
 
-  // Filter data based on date range
+  // Filter data based on chart period (for summary cards, use all data)
   const filteredData = useMemo(() => {
-    const now = new Date();
-    let startDate: Date | null = null;
-
-    switch (dateRange) {
-      case 'month':
-        startDate = startOfMonth(now);
-        break;
-      case '3months':
-        startDate = startOfMonth(subMonths(now, 2));
-        break;
-      case '6months':
-        startDate = startOfMonth(subMonths(now, 5));
-        break;
-      case 'year':
-        startDate = startOfMonth(subMonths(now, 11));
-        break;
-      default:
-        startDate = null;
-    }
-
-    const filteredOrders = startDate
-      ? orders.filter((o) => new Date(o.created_at) >= startDate!)
-      : orders;
-
-    const filteredExpenses = startDate
-      ? expenses.filter((e) => new Date(e.incurred_on) >= startDate!)
-      : expenses;
-
-    const filteredSalaryPayments = startDate
-      ? salaryPayments.filter((s) => new Date(s.date) >= startDate!)
-      : salaryPayments;
-
-    return { orders: filteredOrders, expenses: filteredExpenses, salaryPayments: filteredSalaryPayments };
-  }, [orders, expenses, salaryPayments, dateRange]);
+    // Summary cards always show all-time data
+    return { orders, expenses, salaryPayments };
+  }, [orders, expenses, salaryPayments]);
 
   // Calculate totals
   const paidOrders = filteredData.orders.filter(o => o.is_paid === true);
@@ -187,67 +156,99 @@ export function FinanceDashboard() {
     ? differenceInDays(new Date(), businessStartDate) + 1 
     : 0;
 
-  // Prepare monthly data for charts
-  const monthlyData = useMemo(() => {
-    if (filteredData.orders.length === 0 && filteredData.expenses.length === 0) {
+  // Prepare chart data based on selected period
+  const chartData = useMemo(() => {
+    if (orders.length === 0 && expenses.length === 0) {
       return [];
     }
 
+    const now = new Date();
+    let periods: Date[];
+    let dateFormatter: (date: Date) => string;
+    let periodStartFn: (date: Date) => Date;
+    let periodEndFn: (date: Date) => Date;
+
+    // Determine date range based on period
     let startDate: Date;
-    if (dateRange === 'all') {
-      const orderDates = filteredData.orders.map(o => new Date(o.created_at).getTime());
-      const expenseDates = filteredData.expenses.map(e => new Date(e.incurred_on).getTime());
-      const allDates = [...orderDates, ...expenseDates];
-      if (allDates.length === 0) return [];
-      startDate = startOfMonth(new Date(Math.min(...allDates)));
-    } else {
-      const monthsBack = dateRange === 'month' ? 0 : dateRange === '3months' ? 2 : dateRange === '6months' ? 5 : 11;
-      startDate = startOfMonth(subMonths(new Date(), monthsBack));
+    let endDate = now;
+
+    switch (chartPeriod) {
+      case 'daily':
+        // Last 30 days
+        startDate = startOfDay(subDays(now, 29));
+        periods = eachDayOfInterval({ start: startDate, end: endDate });
+        dateFormatter = (d) => format(d, 'MMM d');
+        periodStartFn = startOfDay;
+        periodEndFn = endOfDay;
+        break;
+      case 'weekly':
+        // Last 12 weeks
+        startDate = startOfWeek(subWeeks(now, 11));
+        periods = eachWeekOfInterval({ start: startDate, end: endDate }, { weekStartsOn: 1 });
+        dateFormatter = (d) => `Week ${format(d, 'MMM d')}`;
+        periodStartFn = (d) => startOfWeek(d, { weekStartsOn: 1 });
+        periodEndFn = (d) => endOfWeek(d, { weekStartsOn: 1 });
+        break;
+      case 'monthly':
+        // Last 12 months
+        startDate = startOfMonth(subMonths(now, 11));
+        periods = eachMonthOfInterval({ start: startDate, end: endDate });
+        dateFormatter = (d) => format(d, 'MMM yyyy');
+        periodStartFn = startOfMonth;
+        periodEndFn = endOfMonth;
+        break;
+      case 'yearly':
+        // All years
+        const orderDates = orders.map(o => new Date(o.created_at).getTime());
+        const expenseDates = expenses.map(e => new Date(e.incurred_on).getTime());
+        const allDates = [...orderDates, ...expenseDates];
+        if (allDates.length === 0) return [];
+        startDate = startOfYear(new Date(Math.min(...allDates)));
+        periods = eachYearOfInterval({ start: startDate, end: endDate });
+        dateFormatter = (d) => format(d, 'yyyy');
+        periodStartFn = startOfYear;
+        periodEndFn = endOfYear;
+        break;
     }
 
-    const months = eachMonthOfInterval({
-      start: startDate,
-      end: new Date(),
-    });
+    return periods.map((period) => {
+      const periodStart = periodStartFn(period);
+      const periodEnd = periodEndFn(period);
+      const periodKey = dateFormatter(period);
 
-    return months.map((month) => {
-      const monthStart = startOfMonth(month);
-      const monthEnd = endOfMonth(month);
-      const monthKey = format(month, 'MMM yyyy');
-
-      const monthOrders = filteredData.orders.filter(
+      const periodOrders = orders.filter(
         (o) => {
           const orderDate = new Date(o.created_at);
-          return orderDate >= monthStart && orderDate <= monthEnd;
+          return orderDate >= periodStart && orderDate <= periodEnd;
         }
       );
-      const monthExpenses = filteredData.expenses.filter(
+      const periodExpenses = expenses.filter(
         (e) => {
           const expenseDate = new Date(e.incurred_on);
-          return expenseDate >= monthStart && expenseDate <= monthEnd;
+          return expenseDate >= periodStart && expenseDate <= periodEnd;
         }
       );
 
-      const monthSalaries = filteredData.salaryPayments.filter(
+      const periodSalaries = salaryPayments.filter(
         (s) => {
           const salaryDate = new Date(s.date);
-          return salaryDate >= monthStart && salaryDate <= monthEnd;
+          return salaryDate >= periodStart && salaryDate <= periodEnd;
         }
       );
 
-      const monthRevenue = monthOrders.filter(o => o.is_paid === true).reduce((sum, o) => sum + (o.total || 0), 0);
-      const monthRegularExpenses = monthExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
-      const monthEmployeeSalaries = monthSalaries.reduce((sum, s) => sum + (s.amount || 0), 0);
-      const monthTotalExpenses = monthRegularExpenses + monthEmployeeSalaries;
+      const periodRevenue = periodOrders.filter(o => o.is_paid === true).reduce((sum, o) => sum + (o.total || 0), 0);
+      const periodRegularExpenses = periodExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+      const periodEmployeeSalaries = periodSalaries.reduce((sum, s) => sum + (s.amount || 0), 0);
+      const periodTotalExpenses = periodRegularExpenses + periodEmployeeSalaries;
 
       return {
-        month: monthKey,
-        revenue: monthRevenue,
-        expenses: monthTotalExpenses,
-        net: monthRevenue - monthTotalExpenses,
+        period: periodKey,
+        revenue: periodRevenue,
+        expenses: periodTotalExpenses,
+        net: periodRevenue - periodTotalExpenses,
       };
     }).filter(d => d.revenue > 0 || d.expenses > 0);
-  }, [filteredData, dateRange]);
+  }, [orders, expenses, salaryPayments, chartPeriod]);
 
   // Prepare expense category data
   const expenseCategoryData = useMemo(() => {
@@ -273,30 +274,6 @@ export function FinanceDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Date Range Filter */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Date Range</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {(['all', 'month', '3months', '6months', 'year'] as const).map((range) => (
-              <button
-                key={range}
-                onClick={() => setDateRange(range)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  dateRange === range
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted hover:bg-muted/80'
-                }`}
-              >
-                {range === 'all' ? 'All Time' : range === 'month' ? 'This Month' : range === '3months' ? 'Last 3 Months' : range === '6months' ? 'Last 6 Months' : 'Last Year'}
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <Card>
@@ -442,20 +419,40 @@ export function FinanceDashboard() {
             )}
           </CardContent>
         </Card>
-      </div>
 
-        {/* Monthly Bar Chart */}
+        {/* Financial Overview Bar Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Financial Overview</CardTitle>
-            <CardDescription>Revenue and expenses by month</CardDescription>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <CardTitle>Financial Overview</CardTitle>
+                <CardDescription>
+                  Revenue and expenses by {chartPeriod === 'daily' ? 'day' : chartPeriod === 'weekly' ? 'week' : chartPeriod === 'monthly' ? 'month' : 'year'}
+                </CardDescription>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(['daily', 'weekly', 'monthly', 'yearly'] as const).map((period) => (
+                  <button
+                    key={period}
+                    onClick={() => setChartPeriod(period)}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      chartPeriod === period
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted hover:bg-muted/80'
+                    }`}
+                  >
+                    {period.charAt(0).toUpperCase() + period.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            {monthlyData.length > 0 ? (
+            {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={monthlyData}>
+                <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
+                  <XAxis dataKey="period" />
                   <YAxis />
                   <Tooltip formatter={(value: number) => `₱${value.toFixed(2)}`} />
                   <Legend />
@@ -471,6 +468,7 @@ export function FinanceDashboard() {
             )}
           </CardContent>
         </Card>
+      </div>
     </div>
   );
 }
