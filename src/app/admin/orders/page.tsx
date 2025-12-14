@@ -51,7 +51,24 @@ export default function AdminOrdersPage() {
     setLoadingAdmin(true);
     const { data, error } = await supabase
       .from('orders')
-      .select('*, order_status_history(*)')
+      .select(`
+        id,
+        customer_id,
+        customer_name,
+        contact_number,
+        loads,
+        weight,
+        status,
+        total,
+        created_at,
+        is_paid,
+        balance,
+        delivery_option,
+        service_package,
+        distance,
+        branch_id,
+        order_status_history(*)
+      `)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -61,12 +78,30 @@ export default function AdminOrdersPage() {
       return;
     }
 
+    console.log('[Admin Orders] Fetched orders:', data?.length, 'orders');
+    console.log('[Admin Orders] Sample order:', data?.[0]);
     setAllOrders((data ?? []).map(mapOrder));
     setLoadingAdmin(false);
   };
 
   useEffect(() => {
     fetchOrders();
+    
+    // Set up real-time subscription to refresh when orders change
+    const channel = supabase
+      .channel('orders-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'orders' },
+        (payload) => {
+          console.log('[Admin Orders] Order changed:', payload);
+          fetchOrders();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleUpdateOrder = async (updatedOrder: Order) => {
