@@ -205,12 +205,9 @@ export function EmployeeSalary() {
     }
   };
 
+  // Count ALL orders for salary calculation - no status filter needed
+  // Payment is daily and all loads are paid immediately
   const completedOrdersByDate = orders
-    .filter((order) => 
-      order.status === 'Success' || 
-      order.status === 'Delivered' || 
-      order.isPaid === true
-    )
     .reduce((acc, order) => {
         const dateStr = startOfDay(new Date(order.orderDate)).toISOString();
         if (!acc[dateStr]) {
@@ -284,7 +281,7 @@ export function EmployeeSalary() {
     <Card className="w-full">
       <CardHeader className="p-4 sm:p-6">
         <CardTitle>Daily Salary Calculation</CardTitle>
-        <CardDescription>Salary is calculated at ₱{SALARY_PER_LOAD} per completed load for each day.</CardDescription>
+        <CardDescription>Salary is calculated at ₱{SALARY_PER_LOAD} per load for each day. All loads are paid immediately.</CardDescription>
       </CardHeader>
       <CardContent className="p-2 sm:p-6">
         {loading ? (

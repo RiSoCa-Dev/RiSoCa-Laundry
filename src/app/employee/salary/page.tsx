@@ -119,12 +119,9 @@ export default function EmployeeSalaryPage() {
     }
   };
 
+  // Count ALL orders for salary calculation - no status filter needed
+  // Payment is daily and all loads are paid immediately
   const completedOrdersByDate = orders
-    .filter((order) => 
-      order.status === 'Success' || 
-      order.status === 'Delivered' || 
-      order.isPaid === true
-    )
     .reduce((acc, order) => {
       const dateStr = startOfDay(new Date(order.orderDate)).toISOString();
       if (!acc[dateStr]) {
@@ -183,7 +180,7 @@ export default function EmployeeSalaryPage() {
       <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-background z-10 border-b rounded-t-lg">
         <div>
           <CardTitle>My Salary</CardTitle>
-          <CardDescription>Salary is calculated at ₱{SALARY_PER_LOAD} per completed load for each day.</CardDescription>
+          <CardDescription>Salary is calculated at ₱{SALARY_PER_LOAD} per load for each day. All loads are paid immediately.</CardDescription>
         </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto overflow-x-hidden scrollable pt-4 pb-4">
@@ -329,11 +326,11 @@ export default function EmployeeSalaryPage() {
           ) : (
             <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground border rounded-lg bg-card p-8">
               <Inbox className="h-12 w-12 mb-2" />
-              <h3 className="text-lg font-semibold mb-1">No Completed Orders</h3>
+              <h3 className="text-lg font-semibold mb-1">No Orders</h3>
               <p className="text-sm">
                 {dateRange.start
-                  ? 'No completed orders found for the selected date range.'
-                  : 'No completed orders found. Salary is calculated based on completed loads.'}
+                  ? 'No orders found for the selected date range.'
+                  : 'No orders found. Salary is calculated based on all loads.'}
               </p>
             </div>
           )}
