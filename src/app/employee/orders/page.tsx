@@ -25,27 +25,34 @@ export default function EmployeeOrdersPage() {
   const [loadingAdmin, setLoadingAdmin] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const mapOrder = (o: any): Order => ({
-    id: o.id,
-    userId: o.customer_id,
-    customerName: o.customer_name,
-    contactNumber: o.contact_number,
-    load: o.loads,
-    weight: o.weight,
-    status: o.status,
-    total: o.total,
-    orderDate: new Date(o.created_at),
-    isPaid: o.is_paid,
-    balance: o.balance ?? (o.is_paid ? 0 : o.total),
-    deliveryOption: o.delivery_option ?? undefined,
-    servicePackage: o.service_package,
-    distance: o.distance ?? 0,
-    statusHistory: (o.order_status_history ?? []).map((sh: any) => ({
-      status: sh.status,
-      timestamp: new Date(sh.created_at),
-    })) as StatusHistory[],
-    branchId: o.branch_id ?? null,
-  });
+  const mapOrder = (o: any): Order => {
+    const totalNum = typeof o.total === 'string' ? parseFloat(o.total) : Number(o.total);
+    const balanceNum = o.balance !== null && o.balance !== undefined 
+      ? (typeof o.balance === 'string' ? parseFloat(o.balance) : Number(o.balance))
+      : (o.is_paid ? 0 : totalNum);
+    
+    return {
+      id: o.id,
+      userId: o.customer_id,
+      customerName: o.customer_name,
+      contactNumber: o.contact_number,
+      load: o.loads,
+      weight: o.weight,
+      status: o.status,
+      total: totalNum,
+      orderDate: new Date(o.created_at),
+      isPaid: o.is_paid,
+      balance: balanceNum,
+      deliveryOption: o.delivery_option ?? undefined,
+      servicePackage: o.service_package,
+      distance: o.distance ?? 0,
+      statusHistory: (o.order_status_history ?? []).map((sh: any) => ({
+        status: sh.status,
+        timestamp: new Date(sh.created_at),
+      })) as StatusHistory[],
+      branchId: o.branch_id ?? null,
+    };
+  };
 
   const fetchOrders = async () => {
     setLoadingAdmin(true);
@@ -89,11 +96,11 @@ export default function EmployeeOrdersPage() {
     
     // Set up real-time subscription to refresh when orders change
     const channel = supabase
-      .channel('orders-changes')
+      .channel('employee-orders-changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'orders' },
         (payload) => {
-          console.log('[Admin Orders] Order changed:', payload);
+          console.log('[Employee Orders] Order changed:', payload);
           fetchOrders();
         }
       )
