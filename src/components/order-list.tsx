@@ -94,6 +94,16 @@ const getPaymentStatusColor = (isPaid: boolean) => {
     return isPaid ? 'bg-green-500' : 'bg-red-500';
 }
 
+const getPaymentBadgeInfo = (isPaid: boolean, isPartiallyPaid: boolean) => {
+    if (isPaid) {
+        return { text: 'Paid', color: 'bg-green-500', clickable: false };
+    } else if (isPartiallyPaid) {
+        return { text: 'Balance', color: 'bg-orange-500', clickable: true };
+    } else {
+        return { text: 'Unpaid', color: 'bg-red-500', clickable: true };
+    }
+}
+
 function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: OrderListProps['onUpdateOrder'] }) {
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -235,34 +245,37 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                         {editableOrder.isPaid ? 'Paid' : 'Unpaid'}
                     </Button>
                 ) : (
-                    !order.isPaid ? (
-                        <Badge 
-                            className={cn(
-                                `${getPaymentStatusColor(order.isPaid)} hover:${getPaymentStatusColor(order.isPaid)} text-white cursor-pointer hover:opacity-80 transition-opacity`
-                            )}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setIsPaymentDialogOpen(true);
-                            }}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
+                    (() => {
+                        const badgeInfo = getPaymentBadgeInfo(order.isPaid, isPartiallyPaid);
+                        return badgeInfo.clickable ? (
+                            <Badge 
+                                className={cn(
+                                    `${badgeInfo.color} hover:${badgeInfo.color} text-white cursor-pointer hover:opacity-80 transition-opacity`
+                                )}
+                                onClick={(e) => {
                                     e.stopPropagation();
                                     setIsPaymentDialogOpen(true);
-                                }
-                            }}
-                        >
-                            {order.isPaid ? 'Paid' : 'Unpaid'}
-                        </Badge>
-                    ) : (
-                        <Badge 
-                            className={`${getPaymentStatusColor(order.isPaid)} hover:${getPaymentStatusColor(order.isPaid)} text-white`}
-                        >
-                            {order.isPaid ? 'Paid' : 'Unpaid'}
-                        </Badge>
-                    )
+                                }}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setIsPaymentDialogOpen(true);
+                                    }
+                                }}
+                            >
+                                {badgeInfo.text}
+                            </Badge>
+                        ) : (
+                            <Badge 
+                                className={`${badgeInfo.color} hover:${badgeInfo.color} text-white`}
+                            >
+                                {badgeInfo.text}
+                            </Badge>
+                        );
+                    })()
                 )}
             </TableCell>
             <TableCell>
@@ -480,34 +493,37 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                             {editableOrder.isPaid ? 'Paid' : 'Unpaid'}
                                         </Button>
                                     ) : (
-                                        !order.isPaid ? (
-                                            <Badge 
-                                                className={cn(
-                                                    `${getPaymentStatusColor(order.isPaid)} hover:${getPaymentStatusColor(order.isPaid)} text-white cursor-pointer hover:opacity-80 transition-opacity`
-                                                )}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setIsPaymentDialogOpen(true);
-                                                }}
-                                                role="button"
-                                                tabIndex={0}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter' || e.key === ' ') {
-                                                        e.preventDefault();
+                                        (() => {
+                                            const badgeInfo = getPaymentBadgeInfo(order.isPaid, isPartiallyPaid);
+                                            return badgeInfo.clickable ? (
+                                                <Badge 
+                                                    className={cn(
+                                                        `${badgeInfo.color} hover:${badgeInfo.color} text-white cursor-pointer hover:opacity-80 transition-opacity`
+                                                    )}
+                                                    onClick={(e) => {
                                                         e.stopPropagation();
                                                         setIsPaymentDialogOpen(true);
-                                                    }
-                                                }}
-                                            >
-                                                {order.isPaid ? 'Paid' : 'Unpaid'}
-                                            </Badge>
-                                        ) : (
-                                            <Badge 
-                                                className={`${getPaymentStatusColor(order.isPaid)} hover:${getPaymentStatusColor(order.isPaid)} text-white`}
-                                            >
-                                                {order.isPaid ? 'Paid' : 'Unpaid'}
-                                            </Badge>
-                                        )
+                                                    }}
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter' || e.key === ' ') {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            setIsPaymentDialogOpen(true);
+                                                        }
+                                                    }}
+                                                >
+                                                    {badgeInfo.text}
+                                                </Badge>
+                                            ) : (
+                                                <Badge 
+                                                    className={`${badgeInfo.color} hover:${badgeInfo.color} text-white`}
+                                                >
+                                                    {badgeInfo.text}
+                                                </Badge>
+                                            );
+                                        })()
                                     )}
                                 </div>
                             </div>
