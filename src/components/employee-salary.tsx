@@ -100,6 +100,24 @@ export function EmployeeSalary() {
     fetchEmployees();
   }, []);
 
+  // Fetch all daily payments when orders are loaded
+  useEffect(() => {
+    if (orders.length === 0 || employees.length === 0) return;
+    
+    // Get unique dates from orders
+    const uniqueDates = new Set<string>();
+    orders.forEach((order) => {
+      const dateKey = format(startOfDay(new Date(order.orderDate)), 'yyyy-MM-dd');
+      uniqueDates.add(dateKey);
+    });
+    
+    // Fetch payments for all dates
+    const paymentPromises = Array.from(uniqueDates).map(dateStr => fetchDailyPayments(dateStr));
+    Promise.all(paymentPromises).catch(error => {
+      console.error('Error fetching daily payments:', error);
+    });
+  }, [orders, employees]);
+
   const fetchEmployees = async () => {
     try {
       const { data, error } = await supabase
@@ -221,12 +239,6 @@ export function EmployeeSalary() {
     .map(([dateStr, orders]) => {
         const totalLoads = orders.reduce((sum, o) => sum + o.load, 0);
         const totalSalary = totalLoads * SALARY_PER_LOAD;
-        const dateKey = format(new Date(dateStr), 'yyyy-MM-dd');
-        
-        // Fetch payments for this date if not already loaded
-        if (!dailyPayments[dateKey]) {
-          fetchDailyPayments(dateKey);
-        }
         
         return {
             date: new Date(dateStr),
