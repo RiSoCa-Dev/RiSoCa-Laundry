@@ -78,8 +78,8 @@ export default function EmployeeOrdersPage() {
       return;
     }
 
-    console.log('[Employee Orders] Fetched orders:', data?.length, 'orders');
-    console.log('[Employee Orders] Sample order:', data?.[0]);
+    console.log('[Admin Orders] Fetched orders:', data?.length, 'orders');
+    console.log('[Admin Orders] Sample order:', data?.[0]);
     setAllOrders((data ?? []).map(mapOrder));
     setLoadingAdmin(false);
   };
@@ -93,7 +93,7 @@ export default function EmployeeOrdersPage() {
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'orders' },
         (payload) => {
-          console.log('[Employee Orders] Order changed:', payload);
+          console.log('[Admin Orders] Order changed:', payload);
           fetchOrders();
         }
       )
@@ -116,11 +116,6 @@ export default function EmployeeOrdersPage() {
       }
     }
 
-    // Calculate balance: if fully paid, balance should be 0, otherwise use the provided balance or total
-    const calculatedBalance = updatedOrder.isPaid 
-      ? 0 
-      : (updatedOrder.balance !== undefined ? updatedOrder.balance : updatedOrder.total);
-
     const patch = {
       customer_name: updatedOrder.customerName,
       contact_number: updatedOrder.contactNumber,
@@ -128,23 +123,14 @@ export default function EmployeeOrdersPage() {
       loads: updatedOrder.load,
       total: updatedOrder.total,
       is_paid: updatedOrder.isPaid,
-      balance: calculatedBalance,
+      balance: updatedOrder.balance ?? (updatedOrder.isPaid ? 0 : updatedOrder.total),
       delivery_option: updatedOrder.deliveryOption,
       distance: updatedOrder.distance,
       service_package: updatedOrder.servicePackage,
     };
 
-    console.log('[Employee Orders] Updating order:', {
-      orderId: updatedOrder.id,
-      isPaid: updatedOrder.isPaid,
-      balance: updatedOrder.balance,
-      calculatedBalance,
-      patch
-    });
-
     const { error: patchError } = await updateOrderFields(updatedOrder.id, patch as any);
     if (patchError) {
-      console.error('[Employee Orders] Update error:', patchError);
       toast({ variant: 'destructive', title: 'Update failed', description: patchError.message });
       return;
     }
