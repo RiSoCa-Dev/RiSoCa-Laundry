@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
 import { useAuthSession } from '@/hooks/use-auth-session';
-import { isEmployee } from '@/lib/auth-helpers';
+import { isEmployee, isAdmin } from '@/lib/auth-helpers';
 import { Loader2 } from 'lucide-react';
 import { NotFound404 } from '@/components/not-found-404';
 
@@ -18,6 +18,7 @@ export default function EmployeeLayout({
   const { user, loading: authLoading } = useAuthSession();
   const [checkingRole, setCheckingRole] = useState(true);
   const [isUserEmployee, setIsUserEmployee] = useState(false);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   useEffect(() => {
     async function checkEmployeeAccess() {
@@ -28,12 +29,16 @@ export default function EmployeeLayout({
         return;
       }
 
-      const employeeStatus = await isEmployee(user.id);
+      const [employeeStatus, adminStatus] = await Promise.all([
+        isEmployee(user.id),
+        isAdmin(user.id),
+      ]);
       setIsUserEmployee(employeeStatus);
+      setIsUserAdmin(adminStatus);
       setCheckingRole(false);
 
-      // Don't redirect if not employee - just show 404
-      // This allows employee menu to be visible on all pages
+      // Allow both employees and admins to access employee pages
+      // This allows admins to view employee interface when using "View as Employee"
     }
 
     checkEmployeeAccess();
@@ -48,7 +53,7 @@ export default function EmployeeLayout({
     );
   }
 
-  if (!isUserEmployee) {
+  if (!isUserEmployee && !isUserAdmin) {
     return (
       <div className="flex flex-col h-screen">
         <AppHeader />
