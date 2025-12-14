@@ -417,11 +417,45 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                     {order.status}
                                 </Badge>
                             </div>
-                            <div className="flex flex-wrap items-baseline gap-x-3 text-foreground/90">
+                            <div className="flex flex-wrap items-center justify-between w-full gap-x-3 text-foreground/90">
                                 <span className="text-base font-medium">{order.customerName}</span>
-                                {order.contactNumber && order.contactNumber !== 'N/A' && (
-                                    <span className="text-sm">{order.contactNumber}</span>
-                                )}
+                                {(() => {
+                                    const badgeInfo = getPaymentBadgeInfo(order.isPaid, isPartiallyPaid);
+                                    const amountText = isPartiallyPaid 
+                                        ? `₱${order.balance!.toFixed(2)}` 
+                                        : isFullyPaid 
+                                            ? `₱${order.total.toFixed(2)}` 
+                                            : `₱${order.total.toFixed(2)}`;
+                                    
+                                    return badgeInfo.clickable ? (
+                                        <Badge 
+                                            className={cn(
+                                                `${badgeInfo.color} hover:${badgeInfo.color} text-white cursor-pointer hover:opacity-80 transition-opacity text-xs`
+                                            )}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setIsPaymentDialogOpen(true);
+                                            }}
+                                            role="button"
+                                            tabIndex={0}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    setIsPaymentDialogOpen(true);
+                                                }
+                                            }}
+                                        >
+                                            {badgeInfo.text} {amountText}
+                                        </Badge>
+                                    ) : (
+                                        <Badge 
+                                            className={`${badgeInfo.color} hover:${badgeInfo.color} text-white text-xs`}
+                                        >
+                                            {badgeInfo.text} {amountText}
+                                        </Badge>
+                                    );
+                                })()}
                             </div>
                         </div>
                     </AccordionTrigger>
