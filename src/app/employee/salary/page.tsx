@@ -57,16 +57,29 @@ export default function EmployeeSalaryPage() {
   const [employeeId, setEmployeeId] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log(`[Employee Salary] Initial useEffect - user:`, user);
     fetchOrders();
-    checkUserRole();
-  }, []);
+    if (user) {
+      checkUserRole();
+    } else {
+      console.log(`[Employee Salary] No user yet, will check role when user is available`);
+    }
+  }, [user]);
 
   const checkUserRole = async () => {
-    if (!user) return;
+    console.log(`[Employee Salary] checkUserRole called, user:`, user);
+    if (!user) {
+      console.log(`[Employee Salary] No user found, returning early`);
+      return;
+    }
+    
+    console.log(`[Employee Salary] Checking roles for user.id: ${user.id}`);
     const [adminStatus, employeeStatus] = await Promise.all([
       isAdmin(user.id),
       isEmployee(user.id),
     ]);
+    
+    console.log(`[Employee Salary] Role check results - admin: ${adminStatus}, employee: ${employeeStatus}`);
     setUserIsAdmin(adminStatus);
     setUserIsEmployee(employeeStatus);
     
@@ -78,6 +91,8 @@ export default function EmployeeSalaryPage() {
       // If user is an admin, fetch the single employee's ID
       console.log(`[Employee Salary] User is admin, fetching employee ID`);
       fetchSingleEmployee();
+    } else {
+      console.warn(`[Employee Salary] User is neither admin nor employee - admin: ${adminStatus}, employee: ${employeeStatus}`);
     }
   };
 
