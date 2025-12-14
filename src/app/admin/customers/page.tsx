@@ -170,16 +170,17 @@ export default function AdminCustomersPage() {
           </div>
         ) : customers.length > 0 ? (
           <div className="space-y-2">
-            <div className="overflow-x-auto">
-              <Table>
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <div className="inline-block min-w-full align-middle">
+                <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[200px]">Customer Name</TableHead>
-                    <TableHead className="text-center">Visits</TableHead>
-                    <TableHead className="text-center">Total Loads</TableHead>
-                    <TableHead className="text-right">Total Weight (kg)</TableHead>
-                    <TableHead className="text-right">Total Amount Paid</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                    <TableHead className="min-w-[150px] sm:min-w-[200px]">Customer Name</TableHead>
+                    <TableHead className="text-center align-middle">Visits</TableHead>
+                    <TableHead className="text-center align-middle">Total Loads</TableHead>
+                    <TableHead className="text-right align-middle whitespace-nowrap">Total Weight (kg)</TableHead>
+                    <TableHead className="text-right align-middle whitespace-nowrap">Total Amount Paid</TableHead>
+                    <TableHead className="w-[50px] align-middle"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -192,27 +193,33 @@ export default function AdminCustomersPage() {
                       >
                         <>
                           <TableRow className="hover:bg-muted/50">
-                            <TableCell className="font-medium">
-                              {customer.name}
-                              {customer.contactNumber && (
-                                <div className="text-xs text-muted-foreground mt-1">
-                                  {customer.contactNumber}
-                                </div>
-                              )}
+                            <TableCell className="font-medium min-w-[150px] sm:min-w-[200px]">
+                              <div className="flex flex-col">
+                                <span>{customer.name}</span>
+                                {customer.contactNumber ? (
+                                  <span className="text-xs text-muted-foreground mt-0.5">
+                                    {customer.contactNumber}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground mt-0.5">
+                                    N/A
+                                  </span>
+                                )}
+                              </div>
                             </TableCell>
-                            <TableCell className="text-center">
+                            <TableCell className="text-center align-middle">
                               {customer.visits}
                             </TableCell>
-                            <TableCell className="text-center">
+                            <TableCell className="text-center align-middle">
                               {customer.totalLoads}
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-right align-middle whitespace-nowrap">
                               {customer.totalWeight.toFixed(2)}
                             </TableCell>
-                            <TableCell className="text-right font-semibold">
+                            <TableCell className="text-right align-middle font-semibold whitespace-nowrap">
                               ₱{customer.totalAmountPaid.toFixed(2)}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="align-middle">
                               {customer.transactions.length > 1 && (
                                 <AccordionTrigger className="h-8 w-8 p-0 hover:no-underline">
                                   <ChevronDown className="h-4 w-4" />
@@ -229,31 +236,31 @@ export default function AdminCustomersPage() {
                                       Transaction History ({customer.transactions.length} orders)
                                     </h4>
                                     <div className="space-y-2">
-                                      <div className="grid grid-cols-5 gap-4 text-xs font-medium text-muted-foreground pb-2 border-b">
-                                        <div>Date</div>
+                                      <div className="grid grid-cols-5 gap-2 sm:gap-4 text-xs font-medium text-muted-foreground pb-2 border-b">
+                                        <div className="min-w-[80px]">Date</div>
                                         <div className="text-center">Loads</div>
-                                        <div className="text-right">Weight (kg)</div>
-                                        <div className="text-right">Amount Paid</div>
-                                        <div className="text-center">Order ID</div>
+                                        <div className="text-right whitespace-nowrap">Weight (kg)</div>
+                                        <div className="text-right whitespace-nowrap">Amount Paid</div>
+                                        <div className="text-center min-w-[80px]">Order ID</div>
                                       </div>
                                       {customer.transactions.map((transaction, idx) => (
                                         <div
                                           key={`${transaction.orderId}-${idx}`}
-                                          className="grid grid-cols-5 gap-4 text-sm py-2 border-b last:border-0"
+                                          className="grid grid-cols-5 gap-2 sm:gap-4 text-sm py-2 border-b last:border-0"
                                         >
-                                          <div>
+                                          <div className="min-w-[80px]">
                                             {format(transaction.date, 'MMM dd, yyyy')}
                                           </div>
                                           <div className="text-center">
                                             {transaction.loads}
                                           </div>
-                                          <div className="text-right">
+                                          <div className="text-right whitespace-nowrap">
                                             {transaction.weight.toFixed(2)}
                                           </div>
-                                          <div className="text-right font-medium">
+                                          <div className="text-right font-medium whitespace-nowrap">
                                             ₱{transaction.amountPaid.toFixed(2)}
                                           </div>
-                                          <div className="text-center text-xs text-muted-foreground">
+                                          <div className="text-center text-xs text-muted-foreground min-w-[80px] break-all">
                                             {transaction.orderId}
                                           </div>
                                         </div>
@@ -270,6 +277,7 @@ export default function AdminCustomersPage() {
                   </Accordion>
                 </TableBody>
               </Table>
+              </div>
             </div>
           </div>
         ) : (
