@@ -108,7 +108,10 @@ export default function EmployeeSalaryPage() {
 
   // Refetch payment status when employee ID is set and orders are loaded
   useEffect(() => {
+    console.log(`[Employee Salary] useEffect triggered - employeeId: ${employeeId}, orders.length: ${orders.length}`);
+    
     if (employeeId && orders.length > 0) {
+      console.log(`[Employee Salary] Condition met, fetching payments...`);
       // Get unique dates from orders
       const uniqueDates = new Set<string>();
       orders.forEach((order) => {
@@ -152,6 +155,8 @@ export default function EmployeeSalaryPage() {
       fetchAllPayments().catch(error => {
         console.error('Error fetching daily payments:', error);
       });
+    } else {
+      console.log(`[Employee Salary] Condition NOT met - employeeId: ${employeeId}, orders.length: ${orders.length}`);
     }
   }, [employeeId, orders]);
 
