@@ -125,106 +125,59 @@ export async function fetchOrderWithHistory(orderId: string) {
 export async function fetchOrderForCustomer(orderId: string, name: string) {
   const trimmedOrderId = orderId.trim();
   const trimmedName = name.trim();
+  const orderIdLower = trimmedOrderId.toLowerCase();
+  const nameLower = trimmedName.toLowerCase();
 
-  // Use RPC call to bypass RLS - allows searching admin-created orders
-  // Convert name to lowercase for case-insensitive search
-  // Order ID is kept as-is since it's typically stored in a specific case format
-  const { data, error } = await supabase.rpc('search_order_by_id_and_name', {
-    p_order_id: trimmedOrderId,
-    p_customer_name: trimmedName.toLowerCase(),
-  });
-
-  if (error) {
-    // Log the error for debugging
-    console.error('RPC search_order_by_id_and_name failed:', error);
-    console.error('This usually means the SQL function has not been created in Supabase.');
-    console.error('Please run the SQL script from src/docs/fix-order-search-rls.sql in Supabase SQL Editor.');
+  // Always use case-insensitive search by fetching all orders and filtering
+  // This ensures "RKR006" and "rKR006" both work, regardless of RPC function case sensitivity
+  try {
+    const { data: allOrdersData, error: allOrdersError } = await supabase
+      .from('orders')
+      .select('*, order_status_history(*)');
     
-    // Fallback to direct query if RPC function doesn't exist (for backwards compatibility)
-    // NOTE: This will fail for non-logged-in users due to RLS restrictions
-    // Use case-insensitive search for both order ID and name
-    const orderIdLower = trimmedOrderId.toLowerCase();
-    const { data: fallbackData, error: fallbackError } = await fetchOrderWithHistory(trimmedOrderId);
-    if (fallbackError || !fallbackData) {
-      // Try case-insensitive order ID search
-      const { data: allOrdersData, error: allOrdersError } = await supabase
-        .from('orders')
-        .select('*, order_status_history(*)');
-      
-      if (allOrdersError) {
-        console.error('Fallback query also failed:', allOrdersError);
-        return { data: null, error: allOrdersError };
-      }
-
-      // Filter by case-insensitive order ID and name match
-      const inputNameLower = trimmedName.toLowerCase();
-      const matchedOrder = (allOrdersData || []).find(order => {
-        const orderIdMatches = order.id.toLowerCase().includes(orderIdLower);
-        const customerNameLower = (order.customer_name || '').toLowerCase();
-        const nameMatches = customerNameLower.includes(inputNameLower);
-        return orderIdMatches && nameMatches;
-      });
-
-      if (!matchedOrder) {
-        return { data: null, error: null };
-      }
-
-      return { data: matchedOrder, error: null };
+    if (allOrdersError) {
+      console.error('Failed to fetch orders for case-insensitive search:', allOrdersError);
+      return { data: null, error: allOrdersError };
     }
 
-    // Verify name matches (case-insensitive)
-    const customerNameLower = (fallbackData.customer_name || '').toLowerCase();
-    const inputNameLower = trimmedName.toLowerCase();
-    const matches = customerNameLower.includes(inputNameLower);
-    
-    if (!matches) {
-      console.warn('Name mismatch:', { 
-        stored: fallbackData.customer_name, 
-        searched: trimmedName 
-      });
+    // Filter by case-insensitive order ID (exact match) and name match
+    const matchedOrder = (allOrdersData || []).find(order => {
+      const storedOrderIdLower = (order.id || '').toLowerCase();
+      const storedNameLower = (order.customer_name || '').toLowerCase();
+      const orderIdMatches = storedOrderIdLower === orderIdLower;
+      const nameMatches = storedNameLower.includes(nameLower);
+      return orderIdMatches && nameMatches;
+    });
+
+    if (!matchedOrder) {
       return { data: null, error: null };
     }
-    
-    if (!matches) {
-      console.warn('Name mismatch:', { 
-        stored: fallbackData.customer_name, 
-        searched: trimmedName 
-      });
-    }
-    
-    return { data: matches ? fallbackData : null, error: null };
-  }
 
-  // RPC returns array, get first result
-  if (!data || data.length === 0) {
-    console.warn('No order found with:', { orderId: trimmedOrderId, name: trimmedName });
-    return { data: null, error: null };
+    return {
+      data: {
+        id: matchedOrder.id,
+        customer_id: matchedOrder.customer_id,
+        branch_id: matchedOrder.branch_id,
+        customer_name: matchedOrder.customer_name,
+        contact_number: matchedOrder.contact_number,
+        service_package: matchedOrder.service_package,
+        weight: matchedOrder.weight,
+        loads: matchedOrder.loads,
+        distance: matchedOrder.distance,
+        delivery_option: matchedOrder.delivery_option,
+        status: matchedOrder.status,
+        total: matchedOrder.total,
+        is_paid: matchedOrder.is_paid,
+        created_at: matchedOrder.created_at,
+        updated_at: matchedOrder.updated_at,
+        order_status_history: (matchedOrder.order_status_history as any[]) || [],
+      },
+      error: null,
+    };
+  } catch (error: any) {
+    console.error('Error in case-insensitive search:', error);
+    return { data: null, error };
   }
-
-  const orderData = data[0];
-  
-  // Transform the RPC result to match the expected format
-  return {
-    data: {
-      id: orderData.id,
-      customer_id: orderData.customer_id,
-      branch_id: orderData.branch_id,
-      customer_name: orderData.customer_name,
-      contact_number: orderData.contact_number,
-      service_package: orderData.service_package,
-      weight: orderData.weight,
-      loads: orderData.loads,
-      distance: orderData.distance,
-      delivery_option: orderData.delivery_option,
-      status: orderData.status,
-      total: orderData.total,
-      is_paid: orderData.is_paid,
-      created_at: orderData.created_at,
-      updated_at: orderData.updated_at,
-      order_status_history: (orderData.order_status_history as any[]) || [],
-    },
-    error: null,
-  };
 }
 
 export async function updateOrderStatus(orderId: string, status: string, note?: string) {
