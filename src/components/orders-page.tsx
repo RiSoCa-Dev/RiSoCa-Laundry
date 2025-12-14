@@ -30,15 +30,30 @@ export function OrdersPage() {
     console.log(`[Orders Page] Mapping order ${o.id}:`, {
       raw_balance: o.balance,
       raw_balance_type: typeof o.balance,
+      raw_balance_is_null: o.balance === null,
+      raw_balance_is_undefined: o.balance === undefined,
       raw_is_paid: o.is_paid,
       raw_total: o.total,
       raw_total_type: typeof o.total,
     });
 
     const totalNum = typeof o.total === 'string' ? parseFloat(o.total) : Number(o.total);
-    const balanceNum = o.balance !== null && o.balance !== undefined 
-      ? (typeof o.balance === 'string' ? parseFloat(o.balance) : Number(o.balance))
-      : (o.is_paid ? 0 : totalNum);
+    
+    // CRITICAL FIX: Handle balance more explicitly
+    // Check if balance exists and is a valid number (including 0)
+    let balanceNum: number;
+    if (o.balance !== null && o.balance !== undefined && o.balance !== '') {
+      // Balance exists - convert to number
+      balanceNum = typeof o.balance === 'string' ? parseFloat(o.balance) : Number(o.balance);
+      // Ensure it's a valid number (not NaN)
+      if (isNaN(balanceNum)) {
+        console.warn(`[Orders Page] Invalid balance for ${o.id}, using fallback`);
+        balanceNum = o.is_paid ? 0 : totalNum;
+      }
+    } else {
+      // Balance is null/undefined/empty - use fallback logic
+      balanceNum = o.is_paid ? 0 : totalNum;
+    }
     
     const mapped = {
       id: o.id,
@@ -51,7 +66,7 @@ export function OrdersPage() {
       total: totalNum,
       orderDate: new Date(o.created_at),
       isPaid: o.is_paid,
-      balance: balanceNum,
+      balance: balanceNum, // ALWAYS set balance, never undefined
       deliveryOption: o.delivery_option ?? undefined,
       servicePackage: o.service_package,
       distance: o.distance ?? 0,
@@ -64,10 +79,18 @@ export function OrdersPage() {
 
     console.log(`[Orders Page] Mapped order ${o.id}:`, {
       final_balance: mapped.balance,
+      final_balance_type: typeof mapped.balance,
+      final_balance_is_undefined: mapped.balance === undefined,
       final_isPaid: mapped.isPaid,
       final_total: mapped.total,
       isPartiallyPaid: mapped.isPaid === false && mapped.balance > 0 && mapped.balance < mapped.total,
     });
+
+    // CRITICAL: Ensure balance is never undefined
+    if (mapped.balance === undefined) {
+      console.error(`[Orders Page] ERROR: balance is undefined for ${o.id}! Setting to fallback.`);
+      mapped.balance = mapped.isPaid ? 0 : mapped.total;
+    }
 
     return mapped;
   };
@@ -106,18 +129,37 @@ export function OrdersPage() {
     console.log('[Orders Page] ===== FETCH ORDERS START =====');
     console.log('[Orders Page] Raw data from Supabase:', data?.length, 'orders');
     
+    // Log raw RKR014 from database BEFORE mapping
+    const rawRkr014 = (data ?? []).find((o: any) => o.id === 'RKR014');
+    if (rawRkr014) {
+      console.log('[Orders Page] ===== RAW RKR014 FROM DATABASE =====');
+      console.log('[Orders Page] Raw RKR014:', {
+        id: rawRkr014.id,
+        balance: rawRkr014.balance,
+        balance_type: typeof rawRkr014.balance,
+        balance_is_null: rawRkr014.balance === null,
+        balance_is_undefined: rawRkr014.balance === undefined,
+        is_paid: rawRkr014.is_paid,
+        total: rawRkr014.total,
+        total_type: typeof rawRkr014.total,
+      });
+      console.log('[Orders Page] ===== RAW RKR014 END =====');
+    }
+    
     const mappedOrders = (data ?? []).map(mapOrder);
     
     console.log('[Orders Page] Mapped orders count:', mappedOrders.length);
     
-    // Log RKR014 specifically
+    // Log RKR014 specifically AFTER mapping
     const rkr014 = mappedOrders.find(o => o.id === 'RKR014');
     if (rkr014) {
-      console.log('[Orders Page] ===== RKR014 DETAILS =====');
-      console.log('[Orders Page] RKR014 order details:', {
+      console.log('[Orders Page] ===== MAPPED RKR014 DETAILS =====');
+      console.log('[Orders Page] Mapped RKR014 order details:', {
         id: rkr014.id,
         balance: rkr014.balance,
         balance_type: typeof rkr014.balance,
+        balance_is_undefined: rkr014.balance === undefined,
+        balance_is_null: rkr014.balance === null,
         isPaid: rkr014.isPaid,
         isPaid_type: typeof rkr014.isPaid,
         total: rkr014.total,
@@ -125,9 +167,15 @@ export function OrdersPage() {
         isPartiallyPaid: rkr014.isPaid === false && rkr014.balance !== undefined && rkr014.balance > 0 && rkr014.balance < rkr014.total,
         isUnpaid: !rkr014.isPaid && (rkr014.balance === undefined || rkr014.balance === 0 || rkr014.balance >= rkr014.total),
       });
-      console.log('[Orders Page] ===== RKR014 END =====');
+      console.log('[Orders Page] ===== MAPPED RKR014 END =====');
     } else {
       console.log('[Orders Page] RKR014 not found in mapped orders');
+    }
+    
+    // Verify all orders have balance set
+    const ordersWithUndefinedBalance = mappedOrders.filter(o => o.balance === undefined);
+    if (ordersWithUndefinedBalance.length > 0) {
+      console.error('[Orders Page] ERROR: Found orders with undefined balance:', ordersWithUndefinedBalance.map(o => o.id));
     }
     
     console.log('[Orders Page] Setting allOrders state with', mappedOrders.length, 'orders');
