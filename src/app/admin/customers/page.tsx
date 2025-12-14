@@ -121,6 +121,22 @@ export default function AdminCustomersPage() {
       const orderDate = startOfDay(new Date(order.created_at));
       const amountPaid = order.is_paid ? order.total : 0;
 
+      // Update contact number: prefer non-empty, and if both are non-empty, use the most recent
+      if (contactNumber) {
+        if (!customer.contactNumber) {
+          // If current is empty, use this one
+          customer.contactNumber = contactNumber;
+        } else {
+          // If both have values, use the most recent one
+          const currentOrderDate = customer.transactions.length > 0 
+            ? new Date(customer.transactions[0].date) 
+            : new Date(0);
+          if (new Date(order.created_at) > currentOrderDate) {
+            customer.contactNumber = contactNumber;
+          }
+        }
+      }
+
       // Check if this is a unique visit date
       const isNewVisit = !customer.transactions.some(
         (t) => startOfDay(t.date).getTime() === orderDate.getTime()
@@ -144,8 +160,19 @@ export default function AdminCustomersPage() {
     });
 
     // Sort transactions by date (newest first) for each customer
+    // Also update contact number to the most recent non-empty one
     customerMap.forEach((customer) => {
       customer.transactions.sort((a, b) => b.date.getTime() - a.date.getTime());
+      
+      // Find the most recent contact number from orders
+      const customerOrders = orders.filter(o => (o.customer_name || 'Unknown') === customer.name);
+      const ordersWithContact = customerOrders
+        .filter(o => o.contact_number)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
+      if (ordersWithContact.length > 0) {
+        customer.contactNumber = ordersWithContact[0].contact_number || '';
+      }
     });
 
     // Convert to array and sort by customer name
@@ -174,12 +201,12 @@ export default function AdminCustomersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-[150px] sm:min-w-[200px] px-3 sm:px-4">Customer Name</TableHead>
-                    <TableHead className="text-center align-middle px-2 sm:px-4 w-[60px] sm:w-auto">Visits</TableHead>
-                    <TableHead className="text-center align-middle px-2 sm:px-4 w-[80px] sm:w-auto">Total Loads</TableHead>
-                    <TableHead className="text-right align-middle whitespace-nowrap px-2 sm:px-4 min-w-[100px]">Total Weight (kg)</TableHead>
-                    <TableHead className="text-right align-middle whitespace-nowrap px-2 sm:px-4 min-w-[120px]">Total Amount Paid</TableHead>
-                    <TableHead className="w-[50px] align-middle px-2 sm:px-4"></TableHead>
+                    <TableHead className="min-w-[150px] sm:min-w-[200px] px-4 text-left">Customer Name</TableHead>
+                    <TableHead className="text-center px-4 w-[80px]">Visits</TableHead>
+                    <TableHead className="text-center px-4 w-[100px]">Total Loads</TableHead>
+                    <TableHead className="text-right px-4 whitespace-nowrap min-w-[120px]">Total Weight (kg)</TableHead>
+                    <TableHead className="text-right px-4 whitespace-nowrap min-w-[140px]">Total Amount Paid</TableHead>
+                    <TableHead className="w-[60px] px-4"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -192,7 +219,7 @@ export default function AdminCustomersPage() {
                       >
                         <>
                           <TableRow className="hover:bg-muted/50">
-                            <TableCell className="font-medium min-w-[150px] sm:min-w-[200px] px-3 sm:px-4 align-top sm:align-middle">
+                            <TableCell className="font-medium min-w-[150px] sm:min-w-[200px] px-4 text-left align-top">
                               <div className="flex flex-col">
                                 <span className="break-words">{customer.name}</span>
                                 {customer.contactNumber ? (
@@ -206,19 +233,19 @@ export default function AdminCustomersPage() {
                                 )}
                               </div>
                             </TableCell>
-                            <TableCell className="text-center align-middle px-2 sm:px-4">
+                            <TableCell className="text-center px-4 w-[80px] align-middle">
                               {customer.visits}
                             </TableCell>
-                            <TableCell className="text-center align-middle px-2 sm:px-4">
+                            <TableCell className="text-center px-4 w-[100px] align-middle">
                               {customer.totalLoads}
                             </TableCell>
-                            <TableCell className="text-right align-middle whitespace-nowrap px-2 sm:px-4">
+                            <TableCell className="text-right px-4 whitespace-nowrap min-w-[120px] align-middle">
                               {customer.totalWeight.toFixed(2)}
                             </TableCell>
-                            <TableCell className="text-right align-middle font-semibold whitespace-nowrap px-2 sm:px-4">
+                            <TableCell className="text-right px-4 whitespace-nowrap min-w-[140px] font-semibold align-middle">
                               ₱{customer.totalAmountPaid.toFixed(2)}
                             </TableCell>
-                            <TableCell className="align-middle px-2 sm:px-4">
+                            <TableCell className="w-[60px] px-4 align-middle">
                               {customer.transactions.length > 1 && (
                                 <AccordionTrigger className="h-8 w-8 p-0 hover:no-underline mx-auto">
                                   <ChevronDown className="h-4 w-4" />
