@@ -192,21 +192,21 @@ export default function EmployeeSalaryPage() {
   // Payment is daily and all loads are paid immediately
   const completedOrdersByDate = orders
     .reduce((acc, order) => {
-      const dateStr = startOfDay(new Date(order.orderDate)).toISOString();
-      if (!acc[dateStr]) {
-        acc[dateStr] = [];
+      // Use consistent 'yyyy-MM-dd' format for date keys
+      const dateKey = format(startOfDay(new Date(order.orderDate)), 'yyyy-MM-dd');
+      if (!acc[dateKey]) {
+        acc[dateKey] = [];
       }
-      acc[dateStr].push(order);
+      acc[dateKey].push(order);
       return acc;
     }, {} as Record<string, Order[]>);
 
   let dailySalaries: DailySalary[] = Object.entries(completedOrdersByDate)
-    .map(([dateStr, orders]) => {
+    .map(([dateKey, orders]) => {
       const totalLoads = orders.reduce((sum, o) => sum + o.load, 0);
-      const dateKey = format(new Date(dateStr), 'yyyy-MM-dd');
       
       return {
-        date: new Date(dateStr),
+        date: new Date(dateKey + 'T00:00:00'), // Parse dateKey as local date
         orders: orders,
         totalLoads: totalLoads,
         totalSalary: totalLoads * SALARY_PER_LOAD,
