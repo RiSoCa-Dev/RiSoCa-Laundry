@@ -33,6 +33,7 @@ import {
   Eye,
   EyeOff,
   Users,
+  Zap,
 } from 'lucide-react';
 
 import { AppHeader } from '@/components/app-header';
@@ -63,6 +64,7 @@ const adminGridItems = [
   { href: '/admin/rates', label: 'Service Rates', icon: DollarSign },
   { href: '/admin/salary', label: 'Employee Salary', icon: Wallet },
   { href: '/admin/expenses', label: 'Expenses', icon: CreditCard },
+  { href: '/admin/electricity', label: 'Electricity', icon: Zap },
   { href: '/admin/finance', label: 'Finance', icon: TrendingUp },
 ];
 
