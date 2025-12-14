@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -72,9 +72,11 @@ export default function EmployeeSalaryPage() {
     
     if (employeeStatus) {
       // If user is an employee, use their own ID
+      console.log(`[Employee Salary] User is employee, using user.id: ${user.id}`);
       setEmployeeId(user.id);
     } else if (adminStatus) {
       // If user is an admin, fetch the single employee's ID
+      console.log(`[Employee Salary] User is admin, fetching employee ID`);
       fetchSingleEmployee();
     }
   };
@@ -94,7 +96,10 @@ export default function EmployeeSalaryPage() {
       }
       
       if (data) {
+        console.log(`[Employee Salary] Fetched employee ID: ${data.id}`);
         setEmployeeId(data.id);
+      } else {
+        console.warn(`[Employee Salary] No employee found in database`);
       }
     } catch (error) {
       console.error('Error fetching employee', error);
@@ -128,23 +133,35 @@ export default function EmployeeSalaryPage() {
   }, [employeeId, orders]);
 
   const fetchDailyPaymentStatusForEmployee = async (dateStr: string, employeeId: string): Promise<void> => {
+    if (!employeeId) {
+      console.warn(`[Employee Salary] No employeeId provided for date: ${dateStr}`);
+      return;
+    }
+    
     try {
       const { data, error } = await supabase
         .from('daily_salary_payments')
-        .select('is_paid')
+        .select('is_paid, employee_id, date')
         .eq('employee_id', employeeId)
         .eq('date', dateStr)
         .maybeSingle();
 
       if (error) {
-        console.error("Failed to load payment status", error);
+        console.error(`[Employee Salary] Failed to load payment status for date: ${dateStr}, employeeId: ${employeeId}`, error);
         return;
       }
 
-      setDailyPayments(prev => ({
-        ...prev,
-        [dateStr]: data?.is_paid ?? false,
-      }));
+      // Debug logging
+      console.log(`[Employee Salary] Payment query - date: ${dateStr}, employeeId: ${employeeId}, found:`, data);
+
+      setDailyPayments(prev => {
+        const newPayments = {
+          ...prev,
+          [dateStr]: data?.is_paid ?? false,
+        };
+        console.log(`[Employee Salary] Updated dailyPayments for ${dateStr}:`, newPayments[dateStr]);
+        return newPayments;
+      });
     } catch (error) {
       console.error('Error fetching payment status', error);
     }
@@ -190,8 +207,8 @@ export default function EmployeeSalaryPage() {
 
   // Count ALL orders for salary calculation - no status filter needed
   // Payment is daily and all loads are paid immediately
-  const completedOrdersByDate = orders
-    .reduce((acc, order) => {
+  const completedOrdersByDate = useMemo(() => {
+    return orders.reduce((acc, order) => {
       // Use consistent 'yyyy-MM-dd' format for date keys
       const dateKey = format(startOfDay(new Date(order.orderDate)), 'yyyy-MM-dd');
       if (!acc[dateKey]) {
@@ -200,20 +217,24 @@ export default function EmployeeSalaryPage() {
       acc[dateKey].push(order);
       return acc;
     }, {} as Record<string, Order[]>);
+  }, [orders]);
 
-  let dailySalaries: DailySalary[] = Object.entries(completedOrdersByDate)
-    .map(([dateKey, orders]) => {
-      const totalLoads = orders.reduce((sum, o) => sum + o.load, 0);
-      
-      return {
-        date: new Date(dateKey + 'T00:00:00'), // Parse dateKey as local date
-        orders: orders,
-        totalLoads: totalLoads,
-        totalSalary: totalLoads * SALARY_PER_LOAD,
-        isPaid: dailyPayments[dateKey] ?? false,
-      };
-    })
-    .sort((a, b) => b.date.getTime() - a.date.getTime());
+  const dailySalaries: DailySalary[] = useMemo(() => {
+    return Object.entries(completedOrdersByDate)
+      .map(([dateKey, orders]) => {
+        const totalLoads = orders.reduce((sum, o) => sum + o.load, 0);
+        const isPaid = dailyPayments[dateKey] ?? false;
+        
+        return {
+          date: new Date(dateKey + 'T00:00:00'), // Parse dateKey as local date
+          orders: orders,
+          totalLoads: totalLoads,
+          totalSalary: totalLoads * SALARY_PER_LOAD,
+          isPaid: isPaid,
+        };
+      })
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+  }, [completedOrdersByDate, dailyPayments]);
 
   // Apply date range filter if set
   if (dateRange.start) {
