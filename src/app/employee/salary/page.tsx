@@ -220,10 +220,15 @@ export default function EmployeeSalaryPage() {
   }, [orders]);
 
   const dailySalaries: DailySalary[] = useMemo(() => {
+    console.log(`[Employee Salary] Computing dailySalaries - dailyPayments keys:`, Object.keys(dailyPayments));
+    console.log(`[Employee Salary] dailyPayments values:`, dailyPayments);
+    
     return Object.entries(completedOrdersByDate)
       .map(([dateKey, orders]) => {
         const totalLoads = orders.reduce((sum, o) => sum + o.load, 0);
         const isPaid = dailyPayments[dateKey] ?? false;
+        
+        console.log(`[Employee Salary] Date: ${dateKey}, isPaid from dailyPayments: ${dailyPayments[dateKey]}, final isPaid: ${isPaid}`);
         
         return {
           date: new Date(dateKey + 'T00:00:00'), // Parse dateKey as local date
