@@ -119,18 +119,11 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
             : (order.isPaid ? 0 : order.total)
     };
 
+    // Use safeOrder for all calculations to ensure balance is never undefined
+    const workingOrder = safeOrder;
+
     // Fix: Watch for balance and isPaid changes, not just order.id
     useEffect(() => {
-        console.log(`[OrderList - Desktop] OrderRow ${order.id} prop changed:`, {
-            balance: order.balance,
-            balance_type: typeof order.balance,
-            isPaid: order.isPaid,
-            isPaid_type: typeof order.isPaid,
-            total: order.total,
-            previous_balance: editableOrder.balance,
-            previous_isPaid: editableOrder.isPaid,
-            safe_balance: safeOrder.balance,
-        });
         setEditableOrder(safeOrder);
     }, [order.id, order.balance, order.isPaid, order.total]);
 
@@ -163,35 +156,18 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
     };
 
     const handleCancel = () => {
-        setEditableOrder(order);
+        setEditableOrder(safeOrder);
         setIsEditing(false);
     };
 
     const handlePayment = async (amountPaid: number, balance: number) => {
-        console.log('[OrderList - Desktop] ===== PAYMENT PROCESSED =====');
-        console.log('[OrderList - Desktop] Payment processed:', {
-            orderId: workingOrder.id,
-            amountPaid,
-            balance,
-            isPaid: balance === 0,
-            currentOrder: {
-                ...workingOrder,
-                balance: workingOrder.balance,
-                isPaid: workingOrder.isPaid,
-            }
-        });
         const updatedOrder = {
             ...workingOrder,
             isPaid: balance === 0,
             balance: balance > 0 ? balance : 0, // Ensure balance is never negative
         };
-        console.log('[OrderList - Desktop] Updated order being sent:', updatedOrder);
         await onUpdateOrder(updatedOrder);
-        console.log('[OrderList - Desktop] ===== PAYMENT PROCESSED END =====');
     };
-
-    // Use safeOrder for all calculations to ensure balance is never undefined
-    const workingOrder = safeOrder;
     
     // Determine payment status
     const isFullyPaid = workingOrder.isPaid === true;
@@ -201,17 +177,6 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
         workingOrder.balance < workingOrder.total;
     const isUnpaid = !isFullyPaid && !isPartiallyPaid;
     
-    // Log payment status calculation
-    console.log(`[OrderList - Desktop] OrderRow ${workingOrder.id} payment status calculation:`, {
-        isPaid: workingOrder.isPaid,
-        balance: workingOrder.balance,
-        balance_type: typeof workingOrder.balance,
-        total: workingOrder.total,
-        isFullyPaid,
-        isPartiallyPaid,
-        isUnpaid,
-    });
-    
     // Calculate display values for total/balance
     // For unpaid orders, if balance is undefined or 0, use order total. For paid orders, use 0.
     const displayBalance = workingOrder.isPaid 
@@ -219,8 +184,6 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
         : (workingOrder.balance !== undefined && workingOrder.balance > 0) 
             ? workingOrder.balance 
             : workingOrder.total;
-    
-    console.log(`[OrderList - Desktop] OrderRow ${workingOrder.id} displayBalance:`, displayBalance);
 
     return (
         <>
@@ -369,9 +332,9 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
             isOpen={isPaymentDialogOpen}
             onClose={() => setIsPaymentDialogOpen(false)}
             onConfirm={handlePayment}
-            orderTotal={order.total}
+            orderTotal={workingOrder.total}
             currentBalance={displayBalance}
-            orderId={order.id}
+            orderId={workingOrder.id}
         />
         </>
     );
@@ -397,18 +360,11 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
             : (order.isPaid ? 0 : order.total)
     };
 
+    // Use safeOrder for all calculations to ensure balance is never undefined
+    const workingOrder = safeOrder;
+
     // Fix: Watch for balance and isPaid changes, not just order.id
     useEffect(() => {
-        console.log(`[OrderList - Mobile] OrderCard ${order.id} prop changed:`, {
-            balance: order.balance,
-            balance_type: typeof order.balance,
-            isPaid: order.isPaid,
-            isPaid_type: typeof order.isPaid,
-            total: order.total,
-            previous_balance: editableOrder.balance,
-            previous_isPaid: editableOrder.isPaid,
-            safe_balance: safeOrder.balance,
-        });
         setEditableOrder(safeOrder);
     }, [order.id, order.balance, order.isPaid, order.total]);
 
@@ -441,35 +397,18 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
     };
 
     const handleCancel = () => {
-        setEditableOrder(order);
+        setEditableOrder(safeOrder);
         setIsEditing(false);
     };
 
     const handlePayment = async (amountPaid: number, balance: number) => {
-        console.log('[OrderList - Mobile] ===== PAYMENT PROCESSED =====');
-        console.log('[OrderList - Mobile] Payment processed:', {
-            orderId: safeOrder.id,
-            amountPaid,
-            balance,
-            isPaid: balance === 0,
-            currentOrder: {
-                ...safeOrder,
-                balance: safeOrder.balance,
-                isPaid: safeOrder.isPaid,
-            }
-        });
         const updatedOrder = {
-            ...safeOrder,
+            ...workingOrder,
             isPaid: balance === 0,
             balance: balance > 0 ? balance : 0, // Ensure balance is never negative
         };
-        console.log('[OrderList - Mobile] Updated order being sent:', updatedOrder);
         await onUpdateOrder(updatedOrder);
-        console.log('[OrderList - Mobile] ===== PAYMENT PROCESSED END =====');
     };
-
-    // Use safeOrder for all calculations to ensure balance is never undefined
-    const workingOrder = safeOrder;
 
     // Determine payment status
     const isFullyPaid = workingOrder.isPaid === true;
@@ -479,17 +418,6 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
         workingOrder.balance < workingOrder.total;
     const isUnpaid = !isFullyPaid && !isPartiallyPaid;
     
-    // Log payment status calculation
-    console.log(`[OrderList - Mobile] OrderCard ${workingOrder.id} payment status calculation:`, {
-        isPaid: workingOrder.isPaid,
-        balance: workingOrder.balance,
-        balance_type: typeof workingOrder.balance,
-        total: workingOrder.total,
-        isFullyPaid,
-        isPartiallyPaid,
-        isUnpaid,
-    });
-    
     // Calculate display values for total/balance
     // For unpaid orders, if balance is undefined or 0, use order total. For paid orders, use 0.
     const displayBalance = workingOrder.isPaid 
@@ -497,8 +425,6 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
         : (workingOrder.balance !== undefined && workingOrder.balance > 0) 
             ? workingOrder.balance 
             : workingOrder.total;
-    
-    console.log(`[OrderList - Mobile] OrderCard ${workingOrder.id} displayBalance:`, displayBalance);
 
     return (
         <>
@@ -604,13 +530,13 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                         <div className="flex flex-col gap-1">
                                             {isPartiallyPaid ? (
                                                 <>
-                                                    <span className="line-through text-muted-foreground text-sm">₱{order.total.toFixed(2)}</span>
-                                                    <span className="text-red-600 font-semibold">₱{order.balance!.toFixed(2)}</span>
+                                                    <span className="line-through text-muted-foreground text-sm">₱{workingOrder.total.toFixed(2)}</span>
+                                                    <span className="text-red-600 font-semibold">₱{workingOrder.balance!.toFixed(2)}</span>
                                                 </>
                                             ) : isFullyPaid ? (
-                                                <span className="text-green-600 font-semibold text-base">₱{order.total.toFixed(2)}</span>
+                                                <span className="text-green-600 font-semibold text-base">₱{workingOrder.total.toFixed(2)}</span>
                                             ) : (
-                                                <span className="text-red-600 font-semibold text-base">₱{order.total.toFixed(2)}</span>
+                                                <span className="text-red-600 font-semibold text-base">₱{workingOrder.total.toFixed(2)}</span>
                                             )}
                                         </div>
                                     )}
@@ -628,7 +554,7 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                         </Button>
                                     ) : (
                                         (() => {
-                                            const badgeInfo = getPaymentBadgeInfo(order.isPaid, isPartiallyPaid);
+                                            const badgeInfo = getPaymentBadgeInfo(workingOrder.isPaid, isPartiallyPaid);
                                             return badgeInfo.clickable ? (
                                                 <Badge 
                                                     className={cn(
@@ -712,24 +638,6 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
 }
 
 export function OrderList({ orders, onUpdateOrder }: OrderListProps) {
-  // Log when orders prop changes
-  useEffect(() => {
-    console.log('[OrderList] ===== ORDERS PROP CHANGED =====');
-    console.log('[OrderList] Orders count:', orders.length);
-    const rkr014 = orders.find(o => o.id === 'RKR014');
-    if (rkr014) {
-      console.log('[OrderList] RKR014 in orders prop:', {
-        balance: rkr014.balance,
-        balance_type: typeof rkr014.balance,
-        isPaid: rkr014.isPaid,
-        isPaid_type: typeof rkr014.isPaid,
-        total: rkr014.total,
-        total_type: typeof rkr014.total,
-      });
-    }
-    console.log('[OrderList] ===== ORDERS PROP END =====');
-  }, [orders]);
-
   return (
     <>
       {/* Mobile View - Card List */}
