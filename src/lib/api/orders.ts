@@ -131,39 +131,76 @@ export async function fetchOrderForCustomer(orderId: string, name: string) {
   }
 
   try {
-    // Try RPC function first (bypasses RLS)
-    const { data: rpcData, error: rpcError } = await supabase.rpc(
-      'get_order_by_id_and_name',
-      {
-        p_order_id: trimmedOrderId,
-        p_customer_name: trimmedName,
-      }
-    );
+    // Try RPC function first (bypasses RLS) - only if function exists
+    // If RPC function doesn't exist or fails, fall through to direct query
+    try {
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        'get_order_by_id_and_name',
+        {
+          p_order_id: trimmedOrderId,
+          p_customer_name: trimmedName,
+        }
+      );
 
-    // If RPC function exists and returns data, use it
-    if (!rpcError && rpcData && rpcData.length > 0) {
-      const order = rpcData[0];
-      return {
-        data: {
-          id: order.id,
-          customer_id: order.customer_id,
-          branch_id: order.branch_id,
-          customer_name: order.customer_name,
-          contact_number: order.contact_number,
-          service_package: order.service_package,
-          weight: order.weight,
-          loads: order.loads,
-          distance: order.distance,
-          delivery_option: order.delivery_option,
-          status: order.status,
-          total: order.total,
-          is_paid: order.is_paid,
-          created_at: order.created_at,
-          updated_at: order.updated_at,
-          order_status_history: (order.order_status_history as any[]) || [],
-        },
-        error: null,
-      };
+      // If RPC function exists and returns data, use it
+      // Handle both TABLE return (array) and JSON return (single object)
+      if (!rpcError && rpcData) {
+        let order: any;
+        
+        // If it's an array (TABLE return type), get first element
+        if (Array.isArray(rpcData)) {
+          if (rpcData.length === 0) {
+            // No results, continue to fallback
+          } else {
+            order = rpcData[0];
+          }
+        } else if (rpcData && typeof rpcData === 'object') {
+          // Single JSON object return
+          order = rpcData;
+        }
+        
+        if (order) {
+          // Parse order_status_history if it's a JSONB string
+          let statusHistory: any[] = [];
+          if (order.order_status_history) {
+            if (typeof order.order_status_history === 'string') {
+              try {
+                statusHistory = JSON.parse(order.order_status_history);
+              } catch {
+                statusHistory = [];
+              }
+            } else if (Array.isArray(order.order_status_history)) {
+              statusHistory = order.order_status_history;
+            }
+          }
+          
+          return {
+            data: {
+              id: order.id,
+              customer_id: order.customer_id,
+              branch_id: order.branch_id,
+              customer_name: order.customer_name,
+              contact_number: order.contact_number,
+              service_package: order.service_package,
+              weight: order.weight,
+              loads: order.loads,
+              distance: order.distance,
+              delivery_option: order.delivery_option,
+              status: order.status,
+              total: order.total,
+              is_paid: order.is_paid,
+              created_at: order.created_at,
+              updated_at: order.updated_at,
+              order_status_history: statusHistory,
+            },
+            error: null,
+          };
+        }
+      }
+      // If RPC returns error (like function doesn't exist), continue to fallback
+    } catch (rpcErr) {
+      // RPC function doesn't exist or failed, continue to direct query fallback
+      console.log('RPC function not available, using direct query fallback');
     }
 
     // Fallback: Try direct query (requires RLS to allow SELECT)
