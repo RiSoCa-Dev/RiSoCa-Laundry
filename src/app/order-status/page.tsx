@@ -5,6 +5,7 @@ import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
 import { PromoBanner } from '@/components/promo-banner';
 import { OrderStatusTracker } from '@/components/order-status-tracker';
+import { RateRKRLaundrySection } from '@/components/rate-rkr-laundry/rate-rkr-laundry-section';
 import type { Order } from '@/components/order-list';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -344,7 +345,12 @@ export default function OrderStatusPage() {
 
               {/* Show selected order from my orders or searched order */}
               {(selectedOrder || (searchAttempted && searchedOrder)) && (
-                <OrderStatusTracker order={selectedOrder || searchedOrder!} />
+                <>
+                  <OrderStatusTracker order={selectedOrder || searchedOrder!} />
+                  <div className="mt-4">
+                    <RateRKRLaundrySection orderId={(selectedOrder || searchedOrder!).id} />
+                  </div>
+                </>
               )}
               
               {searchAttempted && !searchedOrder && !selectedOrder && (
