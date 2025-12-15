@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthSession } from '@/hooks/use-auth-session';
 import { supabase } from '@/lib/supabase-client';
-import { Loader2, Phone } from 'lucide-react';
+import { Loader2, Phone, Trash2 } from 'lucide-react';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -246,6 +246,28 @@ export default function ProfilePage() {
                   )}
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+
+          {/* Delete Account Section */}
+          <Card className="mx-auto w-full max-w-md mt-4 border-destructive/50">
+            <CardContent className="p-4 pt-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-destructive mb-1">Danger Zone</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Permanently delete your account and all associated data. This action cannot be undone.
+                  </p>
+                </div>
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  onClick={() => router.push('/delete-account')}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Account
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
