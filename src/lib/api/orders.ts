@@ -102,9 +102,18 @@ export async function createOrderWithHistory(order: OrderInsert) {
 }
 
 export async function fetchMyOrders() {
+  // Get the current user
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return { data: null, error: { message: 'User not authenticated' } };
+  }
+
+  // Filter orders by the current user's ID (customer_id)
   return supabase
     .from('orders')
     .select('*, order_status_history(*)')
+    .eq('customer_id', user.id)
     .order('created_at', { ascending: false });
 }
 

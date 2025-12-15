@@ -34,6 +34,7 @@ import {
   EyeOff,
   Users,
   Zap,
+  ShoppingBag,
 } from 'lucide-react';
 
 import { AppHeader } from '@/components/app-header';
@@ -257,6 +258,12 @@ function HomeContent({ viewAsCustomer: initialViewAsCustomer }: { viewAsCustomer
                         <Link href="/profile" className="flex items-center gap-2">
                           <User className="h-4 w-4" />
                           Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/my-orders" className="flex items-center gap-2">
+                          <ShoppingBag className="h-4 w-4" />
+                          My Orders
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />

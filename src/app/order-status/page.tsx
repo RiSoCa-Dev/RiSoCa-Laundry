@@ -11,12 +11,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Search, Inbox, AlertTriangle, User, Loader2, Filter, X } from 'lucide-react';
+import { Search, Inbox, AlertTriangle, User, Loader2, Filter, X, ArrowRight, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchOrderForCustomer, fetchMyOrders } from '@/lib/api/orders';
 import { useAuthSession } from '@/hooks/use-auth-session';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export default function OrderStatusPage() {
+  const router = useRouter();
   const { user, loading: authLoading } = useAuthSession();
   const [orderId, setOrderId] = useState('');
   const [name, setName] = useState('');
@@ -57,6 +66,7 @@ export default function OrderStatusPage() {
           total: o.total,
           orderDate: new Date(o.created_at),
           isPaid: o.is_paid,
+          balance: typeof o.balance === 'number' ? o.balance : (o.balance ? parseFloat(o.balance) : (o.is_paid ? 0 : o.total)),
           deliveryOption: o.delivery_option ?? undefined,
           servicePackage: o.service_package,
           distance: o.distance ?? 0,
@@ -66,8 +76,12 @@ export default function OrderStatusPage() {
           })),
         }));
         setMyOrders(mapped);
-        // Auto-select the most recent order
-        if (mapped.length > 0) {
+        // Auto-select the most recent non-Success order
+        const nonSuccessOrders = mapped.filter(o => o.status !== 'Success' && o.status !== 'Completed');
+        if (nonSuccessOrders.length > 0) {
+          setSelectedOrder(nonSuccessOrders[0]);
+        } else if (mapped.length > 0) {
+          // If all orders are Success, still select the first one
           setSelectedOrder(mapped[0]);
         }
       }
@@ -78,10 +92,16 @@ export default function OrderStatusPage() {
   }, [user, authLoading]);
 
   // Filter and sort orders based on search and date filter
+  // IMPORTANT: Filter out "Success" and "Completed" orders for logged-in users on Order Status page
   useEffect(() => {
     if (!user) return;
 
     let filtered = [...myOrders];
+
+    // Filter out "Success" and "Completed" orders (only show active/pending orders)
+    filtered = filtered.filter(order => 
+      order.status !== 'Success' && order.status !== 'Completed'
+    );
 
     // Filter by Order ID search (case-insensitive)
     if (orderIdSearch.trim()) {
@@ -171,18 +191,47 @@ export default function OrderStatusPage() {
         <div className="w-full max-w-2xl">
           <Card>
             <CardHeader>
-              <CardTitle>Check Order Status</CardTitle>
-              <CardDescription>
-                {user 
-                  ? 'View your orders below or search for a specific order.'
-                  : 'Enter the Order ID and Name provided by the admin to track your laundry order status.'}
-              </CardDescription>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <CardTitle>Check Order Status</CardTitle>
+                  <CardDescription>
+                    {user 
+                      ? 'View your active orders below or search for a specific order.'
+                      : 'Enter the Order ID and Name provided by the admin to track your laundry order status.'}
+                  </CardDescription>
+                </div>
+                {user && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push('/my-orders')}
+                    className="flex items-center gap-2 ml-4"
+                  >
+                    Show All Orders
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {user && myOrders.length > 0 && (
                 <div className="mb-6 space-y-4">
                   <div>
-                    <Label className="text-base font-semibold mb-3 block">Your Orders</Label>
+                    <div className="flex items-center justify-between mb-3">
+                      <Label className="text-base font-semibold">Your Active Orders</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">
+                              Only active orders are shown here. Completed orders are available in "My Orders".
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     
                     {/* Search and Filter Controls */}
                     <div className="space-y-3 mb-4">
@@ -302,10 +351,42 @@ export default function OrderStatusPage() {
                 </div>
               )}
 
+              {user && myOrders.length > 0 && filteredOrders.length === 0 && !loadingMyOrders && (
+                <div className="mb-6 p-4 border border-dashed rounded-lg text-center text-sm text-muted-foreground">
+                  <Inbox className="h-8 w-8 mx-auto mb-2" />
+                  <p>No active orders found. All your orders are completed.</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push('/my-orders')}
+                    className="mt-3 flex items-center gap-2"
+                  >
+                    View All Orders
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+
               <div className="mb-6">
-                <Label className="text-base font-semibold mb-3 block">
-                  {user ? 'Search for Another Order' : 'Search Order'}
-                </Label>
+                <div className="flex items-center justify-between mb-3">
+                  <Label className="text-base font-semibold">
+                    {user ? 'Search for Another Order' : 'Search Order'}
+                  </Label>
+                  {!user && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">
+                            Create an account to save and view your order history.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
                 <form onSubmit={handleSearch} className="flex flex-col gap-3">
                 <div className="flex flex-col sm:flex-row gap-3">
                     <div className="w-full grid gap-1.5">
@@ -364,7 +445,20 @@ export default function OrderStatusPage() {
               {!user && !searchAttempted && !searchedOrder && (
                 <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground border-2 border-dashed rounded-lg bg-transparent p-8">
                     <Inbox className="h-12 w-12 mb-2" />
-                    <p>Your order status will appear here.</p>
+                    <p className="mb-2">Your order status will appear here.</p>
+                    <p className="text-xs">Create an account to save and view your order history.</p>
+                    <div className="flex gap-2 mt-4">
+                      <Link href="/register">
+                        <Button variant="outline" size="sm">
+                          Sign Up
+                        </Button>
+                      </Link>
+                      <Link href="/login">
+                        <Button size="sm">
+                          Log In
+                        </Button>
+                      </Link>
+                    </div>
                 </div>
               )}
             </CardContent>
