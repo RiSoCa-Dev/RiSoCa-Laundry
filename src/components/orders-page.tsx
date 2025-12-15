@@ -131,41 +131,60 @@ export function OrdersPage() {
   }, []);
 
   const handleUpdateOrder = async (updatedOrder: Order) => {
-    const previous = allOrders.find(o => o.id === updatedOrder.id);
-    const hasStatusChange = previous?.status !== updatedOrder.status;
+    try {
+      const previous = allOrders.find(o => o.id === updatedOrder.id);
+      const hasStatusChange = previous?.status !== updatedOrder.status;
 
-    if (hasStatusChange) {
-      const { error } = await updateOrderStatus(updatedOrder.id, updatedOrder.status);
-      if (error) {
-        toast({ variant: 'destructive', title: 'Update failed', description: error.message });
+      if (hasStatusChange) {
+        const { error } = await updateOrderStatus(updatedOrder.id, updatedOrder.status);
+        if (error) {
+          toast({ 
+            variant: 'destructive', 
+            title: 'Status update failed', 
+            description: error.message || 'Could not update order status. Please check your permissions.' 
+          });
+          return;
+        }
+      }
+
+      const patch = {
+        customer_name: updatedOrder.customerName,
+        contact_number: updatedOrder.contactNumber,
+        weight: updatedOrder.weight,
+        loads: updatedOrder.load,
+        total: updatedOrder.total,
+        is_paid: updatedOrder.isPaid,
+        balance: updatedOrder.balance ?? (updatedOrder.isPaid ? 0 : updatedOrder.total),
+        delivery_option: updatedOrder.deliveryOption,
+        distance: updatedOrder.distance,
+        service_package: updatedOrder.servicePackage,
+      };
+
+      const { error: patchError } = await updateOrderFields(updatedOrder.id, patch as any);
+      if (patchError) {
+        const errorMessage = patchError.message || 'Could not update order. Please check your permissions.';
+        toast({ 
+          variant: 'destructive', 
+          title: 'Update failed', 
+          description: errorMessage 
+        });
+        console.error('Order update error:', patchError);
         return;
       }
-    }
-
-    const patch = {
-      customer_name: updatedOrder.customerName,
-      contact_number: updatedOrder.contactNumber,
-      weight: updatedOrder.weight,
-      loads: updatedOrder.load,
-      total: updatedOrder.total,
-      is_paid: updatedOrder.isPaid,
-      balance: updatedOrder.balance ?? (updatedOrder.isPaid ? 0 : updatedOrder.total),
-      delivery_option: updatedOrder.deliveryOption,
-      distance: updatedOrder.distance,
-      service_package: updatedOrder.servicePackage,
-    };
-
-    const { error: patchError } = await updateOrderFields(updatedOrder.id, patch as any);
-    if (patchError) {
-      toast({ variant: 'destructive', title: 'Update failed', description: patchError.message });
-      return;
-    }
-    
-    toast({
+      
+      toast({
         title: 'Order Updated',
         description: `Order #${updatedOrder.id} has been updated.`,
-    });
-    fetchOrders();
+      });
+      fetchOrders();
+    } catch (error: any) {
+      console.error('Unexpected error updating order:', error);
+      toast({ 
+        variant: 'destructive', 
+        title: 'Update failed', 
+        description: error?.message || 'An unexpected error occurred while updating the order.' 
+      });
+    }
   };
 
   const handleAddOrder = async (newOrder: Omit<Order, 'id' | 'userId'>) => {

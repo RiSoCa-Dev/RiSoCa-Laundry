@@ -142,24 +142,35 @@ export async function fetchOrderForCustomer(orderId: string, name: string) {
         }
       );
 
+      // Check for errors (including 400 Bad Request)
+      if (rpcError) {
+        // If it's a 400 error or function doesn't exist, fall through to direct query
+        // Don't log or throw - just continue to fallback
+        throw new Error('RPC error, using fallback');
+      }
+
       // If RPC function exists and returns data, use it
       // Handle both TABLE return (array) and JSON return (single object)
-      if (!rpcError && rpcData) {
+      if (rpcData) {
         let order: any;
         
         // If it's an array (TABLE return type), get first element
         if (Array.isArray(rpcData)) {
           if (rpcData.length === 0) {
             // No results, continue to fallback
+            throw new Error('No results from RPC, using fallback');
           } else {
             order = rpcData[0];
           }
-        } else if (rpcData && typeof rpcData === 'object') {
-          // Single JSON object return
+        } else if (rpcData && typeof rpcData === 'object' && Object.keys(rpcData).length > 0) {
+          // Single JSON object return (check it's not empty/null)
           order = rpcData;
+        } else {
+          // Empty or null result, continue to fallback
+          throw new Error('Empty RPC result, using fallback');
         }
         
-        if (order) {
+        if (order && order.id) {
           // Parse order_status_history if it's a JSONB string
           let statusHistory: any[] = [];
           if (order.order_status_history) {
@@ -197,10 +208,10 @@ export async function fetchOrderForCustomer(orderId: string, name: string) {
           };
         }
       }
-      // If RPC returns error (like function doesn't exist), continue to fallback
+      // If RPC returns no data, continue to fallback
     } catch (rpcErr) {
-      // RPC function doesn't exist or failed, continue to direct query fallback
-      console.log('RPC function not available, using direct query fallback');
+      // RPC function doesn't exist, failed, or returned no data - continue to direct query fallback
+      // Silently fall through to direct query
     }
 
     // Fallback: Try direct query (requires RLS to allow SELECT)
