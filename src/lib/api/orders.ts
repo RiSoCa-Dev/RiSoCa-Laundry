@@ -361,8 +361,8 @@ export async function updateOrderStatus(orderId: string, status: string, note?: 
           }
         } else {
           // No error or 406 error - check if function returned success
-          if (updateResult === true) {
-            // Function returned success status (boolean true)
+          if (updateResult === 'success') {
+            // Function returned success status (TEXT 'success')
             finalOrderId = newOrderId;
           } else {
             // Verify the update succeeded by checking if new ID exists
