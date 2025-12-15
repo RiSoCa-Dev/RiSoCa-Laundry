@@ -106,6 +106,7 @@ export default function ProfilePage() {
         .from('profiles')
         .upsert({
           id: user.id,
+          email: user.email || email, // Include email (required by NOT NULL constraint)
           first_name: firstName.trim() || null,
           last_name: lastName.trim() || null,
           contact_number: contactNumber.trim() || null,
