@@ -143,9 +143,11 @@ export function OrdersPage() {
       if (hasStatusChange) {
         const { data: updatedOrderData, error } = await updateOrderStatus(updatedOrder.id, updatedOrder.status);
         if (error) {
+          // Check for specific Supabase errors
+          const isCoerceError = error.message?.includes('coerce') || error.message?.includes('JSON object');
           toast({ 
             variant: 'default', 
-            title: 'Update in progress', 
+            title: isCoerceError ? 'Please refresh the page' : 'Update in progress', 
             description: 'The order may have been updated. Please refresh the page to see the latest status.' 
           });
           return;
@@ -179,11 +181,12 @@ export function OrdersPage() {
       // Use finalOrderId (which might be the new RKR ID) for the update
       const { error: patchError } = await updateOrderFields(finalOrderId, patch as any);
       if (patchError) {
-        const errorMessage = patchError.message || 'Could not update order. Please check your permissions.';
+        // Check for specific Supabase errors and show friendly messages
+        const isCoerceError = patchError.message?.includes('coerce') || patchError.message?.includes('JSON object');
         toast({ 
           variant: 'default', 
-          title: 'Update may be in progress', 
-          description: 'Please refresh the page to see if the changes were applied.' 
+          title: isCoerceError ? 'Please refresh the page' : 'Update may be in progress', 
+          description: 'The order may have been updated. Please refresh the page to see the latest information.' 
         });
         console.error('Order update error:', patchError);
         return;

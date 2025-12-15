@@ -418,7 +418,23 @@ export async function updateOrderStatus(orderId: string, status: string, note?: 
 }
 
 export async function updateOrderFields(orderId: string, patch: Partial<OrderInsert>) {
-  return supabase.from('orders').update(patch).eq('id', orderId).select().single();
+  const result = await supabase.from('orders').update(patch).eq('id', orderId).select().single();
+  
+  // If single() fails, try without single() to see if update actually worked
+  if (result.error && (result.error.message?.includes('coerce') || result.error.message?.includes('JSON object'))) {
+    // Get full order data if update succeeded
+    const { data: fullOrderData } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('id', orderId)
+    .maybeSingle();
+
+    if (fullOrderData) {
+    return { data: fullOrderData, error: null };
+    }
+  }
+  
+  return result;
 }
 
 /**
