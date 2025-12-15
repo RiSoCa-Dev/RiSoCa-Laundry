@@ -16,13 +16,13 @@ BEGIN
   
   -- Step 1: Update order_status_history to a temporary ID (that doesn't conflict)
   UPDATE order_status_history
-  SET order_id = 'TEMP-UPDATE-' || p_order_id
+  SET order_id = 'RKR-UPDATE-' || p_order_id
   WHERE order_id = p_order_id;
   
   -- Step 2: Update order_ratings to temporary ID (if exists)
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'order_ratings') THEN
     UPDATE order_ratings
-    SET order_id = 'TEMP-UPDATE-' || p_order_id
+    SET order_id = 'RKR-UPDATE-' || p_order_id
     WHERE order_id = p_order_id;
   END IF;
   
@@ -34,13 +34,13 @@ BEGIN
   -- Step 4: Update order_status_history to the new ID
   UPDATE order_status_history
   SET order_id = p_new_order_id
-  WHERE order_id = 'TEMP-UPDATE-' || p_order_id;
+  WHERE order_id = 'RKR-UPDATE-' || p_order_id;
   
   -- Step 5: Update order_ratings to the new ID (if exists)
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'order_ratings') THEN
     UPDATE order_ratings
     SET order_id = p_new_order_id
-    WHERE order_id = 'TEMP-UPDATE-' || p_order_id;
+    WHERE order_id = 'RKR-UPDATE-' || p_order_id;
   END IF;
 END;
 $$;

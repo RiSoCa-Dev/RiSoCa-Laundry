@@ -426,10 +426,15 @@ export async function countCustomerOrdersToday(customerId: string): Promise<numb
 }
 
 /**
- * Generate a temporary UUID for orders in "Order Created" status
+ * Generate a temporary ID for orders in "Order Created" status
+ * Format: RKR-Pending
+ * This is customer-friendly and will be replaced with RKR### when status changes to "Order Placed"
+ * Note: Appends minimal suffix for database uniqueness (primary key requires unique IDs)
  */
 export function generateTemporaryOrderId(): string {
-  // Use timestamp + random to create a unique temporary ID
-  return `TEMP-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  // Use just "RKR-Pending" with minimal 2-digit suffix for database uniqueness
+  // The suffix ensures no primary key conflicts if multiple orders created simultaneously
+  const shortSuffix = String(Date.now()).slice(-2);
+  return `RKR-Pending-${shortSuffix}`;
 }
 
