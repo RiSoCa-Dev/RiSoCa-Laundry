@@ -171,10 +171,10 @@ export default function AdminCustomersPage() {
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full transition-all duration-300">
       <CardHeader>
-        <CardTitle>Customers</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-lg sm:text-xl">Customers</CardTitle>
+        <CardDescription className="text-xs sm:text-sm">
           View all customers and their transaction history
         </CardDescription>
       </CardHeader>

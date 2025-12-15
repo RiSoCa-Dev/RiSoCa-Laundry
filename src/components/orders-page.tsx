@@ -305,13 +305,13 @@ export function OrdersPage() {
 
   return (
     <>
-      <Card className="w-full flex flex-col max-h-[calc(100vh-12rem)] sm:max-h-[calc(100vh-14rem)]">
-        <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-background z-10 border-b rounded-t-lg">
+      <Card className="w-full flex flex-col max-h-[calc(100vh-12rem)] sm:max-h-[calc(100vh-14rem)] transition-all duration-300">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sticky top-0 bg-background z-10 border-b rounded-t-lg">
           <div>
-            <CardTitle>Orders</CardTitle>
-            <CardDescription>View and update all customer orders.</CardDescription>
+            <CardTitle className="text-lg sm:text-xl">Orders</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">View and update all customer orders.</CardDescription>
           </div>
-          <Button onClick={() => setIsDialogOpen(true)}>
+          <Button onClick={() => setIsDialogOpen(true)} className="w-full sm:w-auto">
             New Order
           </Button>
         </CardHeader>

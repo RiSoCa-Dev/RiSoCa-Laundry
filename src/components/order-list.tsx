@@ -202,7 +202,7 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                         type="text" 
                         value={editableOrder.customerName} 
                         onChange={e => handleFieldChange('customerName', e.target.value)} 
-                        className="h-8 w-32" 
+                        className="h-8 w-full min-w-[120px] max-w-[200px]" 
                         disabled={isSaving}
                     />
                 ) : (
@@ -215,7 +215,7 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                         type="tel" 
                         value={editableOrder.contactNumber} 
                         onChange={e => handleFieldChange('contactNumber', e.target.value)} 
-                        className="h-8 w-32" 
+                        className="h-8 w-full min-w-[130px] max-w-[180px]" 
                         disabled={isSaving}
                     />
                 ) : (
@@ -224,21 +224,21 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
             </TableCell>
             <TableCell>
                 {isEditing ? (
-                    <Input type="number" value={editableOrder.weight} onChange={e => handleFieldChange('weight', e.target.value)} className="h-8 w-24" disabled={isSaving}/>
+                    <Input type="number" value={editableOrder.weight} onChange={e => handleFieldChange('weight', e.target.value)} className="h-8 w-full min-w-[80px] max-w-[120px]" disabled={isSaving}/>
                 ) : (
                     workingOrder.weight
                 )}
             </TableCell>
             <TableCell>
                 {isEditing ? (
-                    <Input type="number" value={editableOrder.load} onChange={e => handleFieldChange('load', e.target.value)} className="h-8 w-20" disabled={isSaving}/>
+                    <Input type="number" value={editableOrder.load} onChange={e => handleFieldChange('load', e.target.value)} className="h-8 w-full min-w-[60px] max-w-[100px]" disabled={isSaving}/>
                 ) : (
                     workingOrder.load
                 )}
             </TableCell>
             <TableCell>
                 {isEditing ? (
-                    <Input type="number" value={editableOrder.total.toString()} onChange={e => handleFieldChange('total', e.target.value)} className="h-8 w-28" disabled={isSaving}/>
+                    <Input type="number" value={editableOrder.total.toString()} onChange={e => handleFieldChange('total', e.target.value)} className="h-8 w-full min-w-[100px] max-w-[150px]" disabled={isSaving}/>
                 ) : (
                     <div className="flex items-center gap-2">
                         {isPartiallyPaid ? (
@@ -300,13 +300,13 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
             </TableCell>
             <TableCell>
                 {isEditing ? (
-                     <div className="relative w-[180px]">
+                     <div className="relative w-full min-w-[140px] max-w-[200px]">
                         <Select
                             value={editableOrder.status}
                             onValueChange={(value) => handleFieldChange('status', value)}
                             disabled={isSaving}
                         >
-                            <SelectTrigger className="w-[180px] h-9">
+                            <SelectTrigger className="w-full h-9">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -655,19 +655,19 @@ export function OrderList({ orders, onUpdateOrder }: OrderListProps) {
       </div>
 
       {/* Desktop View - Table */}
-      <div className="hidden md:block">
+      <div className="hidden md:block overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ORDER #</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Contact number</TableHead>
-              <TableHead>Weight (kg)</TableHead>
-              <TableHead>Load</TableHead>
-              <TableHead>Total (₱)</TableHead>
-              <TableHead>Payment</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Action</TableHead>
+              <TableHead className="min-w-[100px]">ORDER #</TableHead>
+              <TableHead className="min-w-[120px]">Name</TableHead>
+              <TableHead className="min-w-[130px]">Contact number</TableHead>
+              <TableHead className="min-w-[100px]">Weight (kg)</TableHead>
+              <TableHead className="min-w-[80px]">Load</TableHead>
+              <TableHead className="min-w-[110px]">Total (₱)</TableHead>
+              <TableHead className="min-w-[100px]">Payment</TableHead>
+              <TableHead className="min-w-[140px]">Status</TableHead>
+              <TableHead className="min-w-[100px]">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

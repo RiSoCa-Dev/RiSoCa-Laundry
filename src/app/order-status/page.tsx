@@ -193,10 +193,10 @@ export default function OrderStatusPage() {
         <div className="w-full max-w-2xl">
           <Card>
             <CardHeader>
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex-1">
-                  <CardTitle>Check Order Status</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-lg sm:text-xl">Check Order Status</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     {user 
                       ? 'View your active orders below or search for a specific order.'
                       : 'Enter the Order ID and Name provided by the admin to track your laundry order status.'}
@@ -207,7 +207,7 @@ export default function OrderStatusPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => router.push('/my-orders')}
-                    className="flex items-center gap-2 ml-4"
+                    className="flex items-center gap-2 w-full sm:w-auto"
                   >
                     Show All Orders
                     <ArrowRight className="h-4 w-4" />

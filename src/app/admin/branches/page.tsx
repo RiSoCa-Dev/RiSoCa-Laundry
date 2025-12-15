@@ -84,13 +84,13 @@ export default function AdminBranchesPage() {
   };
 
   return (
-    <div className="w-full flex flex-col items-center space-y-6">
+    <div className="w-full flex flex-col items-center space-y-6 transition-all duration-300">
       <div className="flex flex-col items-center text-center w-full mb-2">
-        <h1 className="text-2xl md:text-4xl font-bold text-primary">Branches</h1>
-        <p className="text-sm md:text-lg text-muted-foreground mt-2">Manage branch info and activation.</p>
+        <h1 className="text-xl sm:text-2xl md:text-4xl font-bold text-primary">Branches</h1>
+        <p className="text-xs sm:text-sm md:text-lg text-muted-foreground mt-2">Manage branch info and activation.</p>
       </div>
       
-      <div className="w-full max-w-5xl space-y-6">
+      <div className="w-full max-w-5xl space-y-6 px-4 sm:px-0">
 
       <Card>
         <CardHeader>
@@ -146,7 +146,7 @@ export default function AdminBranchesPage() {
             <p className="text-muted-foreground">No branches yet.</p>
           ) : (
             branches.map((b) => (
-              <div key={b.id} className="border rounded-lg p-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div key={b.id} className="border rounded-lg p-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between transition-all duration-300">
                 <div>
                   <p className="font-semibold">{b.name}</p>
                   {b.address && <p className="text-sm text-muted-foreground">{b.address}</p>}

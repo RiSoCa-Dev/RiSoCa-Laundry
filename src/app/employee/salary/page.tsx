@@ -244,24 +244,24 @@ export default function EmployeeSalaryPage() {
   const totalLoads = dailySalaries.reduce((sum, day) => sum + day.totalLoads, 0);
 
   return (
-    <Card className="w-full flex flex-col max-h-[calc(100vh-12rem)] sm:max-h-[calc(100vh-14rem)]">
-      <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-background z-10 border-b rounded-t-lg">
+    <Card className="w-full flex flex-col max-h-[calc(100vh-12rem)] sm:max-h-[calc(100vh-14rem)] transition-all duration-300">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sticky top-0 bg-background z-10 border-b rounded-t-lg">
         <div>
-          <CardTitle>{userIsAdmin && !userIsEmployee ? 'Employee Salary' : 'My Salary'}</CardTitle>
-          <CardDescription>Salary is calculated at ₱{SALARY_PER_LOAD} per load for each day. All loads are paid immediately.</CardDescription>
+          <CardTitle className="text-lg sm:text-xl">{userIsAdmin && !userIsEmployee ? 'Employee Salary' : 'My Salary'}</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">Salary is calculated at ₱{SALARY_PER_LOAD} per load for each day. All loads are paid immediately.</CardDescription>
         </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto overflow-x-hidden scrollable pt-4 pb-4">
         {/* Calendar Date Range Filter */}
-        <div className="mb-6 p-4 border rounded-lg bg-muted/50">
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="mb-6 p-4 border rounded-lg bg-muted/50 transition-all duration-300">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
               <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-[280px] justify-start text-left font-normal",
+                      "w-full sm:w-[280px] justify-start text-left font-normal",
                       !dateRange.start && "text-muted-foreground"
                     )}
                   >

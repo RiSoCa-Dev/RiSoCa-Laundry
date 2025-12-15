@@ -205,15 +205,15 @@ export default function MyOrdersPage() {
                       </div>
 
                       {/* Filters Row */}
-                      <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex flex-col sm:flex-row gap-3 transition-all duration-300">
                         {/* Status Filter */}
                         <div className="flex items-center gap-2 flex-1">
-                          <Filter className="h-4 w-4 text-muted-foreground" />
+                          <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                           <Label className="text-sm text-muted-foreground whitespace-nowrap">Status:</Label>
                           <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="flex-1 px-3 py-2 text-sm border rounded-md bg-background"
+                            className="flex-1 px-3 py-2 text-sm border rounded-md bg-background min-w-0"
                           >
                             <option value="all">All Statuses</option>
                             {uniqueStatuses.map(status => (
@@ -249,7 +249,7 @@ export default function MyOrdersPage() {
 
                     {/* Orders List */}
                     {filteredOrders.length > 0 ? (
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 transition-all duration-300">
                         {/* Orders List Column */}
                         <div className="space-y-2 max-h-[600px] overflow-y-auto scrollable">
                           {filteredOrders.map((order) => (

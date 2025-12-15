@@ -90,6 +90,24 @@ body {
   background-size: 8px 8px;
 }
 
+/* Smooth transitions for responsive design - only for layout elements */
+@media (prefers-reduced-motion: no-preference) {
+  .transition-all,
+  [class*="flex"],
+  [class*="grid"],
+  [class*="w-"],
+  [class*="h-"],
+  [class*="max-w-"],
+  [class*="min-w-"],
+  [class*="gap-"],
+  [class*="p-"],
+  [class*="m-"] {
+    transition-property: width, height, padding, margin, font-size, transform, opacity, gap;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-in-out;
+  }
+}
+
 @layer utilities {
   .form-group {
     @apply relative;
