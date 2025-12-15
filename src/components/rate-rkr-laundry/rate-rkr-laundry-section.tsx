@@ -1,7 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Loader2 } from 'lucide-react';
 import { RateForm } from './rate-form';
 import { ThankYouMessage } from './thank-you-message';
@@ -14,8 +21,7 @@ interface RateRKRLaundrySectionProps {
 export function RateRKRLaundrySection({ orderId }: RateRKRLaundrySectionProps) {
   const [rating, setRating] = useState<OrderRating | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(true);
-  const [isCancelled, setIsCancelled] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     async function fetchRating() {
@@ -24,11 +30,6 @@ export function RateRKRLaundrySection({ orderId }: RateRKRLaundrySectionProps) {
       
       if (!error && data) {
         setRating(data);
-        setShowForm(false);
-      } else {
-        // Show form if no rating exists (reset cancelled state on mount)
-        setIsCancelled(false);
-        setShowForm(true);
       }
       setLoading(false);
     }
@@ -41,65 +42,54 @@ export function RateRKRLaundrySection({ orderId }: RateRKRLaundrySectionProps) {
     getOrderRating(orderId).then(({ data, error }) => {
       if (!error && data) {
         setRating(data);
-        setShowForm(false);
+        setIsDialogOpen(false);
       }
     });
   };
 
   const handleCancel = () => {
-    setIsCancelled(true);
-    setShowForm(false);
+    setIsDialogOpen(false);
   };
 
   if (loading) {
-    return (
-      <Card>
-        <CardContent className="py-6">
-          <div className="flex items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return null; // Don't show anything while loading
   }
 
-  // If rating exists, always show thank you message
+  // If rating exists, show thank you message
   if (rating) {
-    return (
-      <Card>
-        <CardContent className="py-6">
-          <ThankYouMessage rating={rating.overall_rating} />
-        </CardContent>
-      </Card>
-    );
+    return <ThankYouMessage rating={rating.overall_rating} />;
   }
 
-  // If form was cancelled, don't show anything
-  if (isCancelled) {
-    return null;
-  }
-
-  // Show form if no rating exists and not cancelled
+  // Show button that opens dialog
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <span className="text-2xl">⭐</span>
-          Rate RKR Laundry
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-4">
-          <p className="text-base text-muted-foreground">
-            How was your experience with RKR Laundry?
-          </p>
-        </div>
-        <RateForm
-          orderId={orderId}
-          onSubmitSuccess={handleSubmitSuccess}
-          onCancel={handleCancel}
-        />
-      </CardContent>
-    </Card>
+    <>
+      <Button
+        variant="outline"
+        onClick={() => setIsDialogOpen(true)}
+        className="w-full"
+      >
+        <span className="text-lg mr-2">⭐</span>
+        Rate RKR Laundry
+      </Button>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="text-2xl">⭐</span>
+              Rate RKR Laundry
+            </DialogTitle>
+            <DialogDescription>
+              How was your experience with RKR Laundry?
+            </DialogDescription>
+          </DialogHeader>
+          <RateForm
+            orderId={orderId}
+            onSubmitSuccess={handleSubmitSuccess}
+            onCancel={handleCancel}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
