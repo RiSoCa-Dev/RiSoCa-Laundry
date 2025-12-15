@@ -249,7 +249,7 @@ export function OrderForm() {
     }
 
     // Generate temporary ID - will be replaced with RKR format when status changes to "Order Placed"
-    const tempOrderId = generateTemporaryOrderId();
+    const tempOrderId = await generateTemporaryOrderId();
     const initialStatus = 'Order Created';
 
     const newOrder: Order = {
@@ -287,7 +287,7 @@ export function OrderForm() {
     if (error) {
         // Handle duplicate ID error (race condition) - retry with new temp ID
         if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
-          const retryTempId = generateTemporaryOrderId();
+          const retryTempId = await generateTemporaryOrderId();
           const { error: retryCreateError } = await createOrderWithHistory({
             id: retryTempId,
             customer_id: user.id,

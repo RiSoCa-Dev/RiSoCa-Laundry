@@ -427,14 +427,38 @@ export async function countCustomerOrdersToday(customerId: string): Promise<numb
 
 /**
  * Generate a temporary ID for orders in "Order Created" status
- * Format: RKR-Pending
+ * Format: RKR-Pending-001, RKR-Pending-002, etc. (sequential)
  * This is customer-friendly and will be replaced with RKR### when status changes to "Order Placed"
- * Note: Appends minimal suffix for database uniqueness (primary key requires unique IDs)
  */
-export function generateTemporaryOrderId(): string {
-  // Use just "RKR-Pending" with minimal 2-digit suffix for database uniqueness
-  // The suffix ensures no primary key conflicts if multiple orders created simultaneously
-  const shortSuffix = String(Date.now()).slice(-2);
-  return `RKR-Pending-${shortSuffix}`;
+export async function generateTemporaryOrderId(): Promise<string> {
+  // Get the latest RKR-Pending-### ID to generate the next sequential number
+  const { data, error } = await supabase
+    .from('orders')
+    .select('id')
+    .like('id', 'RKR-Pending-%')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  
+  if (error || !data || !data.id) {
+    // No existing pending orders, start with 001
+    return 'RKR-Pending-001';
+  }
+  
+  // Extract the number from RKR-Pending-### format
+  const match = data.id.match(/RKR-Pending-(\d+)/i);
+  if (!match) {
+    // If format is unexpected, start fresh
+    return 'RKR-Pending-001';
+  }
+  
+  const currentNumber = parseInt(match[1], 10);
+  if (isNaN(currentNumber)) {
+    return 'RKR-Pending-001';
+  }
+  
+  // Increment and format with leading zeros (e.g., 2 -> "002")
+  const nextNumber = currentNumber + 1;
+  return `RKR-Pending-${String(nextNumber).padStart(3, '0')}`;
 }
 
