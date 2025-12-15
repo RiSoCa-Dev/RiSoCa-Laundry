@@ -118,41 +118,94 @@ export async function fetchOrderWithHistory(orderId: string) {
 
 /**
  * Fetches an order by ID and customer name.
- * This function uses an RPC call to bypass RLS restrictions,
- * allowing anyone (logged in or not) to search for orders by ID and name.
- * This is necessary for the order status page where customers need to
- * search for orders created by admins.
+ * Uses case-insensitive matching for both order ID and customer name.
+ * First tries to use an RPC function (if available) to bypass RLS,
+ * then falls back to direct query if RPC is not available.
  */
 export async function fetchOrderForCustomer(orderId: string, name: string) {
   const trimmedOrderId = orderId.trim();
   const trimmedName = name.trim();
-  const orderIdLower = trimmedOrderId.toLowerCase();
-  const nameLower = trimmedName.toLowerCase();
 
-  // Always use case-insensitive search by fetching all orders and filtering
-  // This ensures "RKR006" and "rKR006" both work, regardless of RPC function case sensitivity
+  if (!trimmedOrderId || !trimmedName) {
+    return { data: null, error: null };
+  }
+
   try {
-    const { data: allOrdersData, error: allOrdersError } = await supabase
-      .from('orders')
-      .select('*, order_status_history(*)');
-    
-    if (allOrdersError) {
-      console.error('Failed to fetch orders for case-insensitive search:', allOrdersError);
-      return { data: null, error: allOrdersError };
+    // Try RPC function first (bypasses RLS)
+    const { data: rpcData, error: rpcError } = await supabase.rpc(
+      'get_order_by_id_and_name',
+      {
+        p_order_id: trimmedOrderId,
+        p_customer_name: trimmedName,
+      }
+    );
+
+    // If RPC function exists and returns data, use it
+    if (!rpcError && rpcData && rpcData.length > 0) {
+      const order = rpcData[0];
+      return {
+        data: {
+          id: order.id,
+          customer_id: order.customer_id,
+          branch_id: order.branch_id,
+          customer_name: order.customer_name,
+          contact_number: order.contact_number,
+          service_package: order.service_package,
+          weight: order.weight,
+          loads: order.loads,
+          distance: order.distance,
+          delivery_option: order.delivery_option,
+          status: order.status,
+          total: order.total,
+          is_paid: order.is_paid,
+          created_at: order.created_at,
+          updated_at: order.updated_at,
+          order_status_history: (order.order_status_history as any[]) || [],
+        },
+        error: null,
+      };
     }
 
-    // Filter by case-insensitive order ID (exact match) and name match
-    const matchedOrder = (allOrdersData || []).find(order => {
-      const storedOrderIdLower = (order.id || '').toLowerCase();
-      const storedNameLower = (order.customer_name || '').toLowerCase();
-      const orderIdMatches = storedOrderIdLower === orderIdLower;
-      const nameMatches = storedNameLower.includes(nameLower);
-      return orderIdMatches && nameMatches;
-    });
+    // Fallback: Try direct query (requires RLS to allow SELECT)
+    let { data: ordersData, error: ordersError } = await supabase
+      .from('orders')
+      .select('*, order_status_history(*)')
+      .eq('id', trimmedOrderId);
+    
+    // If exact match fails, try case-insensitive search by fetching all and filtering
+    if (ordersError || !ordersData || ordersData.length === 0) {
+      const { data: allOrders, error: allError } = await supabase
+        .from('orders')
+        .select('*, order_status_history(*)');
+      
+      if (allError) {
+        console.error('Failed to fetch orders:', allError);
+        return { data: null, error: allError };
+      }
 
-    if (!matchedOrder) {
+      // Case-insensitive matching
+      const orderIdLower = trimmedOrderId.toLowerCase();
+      const nameLower = trimmedName.toLowerCase();
+      
+      ordersData = (allOrders || []).filter(order => {
+        const storedOrderIdLower = (order.id || '').toLowerCase();
+        const storedNameLower = (order.customer_name || '').toLowerCase();
+        return storedOrderIdLower === orderIdLower && storedNameLower.includes(nameLower);
+      });
+    } else {
+      // Exact match found, now filter by name (case-insensitive)
+      const nameLower = trimmedName.toLowerCase();
+      ordersData = ordersData.filter(order => {
+        const storedNameLower = (order.customer_name || '').toLowerCase();
+        return storedNameLower.includes(nameLower);
+      });
+    }
+
+    if (!ordersData || ordersData.length === 0) {
       return { data: null, error: null };
     }
+
+    const matchedOrder = ordersData[0];
 
     return {
       data: {
@@ -176,7 +229,7 @@ export async function fetchOrderForCustomer(orderId: string, name: string) {
       error: null,
     };
   } catch (error: any) {
-    console.error('Error in case-insensitive search:', error);
+    console.error('Error in order search:', error);
     return { data: null, error };
   }
 }
