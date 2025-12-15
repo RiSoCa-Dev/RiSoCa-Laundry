@@ -113,12 +113,11 @@ export async function fetchMyOrders() {
   }
 
   // Filter orders by the current user's ID (customer_id)
-  // Exclude "Order Created" status - customers can't see orders until they're "Order Placed"
+  // Include "Order Created" orders so customers can see their newly submitted orders
   return supabase
     .from('orders')
     .select('*, order_status_history(*)')
     .eq('customer_id', user.id)
-    .neq('status', 'Order Created') // Hide orders that haven't been approved yet
     .order('created_at', { ascending: false });
 }
 
