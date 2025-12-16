@@ -4,6 +4,7 @@ export type ExpenseInsert = {
   title: string;
   amount: number;
   category?: string | null;
+  expense_for: 'Racky' | 'Karaya' | 'Richard';
   incurred_on?: string; // ISO date
   branch_id?: string | null;
 };
@@ -23,6 +24,7 @@ export async function addExpense(expense: ExpenseInsert) {
       title: expense.title,
       amount: expense.amount,
       category: expense.category ?? null,
+      expense_for: expense.expense_for,
       incurred_on: expense.incurred_on ?? new Date().toISOString().slice(0, 10),
       branch_id: expense.branch_id ?? null,
     })
