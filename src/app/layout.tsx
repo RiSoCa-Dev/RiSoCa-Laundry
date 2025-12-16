@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import { Toaster } from "@/components/ui/toaster"
 import { CookieConsentBanner } from '@/components/cookie-consent-banner';
+import { AdSenseTopAnchor } from '@/components/adsense-top-anchor';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -92,8 +93,15 @@ export default function RootLayout({
         <meta name="twitter:title" content="RKR Laundry Service" />
         <meta name="twitter:description" content="Fast, clean, and convenient laundry service at rkrlaundry.com. Real-time tracking and smart pricing for your laundry needs." />
         <meta name="twitter:image" content="https://rkrlaundry.com/icons/android-chrome-512x512.png" />
+        {/* Google AdSense */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1036864152624333"
+          crossOrigin="anonymous"
+        />
       </head>
       <body className="font-body antialiased flex flex-col h-screen overflow-hidden">
+        <AdSenseTopAnchor />
         {children}
         <Toaster />
         <CookieConsentBanner />
