@@ -110,13 +110,13 @@ export function AppHeader() {
   }, []);
 
   const now = new Date();
-  const hidePromoBanner = loading || !promo || now >= new Date(promo.end_date);
+  const showPromoBanner = !loading && promo && now < new Date(promo.end_date);
 
   return (
     <>
       <header className="w-full border-b bg-background/95">
-        {!hidePromoBanner ? (
-          /* Promo banner on all pages when active */
+        {isHome && showPromoBanner ? (
+          /* Homepage: Full-width promo banner in header */
           <div className="w-full flex items-center justify-center h-auto relative overflow-hidden">
             {/* Animated background gradient */}
             <div 
@@ -213,7 +213,7 @@ export function AppHeader() {
 
           </div>
         ) : (
-          /* No active promo: Show logo only */
+          /* Other pages: Logo only */
           <div className="container flex h-16 items-center px-4">
             <Link href="/" className="flex items-center gap-2 flex-shrink-0">
               <WashingMachine className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
