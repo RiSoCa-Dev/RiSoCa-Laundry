@@ -9,12 +9,13 @@ export type ExpenseInsert = {
   branch_id?: string | null;
 };
 
-export async function fetchExpenses() {
+export async function updateExpense(id: string, updates: { expense_for: 'Racky' | 'Karaya' | 'Richard' }) {
   return supabase
     .from('expenses')
-    .select('*')
-    .order('incurred_on', { ascending: false })
-    .order('created_at', { ascending: false });
+    .update({ expense_for: updates.expense_for })
+    .eq('id', id)
+    .select()
+    .single();
 }
 
 export async function addExpense(expense: ExpenseInsert) {
