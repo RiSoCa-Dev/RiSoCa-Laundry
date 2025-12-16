@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { AlertTriangle, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthSession } from '@/hooks/use-auth-session';
-import { supabase } from '@/lib/supabase-client';
+import { signOut } from '@/lib/auth';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
@@ -82,7 +82,7 @@ export default function DeleteAccountPage() {
       });
 
       // Sign out and redirect to home page after a short delay
-      await supabase.auth.signOut();
+      await signOut();
       setTimeout(() => {
         router.push('/');
       }, 2000);

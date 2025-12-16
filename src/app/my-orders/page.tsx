@@ -17,6 +17,7 @@ import { Search, Inbox, Loader2, Filter, X, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchMyOrders } from '@/lib/api/orders';
 import { useAuthSession } from '@/hooks/use-auth-session';
+import { getCachedOrders, setCachedOrders } from '@/lib/order-cache';
 
 export default function MyOrdersPage() {
   const router = useRouter();
@@ -42,11 +43,22 @@ export default function MyOrdersPage() {
     }
   }, [user, authLoading, router, toast]);
 
-  // Load orders for logged-in users
+  // Load orders for logged-in users with caching
   useEffect(() => {
     async function loadMyOrders() {
       if (authLoading || !user) return;
       
+      // Load cached orders immediately
+      const cachedOrders = getCachedOrders(user.id);
+      if (cachedOrders && cachedOrders.length > 0) {
+        setMyOrders(cachedOrders);
+        // Auto-select the most recent order
+        if (cachedOrders.length > 0) {
+          setSelectedOrder(cachedOrders[0]);
+        }
+      }
+      
+      // Fetch fresh data in background
       setLoadingMyOrders(true);
       const { data, error } = await fetchMyOrders();
       
@@ -84,6 +96,11 @@ export default function MyOrdersPage() {
           orderType: o.order_type || 'customer',
           assignedEmployeeId: o.assigned_employee_id ?? null,
         }));
+        
+        // Update cache with fresh data
+        setCachedOrders(user.id, mapped);
+        
+        // Update state with fresh data
         setMyOrders(mapped);
         // Auto-select the most recent order
         if (mapped.length > 0) {

@@ -1,4 +1,6 @@
 import { supabase } from './supabase-client';
+import { clearRoleCache } from './auth-helpers';
+import { clearOrderCache } from './order-cache';
 
 export async function signUpWithEmail(email: string, password: string, data?: Record<string, any>) {
   const redirectTo = typeof window !== 'undefined' 
@@ -20,6 +22,17 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 export async function signOut() {
+  // Clear caches on logout
+  if (typeof window !== 'undefined') {
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    if (userId) {
+      clearRoleCache(userId);
+      clearOrderCache(userId);
+    }
+    // Also clear all caches (in case of multiple users)
+    clearRoleCache();
+    clearOrderCache();
+  }
   return supabase.auth.signOut();
 }
 

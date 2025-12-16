@@ -1,11 +1,12 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Gift, WashingMachine, Sparkles, Clock } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
-import { getActivePromo, type Promo } from '@/lib/api/promos';
+import { usePromo } from '@/contexts/promo-context';
+import type { Promo } from '@/lib/api/promos';
 
 function CountdownTimer({ promo }: { promo: Promo }) {
   const [timeLeft, setTimeLeft] = useState<{
@@ -92,22 +93,7 @@ function CountdownTimer({ promo }: { promo: Promo }) {
 export function AppHeader() {
   const pathname = usePathname();
   const isHome = pathname === '/';
-  const [promo, setPromo] = useState<Promo | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPromo = async () => {
-      const { data } = await getActivePromo();
-      setPromo(data);
-      setLoading(false);
-    };
-
-    fetchPromo();
-    // Refresh every minute to check for new/ended promos
-    const interval = setInterval(fetchPromo, 60000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const { promo, loading } = usePromo();
 
   const now = new Date();
   const showPromoBanner = !loading && promo && now < new Date(promo.end_date);

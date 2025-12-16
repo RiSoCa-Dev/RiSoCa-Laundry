@@ -19,6 +19,7 @@ import type { Order as OrderType } from '@/components/order-list';
 import { useAuthSession } from '@/hooks/use-auth-session';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getCachedOrders, setCachedOrders } from '@/lib/order-cache';
 import {
   Tooltip,
   TooltipContent,
@@ -42,11 +43,25 @@ export default function OrderStatusPage() {
   const [dateFilter, setDateFilter] = useState<'recent' | 'oldest' | 'all'>('recent');
   const { toast } = useToast();
 
-  // Auto-load orders for logged-in users
+  // Auto-load orders for logged-in users with caching
   useEffect(() => {
     async function loadMyOrders() {
       if (authLoading || !user) return;
       
+      // Load cached orders immediately
+      const cachedOrders = getCachedOrders(user.id);
+      if (cachedOrders && cachedOrders.length > 0) {
+        setMyOrders(cachedOrders);
+        // Auto-select the most recent non-Success order
+        const nonSuccessOrders = cachedOrders.filter(o => o.status !== 'Success' && o.status !== 'Completed');
+        if (nonSuccessOrders.length > 0) {
+          setSelectedOrder(nonSuccessOrders[0]);
+        } else if (cachedOrders.length > 0) {
+          setSelectedOrder(cachedOrders[0]);
+        }
+      }
+      
+      // Fetch fresh data in background
       setLoadingMyOrders(true);
       const { data, error } = await fetchMyOrders();
       
@@ -79,6 +94,11 @@ export default function OrderStatusPage() {
           orderType: o.order_type || 'customer',
           assignedEmployeeId: o.assigned_employee_id ?? null,
         }));
+        
+        // Update cache with fresh data
+        setCachedOrders(user.id, mapped);
+        
+        // Update state with fresh data
         setMyOrders(mapped);
         // Auto-select the most recent non-Success order
         const nonSuccessOrders = mapped.filter(o => o.status !== 'Success' && o.status !== 'Completed');

@@ -1,9 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Gift, Sparkles, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
-import { getActivePromo, type Promo } from '@/lib/api/promos';
+import { usePromo } from '@/contexts/promo-context';
+import type { Promo } from '@/lib/api/promos';
 
 function CountdownTimer({ promo }: { promo: Promo }) {
   const [timeLeft, setTimeLeft] = useState<{
@@ -88,22 +89,7 @@ function CountdownTimer({ promo }: { promo: Promo }) {
 }
 
 export function PromoBanner() {
-  const [promo, setPromo] = useState<Promo | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPromo = async () => {
-      const { data } = await getActivePromo();
-      setPromo(data);
-      setLoading(false);
-    };
-
-    fetchPromo();
-    // Refresh every minute to check for new/ended promos
-    const interval = setInterval(fetchPromo, 60000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const { promo, loading } = usePromo();
 
   // Don't render if loading or no active promo
   if (loading || !promo) {
