@@ -1,7 +1,80 @@
 'use client';
 
-import { Gift, Sparkles } from 'lucide-react';
+import { Gift, Sparkles, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+
+function CountdownTimer() {
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const promoDate = new Date('2025-12-17');
+      promoDate.setHours(23, 59, 59, 999); // End of day on Dec 17
+      
+      // If it's Dec 17, countdown to end of day, otherwise countdown to Dec 17 start
+      const targetDate = now.getDate() === 17 && now.getMonth() === 11
+        ? new Date('2025-12-17T23:59:59')
+        : new Date('2025-12-17T00:00:00');
+
+      const difference = targetDate.getTime() - now.getTime();
+
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        return { days, hours, minutes, seconds };
+      }
+      return null;
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!timeLeft) {
+    return null;
+  }
+
+  const isPromoDay = new Date().getDate() === 17 && new Date().getMonth() === 11;
+  const label = isPromoDay ? 'Promo Ends In:' : 'Promo Starts In:';
+
+  return (
+    <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+      <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-red-700" />
+      <div className="flex flex-col">
+        <span className="text-[9px] sm:text-[10px] text-yellow-900 font-semibold leading-tight">
+          {label}
+        </span>
+        <div className="flex items-center gap-1 text-[10px] sm:text-xs font-bold text-red-700">
+          {timeLeft.days > 0 && (
+            <>
+              <span>{timeLeft.days}d</span>
+              <span>:</span>
+            </>
+          )}
+          <span>{String(timeLeft.hours).padStart(2, '0')}h</span>
+          <span>:</span>
+          <span>{String(timeLeft.minutes).padStart(2, '0')}m</span>
+          <span>:</span>
+          <span>{String(timeLeft.seconds).padStart(2, '0')}s</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function PromoBanner() {
   return (
@@ -81,6 +154,9 @@ export function PromoBanner() {
               <strong className="text-red-700">December 17, 2025</strong>
             </span>
           </div>
+
+          {/* Countdown Timer */}
+          <CountdownTimer />
 
           {/* Right side sparkle */}
           <div className="flex-shrink-0 animate-pulse">
