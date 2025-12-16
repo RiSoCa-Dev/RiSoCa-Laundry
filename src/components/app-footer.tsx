@@ -2,7 +2,6 @@
 
 import { Facebook, Mail } from 'lucide-react';
 import Link from 'next/link';
-import { TermsModal } from '@/components/terms-modal';
 
 export function AppFooter() {
   return (
@@ -13,11 +12,9 @@ export function AppFooter() {
           <Link href="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors underline">
             Privacy Policy
           </Link>
-          <TermsModal>
-            <button className="text-muted-foreground hover:text-primary transition-colors underline">
-              Terms & Conditions
-            </button>
-          </TermsModal>
+          <Link href="/terms-and-conditions" className="text-muted-foreground hover:text-primary transition-colors underline">
+            Terms & Conditions
+          </Link>
           <div className="flex items-center space-x-2">
           <div className="text-muted-foreground opacity-50 cursor-not-allowed" title="Facebook page coming soon">
               <Facebook className="h-4 w-4 sm:h-5 sm:w-5" />
