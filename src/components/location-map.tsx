@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { GoogleMap, MarkerF } from '@react-google-maps/api'
+import { LocationPermissionDialog } from './location-permission-dialog'
 
 const SHOP_POSITION = { lat: 17.522928, lng: 121.775073 }
 
@@ -19,7 +20,11 @@ export function LocationMap({ onSelectLocation }: LocationMapProps) {
   const [mapCenter, setMapCenter] =
     useState(SHOP_POSITION)
   const [hasUserInteracted, setHasUserInteracted] = useState(false)
-  const debounceTimeoutRef = useRef<NodeJS.Timeout>()
+  const [showPermissionDialog, setShowPermissionDialog] = useState(false)
+  const [locationPermission, setLocationPermission] = useState<'prompt' | 'granted' | 'denied' | 'checking'>('prompt')
+  const [locationError, setLocationError] = useState<string | null>(null)
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
+  const hasRequestedLocationRef = useRef<boolean>(false)
 
   const updateURL = useCallback(
     (pos: google.maps.LatLng, isUserInteraction: boolean = true) => {
@@ -60,9 +65,34 @@ export function LocationMap({ onSelectLocation }: LocationMapProps) {
     [router, searchParams, onSelectLocation]
   )
 
-  // Only get user location for centering the map, but don't update URL automatically
+  // Request location permission on mount
   useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocationPermission('denied')
+      setLocationError('Geolocation is not supported by your browser.')
+      return
+    }
+
+    // Check if permission was already requested
+    if (hasRequestedLocationRef.current) return
+
+    // Show permission dialog first
+    setShowPermissionDialog(true)
+  }, [])
+
+  // Handle location permission request
+  const handleAllowLocation = useCallback(() => {
     if (!navigator.geolocation) return
+
+    setLocationPermission('checking')
+    setShowPermissionDialog(false)
+    hasRequestedLocationRef.current = true
+
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -72,14 +102,73 @@ export function LocationMap({ onSelectLocation }: LocationMapProps) {
         }
         setMapCenter(userPos)
         setMarkerPosition(userPos)
-        // Don't update URL automatically - wait for user interaction
+        setLocationPermission('granted')
+        setLocationError(null)
+
+        // Wait for Google Maps API to be ready, then calculate distance
+        const checkAndUpdate = () => {
+          if (typeof window !== 'undefined' && window.google && window.google.maps) {
+            const userLatLng = new google.maps.LatLng(userPos.lat, userPos.lng)
+            // Auto-update URL with distance calculation
+            updateURL(userLatLng, false) // false = auto-calculated, not user interaction
+          } else {
+            // Retry after a short delay if API not ready
+            setTimeout(checkAndUpdate, 100)
+          }
+        }
+        checkAndUpdate()
       },
-      () => {
-        // On error, just center on shop position but don't update URL
+      (error) => {
+        setLocationPermission('denied')
+        hasRequestedLocationRef.current = false // Allow retry
+        
+        let errorMessage = 'Unable to get your location.'
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location permission was denied. You can manually select your location on the map.'
+            break
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information is unavailable. Please select your location on the map.'
+            break
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out. Please select your location on the map.'
+            break
+        }
+        setLocationError(errorMessage)
         setMapCenter(SHOP_POSITION)
-      }
+      },
+      options
     )
-  }, []) // Remove updateURL dependency to prevent auto-updates
+  }, [updateURL])
+
+  const handleDenyLocation = useCallback(() => {
+    setShowPermissionDialog(false)
+    setLocationPermission('denied')
+    hasRequestedLocationRef.current = true
+    setLocationError('You can manually select your location on the map.')
+  }, [])
+
+  // Auto-calculate distance when marker position changes and permission is granted
+  useEffect(() => {
+    if (
+      locationPermission === 'granted' &&
+      markerPosition !== SHOP_POSITION &&
+      !hasUserInteracted // Only auto-calculate on initial load, not after user interactions
+    ) {
+      // Wait for Google Maps API to be ready
+      const checkAndUpdate = () => {
+        if (typeof window !== 'undefined' && window.google && window.google.maps) {
+          const userLatLng = new google.maps.LatLng(markerPosition.lat, markerPosition.lng)
+          // Ensure distance is calculated
+          updateURL(userLatLng, false)
+        } else {
+          // Retry after a short delay if API not ready
+          setTimeout(checkAndUpdate, 100)
+        }
+      }
+      checkAndUpdate()
+    }
+  }, [locationPermission, markerPosition, hasUserInteracted, updateURL])
 
   // Cleanup debounce timeout on unmount
   useEffect(() => {
@@ -99,27 +188,36 @@ export function LocationMap({ onSelectLocation }: LocationMapProps) {
   )
 
   return (
-    <GoogleMap
-      zoom={14}
-      center={mapCenter}
-      options={mapOptions}
-      mapContainerStyle={{ width: '100%', height: '100%' }}
-      onClick={(e) => e.latLng && updateURL(e.latLng, true)}
-    >
-      <MarkerF
-        position={markerPosition}
-        draggable
-        onDragEnd={(e) =>
-          e.latLng && updateURL(e.latLng, true)
-        }
+    <>
+      <LocationPermissionDialog
+        open={showPermissionDialog}
+        onAllow={handleAllowLocation}
+        onDeny={handleDenyLocation}
+        onClose={handleDenyLocation}
       />
+      
+      <GoogleMap
+        zoom={14}
+        center={mapCenter}
+        options={mapOptions}
+        mapContainerStyle={{ width: '100%', height: '100%' }}
+        onClick={(e) => e.latLng && updateURL(e.latLng, true)}
+      >
+        <MarkerF
+          position={markerPosition}
+          draggable
+          onDragEnd={(e) =>
+            e.latLng && updateURL(e.latLng, true)
+          }
+        />
 
-      <MarkerF
-        position={SHOP_POSITION}
-        icon={{
-          url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-        }}
-      />
-    </GoogleMap>
+        <MarkerF
+          position={SHOP_POSITION}
+          icon={{
+            url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+          }}
+        />
+      </GoogleMap>
+    </>
   )
 }
