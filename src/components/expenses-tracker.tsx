@@ -40,7 +40,7 @@ const expenseSchema = z.object({
   title: z.string().min(1, 'Description is required'),
   amount: z.coerce.number().min(0.01, 'Amount must be greater than 0'),
   category: z.string().optional(),
-  expense_for: z.enum(['Racky', 'Karaya', 'Richard'], {
+  expense_for: z.enum(['Racky', 'Karaya', 'Richard', 'RKR'], {
     required_error: 'Please select who this expense is for',
   }),
   incurred_on: z.string().optional(),
@@ -160,6 +160,7 @@ export function ExpensesTracker() {
   const rackyTotal = totalsByPerson['Racky'] || 0;
   const karayaTotal = totalsByPerson['Karaya'] || 0;
   const richardTotal = totalsByPerson['Richard'] || 0;
+  const rkrTotal = totalsByPerson['RKR'] || 0;
 
   return (
     <div className="space-y-6">
@@ -186,7 +187,7 @@ export function ExpensesTracker() {
                     </div>
                     <div className="grid w-full sm:w-auto gap-1.5">
                         <Label htmlFor="expense_for">Expense By</Label>
-                        <Select value={expenseFor} onValueChange={(value) => setValue('expense_for', value as 'Racky' | 'Karaya' | 'Richard')}>
+                        <Select value={expenseFor} onValueChange={(value) => setValue('expense_for', value as 'Racky' | 'Karaya' | 'Richard' | 'RKR')}>
                             <SelectTrigger id="expense_for" className="w-full sm:w-[140px]">
                                 <SelectValue placeholder="Select person" />
                             </SelectTrigger>
@@ -194,6 +195,7 @@ export function ExpensesTracker() {
                                 <SelectItem value="Racky">Racky</SelectItem>
                                 <SelectItem value="Karaya">Karaya</SelectItem>
                                 <SelectItem value="Richard">Richard</SelectItem>
+                                <SelectItem value="RKR">RKR</SelectItem>
                             </SelectContent>
                         </Select>
                         {errors.expense_for && <p className="text-xs text-destructive">{errors.expense_for.message}</p>}
@@ -214,8 +216,8 @@ export function ExpensesTracker() {
         {expenses.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Expense Summary by Person</CardTitle>
-              <CardDescription>Total expenses for reimbursement tracking</CardDescription>
+              <CardTitle>Expense Summary</CardTitle>
+              <CardDescription>Personal expenses (reimbursement) and business expenses (RKR)</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap items-center gap-4 text-sm">
@@ -230,6 +232,10 @@ export function ExpensesTracker() {
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-muted-foreground">Richard:</span>
                   <span className="font-bold text-primary">₱{richardTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-muted-foreground">RKR:</span>
+                  <span className="font-bold text-orange-600">₱{rkrTotal.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center gap-2 ml-auto border-l pl-4">
                   <span className="font-semibold text-muted-foreground">Total:</span>

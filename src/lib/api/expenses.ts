@@ -4,7 +4,7 @@ export type ExpenseInsert = {
   title: string;
   amount: number;
   category?: string | null;
-  expense_for: 'Racky' | 'Karaya' | 'Richard';
+  expense_for: 'Racky' | 'Karaya' | 'Richard' | 'RKR';
   incurred_on?: string; // ISO date
   branch_id?: string | null;
 };
@@ -19,7 +19,7 @@ export async function fetchExpenses() {
     .order('created_at', { ascending: false });
 }
 
-export async function updateExpense(id: string, updates: { expense_for?: 'Racky' | 'Karaya' | 'Richard'; incurred_on?: string }) {
+export async function updateExpense(id: string, updates: { expense_for?: 'Racky' | 'Karaya' | 'Richard' | 'RKR'; incurred_on?: string }) {
   return supabase
     .from('expenses')
     .update(updates)
