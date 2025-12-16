@@ -57,7 +57,14 @@ export default function RegisterPage() {
     })
 
     if (signUpError) {
-      setError(signUpError.message)
+      // Handle specific error codes
+      if (signUpError.status === 429) {
+        setError(signUpError.message || 'Email limit reached. Please try again later.')
+      } else if (signUpError.status === 400) {
+        setError(signUpError.message || 'Invalid email address. Please check and try again.')
+      } else {
+        setError(signUpError.message || 'Failed to create account. Please try again.')
+      }
       setLoading(false)
       return
     }

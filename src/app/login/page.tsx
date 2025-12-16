@@ -436,23 +436,53 @@ export default function LoginPage() {
     if (error) {
       const newAttempts = incrementResetAttempt(forgotPasswordEmail)
       
-      if (newAttempts.lockoutUntil) {
-        const remaining = Math.ceil((newAttempts.lockoutUntil - Date.now()) / 1000)
-        const minutes = Math.floor(remaining / 60)
-        const seconds = remaining % 60
-        setResetLockoutTime(newAttempts.lockoutUntil)
+      // Handle specific error codes
+      if (error.status === 429) {
+        // Rate limit or email limit reached
+        if (newAttempts.lockoutUntil) {
+          const remaining = Math.ceil((newAttempts.lockoutUntil - Date.now()) / 1000)
+          const minutes = Math.floor(remaining / 60)
+          const seconds = remaining % 60
+          setResetLockoutTime(newAttempts.lockoutUntil)
+          toast({
+            variant: "destructive",
+            title: 'Too Many Reset Requests',
+            description: `You have exceeded ${MAX_RESET_ATTEMPTS} password reset requests. Please wait ${minutes} minute${minutes !== 1 ? 's' : ''} and ${seconds} second${seconds !== 1 ? 's' : ''} before trying again.`,
+          })
+        } else {
+          toast({
+            variant: "destructive",
+            title: 'Email Limit Reached',
+            description: error.message || 'Daily or monthly email limit reached. Please try again later.',
+          })
+        }
+      } else if (error.status === 400) {
+        // Invalid email format
         toast({
           variant: "destructive",
-          title: 'Too Many Reset Requests',
-          description: `You have exceeded ${MAX_RESET_ATTEMPTS} password reset requests. Please wait ${minutes} minute${minutes !== 1 ? 's' : ''} and ${seconds} second${seconds !== 1 ? 's' : ''} before trying again.`,
+          title: 'Invalid Email',
+          description: error.message || 'Please enter a valid email address.',
         })
       } else {
-        const remainingAttempts = MAX_RESET_ATTEMPTS - newAttempts.count
-        toast({
-          variant: "destructive",
-          title: 'Error',
-          description: error.message || `Failed to send password reset email. ${remainingAttempts} attempt${remainingAttempts !== 1 ? 's' : ''} remaining.`,
-        })
+        // Other errors
+        if (newAttempts.lockoutUntil) {
+          const remaining = Math.ceil((newAttempts.lockoutUntil - Date.now()) / 1000)
+          const minutes = Math.floor(remaining / 60)
+          const seconds = remaining % 60
+          setResetLockoutTime(newAttempts.lockoutUntil)
+          toast({
+            variant: "destructive",
+            title: 'Too Many Reset Requests',
+            description: `You have exceeded ${MAX_RESET_ATTEMPTS} password reset requests. Please wait ${minutes} minute${minutes !== 1 ? 's' : ''} and ${seconds} second${seconds !== 1 ? 's' : ''} before trying again.`,
+          })
+        } else {
+          const remainingAttempts = MAX_RESET_ATTEMPTS - newAttempts.count
+          toast({
+            variant: "destructive",
+            title: 'Error',
+            description: error.message || `Failed to send password reset email. ${remainingAttempts} attempt${remainingAttempts !== 1 ? 's' : ''} remaining.`,
+          })
+        }
       }
       setSendingReset(false)
       return
