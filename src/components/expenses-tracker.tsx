@@ -19,7 +19,6 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  TableFooter
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,10 +30,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Trash2, Inbox, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Inbox, Loader2, Edit2, Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { addExpense, deleteExpense, fetchExpenses } from '@/lib/api/expenses';
+import { addExpense, deleteExpense, fetchExpenses, updateExpense } from '@/lib/api/expenses';
 import { useAuthSession } from '@/hooks/use-auth-session';
 
 const expenseSchema = z.object({
@@ -44,6 +43,7 @@ const expenseSchema = z.object({
   expense_for: z.enum(['Racky', 'Karaya', 'Richard'], {
     required_error: 'Please select who this expense is for',
   }),
+  incurred_on: z.string().optional(),
 });
 
 export function ExpensesTracker() {
@@ -52,14 +52,18 @@ export function ExpensesTracker() {
   const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editingDateId, setEditingDateId] = useState<string | null>(null);
+  const [editingDateValue, setEditingDateValue] = useState<string>('');
+  const [savingDate, setSavingDate] = useState(false);
 
-  const { register, handleSubmit, reset, formState: { errors }, setValue, watch } = useForm<{title: string, amount: string, category?: string, expense_for: 'Racky' | 'Karaya' | 'Richard'}>({
+  const { register, handleSubmit, reset, formState: { errors }, setValue, watch } = useForm<z.infer<typeof expenseSchema>>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
       title: '',
-      amount: '',
+      amount: 0,
       category: '',
-      expense_for: 'Racky'
+      expense_for: 'Racky',
+      incurred_on: new Date().toISOString().slice(0, 10)
     }
   });
 
@@ -81,7 +85,7 @@ export function ExpensesTracker() {
     load();
   }, []);
 
-  const onAddExpense = async (data: {title: string, amount: string, category?: string, expense_for: 'Racky' | 'Karaya' | 'Richard'}) => {
+  const onAddExpense = async (data: z.infer<typeof expenseSchema>) => {
     if (authLoading || !user) {
       toast({ variant: 'destructive', title: 'Please log in', description: 'Admin sign-in required.' });
       return;
@@ -89,9 +93,10 @@ export function ExpensesTracker() {
     setSaving(true);
     const { error } = await addExpense({
       title: data.title,
-      amount: parseFloat(data.amount),
+      amount: data.amount,
       category: data.category ?? null,
       expense_for: data.expense_for,
+      incurred_on: data.incurred_on || new Date().toISOString().slice(0, 10),
     });
     if (error) {
       toast({ variant: 'destructive', title: 'Save failed', description: error.message });
@@ -111,6 +116,35 @@ export function ExpensesTracker() {
       return;
     }
     toast({ variant: 'destructive', title: 'Expense Removed' });
+    load();
+  };
+
+  const handleStartEditDate = (expense: any) => {
+    setEditingDateId(expense.id);
+    setEditingDateValue(expense.incurred_on || new Date(expense.date).toISOString().slice(0, 10));
+  };
+
+  const handleCancelEditDate = () => {
+    setEditingDateId(null);
+    setEditingDateValue('');
+  };
+
+  const handleSaveDate = async (id: string) => {
+    if (!editingDateValue) {
+      toast({ variant: 'destructive', title: 'Date required', description: 'Please enter a valid date.' });
+      return;
+    }
+    setSavingDate(true);
+    const { error } = await updateExpense(id, { incurred_on: editingDateValue });
+    if (error) {
+      toast({ variant: 'destructive', title: 'Update failed', description: error.message });
+      setSavingDate(false);
+      return;
+    }
+    toast({ title: 'Date Updated', description: 'Expense date has been updated.' });
+    setEditingDateId(null);
+    setEditingDateValue('');
+    setSavingDate(false);
     load();
   };
 
@@ -136,14 +170,14 @@ export function ExpensesTracker() {
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit(onAddExpense)} className="flex flex-col sm:flex-row gap-4 items-end">
-                    <div className="grid w-full gap-1.5">
+                    <div className="grid w-full sm:w-48 gap-1.5">
                         <Label htmlFor="title">Description</Label>
                         <Input id="title" placeholder="e.g., Rent, Supplies" {...register('title', { required: 'Description is required' })} />
                         {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
                     </div>
                     <div className="grid w-full sm:w-auto gap-1.5">
                         <Label htmlFor="amount">Amount (₱)</Label>
-                        <Input id="amount" type="number" step="0.01" placeholder="0.00" {...register('amount', { required: 'Amount is required', valueAsNumber: true })}/>
+                        <Input id="amount" type="number" step="0.01" placeholder="0.00" {...register('amount', { required: 'Amount is required', valueAsNumber: true })} />
                         {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
                     </div>
                     <div className="grid w-full sm:w-auto gap-1.5">
@@ -151,7 +185,7 @@ export function ExpensesTracker() {
                         <Input id="category" placeholder="e.g., utilities" {...register('category')} />
                     </div>
                     <div className="grid w-full sm:w-auto gap-1.5">
-                        <Label htmlFor="expense_for">Who</Label>
+                        <Label htmlFor="expense_for">Expense By</Label>
                         <Select value={expenseFor} onValueChange={(value) => setValue('expense_for', value as 'Racky' | 'Karaya' | 'Richard')}>
                             <SelectTrigger id="expense_for" className="w-full sm:w-[140px]">
                                 <SelectValue placeholder="Select person" />
@@ -163,6 +197,10 @@ export function ExpensesTracker() {
                             </SelectContent>
                         </Select>
                         {errors.expense_for && <p className="text-xs text-destructive">{errors.expense_for.message}</p>}
+                    </div>
+                    <div className="grid w-full sm:w-auto gap-1.5">
+                        <Label htmlFor="incurred_on">Date</Label>
+                        <Input id="incurred_on" type="date" {...register('incurred_on')} />
                     </div>
                     <Button type="submit" className="w-full sm:w-auto">
                         {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -229,7 +267,53 @@ export function ExpensesTracker() {
                         <TableBody>
                         {expenses.map((expense) => (
                             <TableRow key={expense.id}>
-                            <TableCell className="text-xs">{format(new Date(expense.incurred_on ?? expense.date), 'PPP')}</TableCell>
+                            <TableCell className="text-xs">
+                              {editingDateId === expense.id ? (
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    type="date"
+                                    value={editingDateValue}
+                                    onChange={(e) => setEditingDateValue(e.target.value)}
+                                    className="h-8 w-[140px] text-xs"
+                                    disabled={savingDate}
+                                  />
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => handleSaveDate(expense.id)}
+                                    disabled={savingDate}
+                                  >
+                                    {savingDate ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <Check className="h-3 w-3 text-green-600" />
+                                    )}
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={handleCancelEditDate}
+                                    disabled={savingDate}
+                                  >
+                                    <X className="h-3 w-3 text-destructive" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1">
+                                  <span>{format(new Date(expense.incurred_on ?? expense.date), 'PPP')}</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    onClick={() => handleStartEditDate(expense)}
+                                  >
+                                    <Edit2 className="h-3 w-3 text-muted-foreground" />
+                                  </Button>
+                                </div>
+                              )}
+                            </TableCell>
                             <TableCell>{expense.title}</TableCell>
                             <TableCell className="text-xs text-muted-foreground">{expense.category || '—'}</TableCell>
                             <TableCell className="font-medium">{expense.expense_for || '—'}</TableCell>
@@ -242,13 +326,6 @@ export function ExpensesTracker() {
                             </TableRow>
                         ))}
                         </TableBody>
-                         <TableFooter className="sticky bottom-0 bg-muted/95">
-                            <TableRow>
-                                <TableCell colSpan={3} className="font-bold text-lg">Total Expenses</TableCell>
-                                <TableCell className="text-right font-bold text-lg text-primary">₱{totalExpenses.toFixed(2)}</TableCell>
-                                <TableCell />
-                            </TableRow>
-                        </TableFooter>
                     </Table>
                 </div>
               ) : (

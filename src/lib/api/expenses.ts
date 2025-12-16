@@ -19,10 +19,10 @@ export async function fetchExpenses() {
     .order('created_at', { ascending: false });
 }
 
-export async function updateExpense(id: string, updates: { expense_for: 'Racky' | 'Karaya' | 'Richard' }) {
+export async function updateExpense(id: string, updates: { expense_for?: 'Racky' | 'Karaya' | 'Richard'; incurred_on?: string }) {
   return supabase
     .from('expenses')
-    .update({ expense_for: updates.expense_for })
+    .update(updates)
     .eq('id', id)
     .select()
     .single();
