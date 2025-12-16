@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { GoogleMap, MarkerF } from '@react-google-maps/api'
 
@@ -18,9 +18,16 @@ export function LocationMap({ onSelectLocation }: LocationMapProps) {
     useState(SHOP_POSITION)
   const [mapCenter, setMapCenter] =
     useState(SHOP_POSITION)
+  const [hasUserInteracted, setHasUserInteracted] = useState(false)
+  const debounceTimeoutRef = useRef<NodeJS.Timeout>()
 
   const updateURL = useCallback(
-    (pos: google.maps.LatLng) => {
+    (pos: google.maps.LatLng, isUserInteraction: boolean = true) => {
+      // Mark that user has interacted if this is a user action
+      if (isUserInteraction) {
+        setHasUserInteracted(true)
+      }
+
       const shopLatLng = new google.maps.LatLng(
         SHOP_POSITION.lat,
         SHOP_POSITION.lng
@@ -32,15 +39,28 @@ export function LocationMap({ onSelectLocation }: LocationMapProps) {
           pos
         ) / 1000
 
-      const params = new URLSearchParams(searchParams.toString())
-      params.set('distance', distanceInKm.toFixed(2))
-      router.replace(`/select-location?${params.toString()}`)
+      // Clear previous debounce timeout
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
 
+      // Debounce URL updates to prevent excessive router calls
+      debounceTimeoutRef.current = setTimeout(() => {
+        const params = new URLSearchParams(searchParams.toString())
+        params.set('distance', distanceInKm.toFixed(2))
+        router.replace(`/select-location?${params.toString()}`)
+      }, 300)
+
+      // Update marker position immediately for better UX
+      setMarkerPosition({ lat: pos.lat(), lng: pos.lng() })
+      
+      // Call onSelectLocation immediately
       onSelectLocation?.(pos.lat(), pos.lng())
     },
     [router, searchParams, onSelectLocation]
   )
 
+  // Only get user location for centering the map, but don't update URL automatically
   useEffect(() => {
     if (!navigator.geolocation) return
 
@@ -52,18 +72,23 @@ export function LocationMap({ onSelectLocation }: LocationMapProps) {
         }
         setMapCenter(userPos)
         setMarkerPosition(userPos)
-        updateURL(new google.maps.LatLng(userPos.lat, userPos.lng))
+        // Don't update URL automatically - wait for user interaction
       },
       () => {
-        updateURL(
-          new google.maps.LatLng(
-            SHOP_POSITION.lat,
-            SHOP_POSITION.lng
-          )
-        )
+        // On error, just center on shop position but don't update URL
+        setMapCenter(SHOP_POSITION)
       }
     )
-  }, [updateURL])
+  }, []) // Remove updateURL dependency to prevent auto-updates
+
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const mapOptions = useMemo<google.maps.MapOptions>(
     () => ({
@@ -79,13 +104,13 @@ export function LocationMap({ onSelectLocation }: LocationMapProps) {
       center={mapCenter}
       options={mapOptions}
       mapContainerStyle={{ width: '100%', height: '100%' }}
-      onClick={(e) => e.latLng && updateURL(e.latLng)}
+      onClick={(e) => e.latLng && updateURL(e.latLng, true)}
     >
       <MarkerF
         position={markerPosition}
         draggable
         onDragEnd={(e) =>
-          e.latLng && updateURL(e.latLng)
+          e.latLng && updateURL(e.latLng, true)
         }
       />
 

@@ -102,10 +102,12 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              (adsbygoogle = window.adsbygoogle || []).push({
-                google_ad_client: "ca-pub-1036864152624333",
-                enable_page_level_ads: true
-              });
+              if (typeof window !== 'undefined' && !window.adsbygoogle) {
+                (adsbygoogle = window.adsbygoogle || []).push({
+                  google_ad_client: "ca-pub-1036864152624333",
+                  enable_page_level_ads: true
+                });
+              }
             `,
           }}
         />

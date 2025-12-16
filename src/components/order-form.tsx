@@ -151,9 +151,15 @@ export function OrderForm() {
       const numericDistance = parseFloat(distanceParam);
       if (!isNaN(numericDistance)) {
         setValue('distance', numericDistance, { shouldValidate: true });
+        // Trigger validation after setting value
+        trigger('distance');
       }
+    } else if (needsLocation) {
+      // If needs location but no distance param, reset to 0
+      setValue('distance', 0, { shouldValidate: true });
+      trigger('distance');
     }
-  }, [distanceParam, setValue]);
+  }, [distanceParam, setValue, trigger, needsLocation]);
 
   // Load order count for logged-in users
   useEffect(() => {
@@ -175,6 +181,12 @@ export function OrderForm() {
   const handleLocationSelect = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('servicePackage', watchedValues.servicePackage);
+    
+    // Store servicePackage in localStorage as backup
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('selectedServicePackage', watchedValues.servicePackage);
+    }
+    
     router.push(`/select-location?${params.toString()}`);
   };
 

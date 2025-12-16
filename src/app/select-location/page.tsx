@@ -34,7 +34,7 @@ function SelectLocationContent() {
   )
 
   /**
-   * Save selected coords
+   * Save selected coords (optional - can be used for localStorage or other persistence)
    */
   async function saveLocation() {
     if (!coords) {
@@ -45,8 +45,13 @@ function SelectLocationContent() {
     setSaving(true)
     setStatus(null)
 
-    // Simulate saving
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Optionally save to localStorage for persistence
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('selectedLocation', JSON.stringify(coords))
+    }
+    
+    // Small delay for UX feedback
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     setSaving(false)
     setStatus('✅ Location saved successfully.')
