@@ -9,6 +9,16 @@ export type ExpenseInsert = {
   branch_id?: string | null;
 };
 
+// src/lib/api/expenses.ts
+
+export async function fetchExpenses() {
+  return supabase
+    .from('expenses')
+    .select('*')
+    .order('incurred_on', { ascending: false })
+    .order('created_at', { ascending: false });
+}
+
 export async function updateExpense(id: string, updates: { expense_for: 'Racky' | 'Karaya' | 'Richard' }) {
   return supabase
     .from('expenses')
