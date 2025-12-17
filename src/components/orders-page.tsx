@@ -446,123 +446,11 @@ export function OrdersPage() {
   };
 
   return (
-    <div className="w-full space-y-6">
-      {/* Statistics Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-2 hover:border-primary/50 transition-all shadow-lg bg-gradient-to-br from-blue-50/50 to-blue-100/30 dark:from-blue-950/20 dark:to-blue-900/10">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Total Orders</p>
-                <p className="text-2xl font-bold text-primary">{statistics.totalOrders}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {statistics.todayOrders} today
-                </p>
-              </div>
-              <div className="p-3 rounded-lg bg-blue-500/20">
-                <Package className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 hover:border-primary/50 transition-all shadow-lg bg-gradient-to-br from-green-50/50 to-green-100/30 dark:from-green-950/20 dark:to-green-900/10">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Total Revenue</p>
-                <p className="text-2xl font-bold text-primary">₱{Math.ceil(statistics.totalRevenue)}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  ₱{Math.ceil(statistics.todayRevenue)} today
-                </p>
-              </div>
-              <div className="p-3 rounded-lg bg-green-500/20">
-                <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 hover:border-primary/50 transition-all shadow-lg bg-gradient-to-br from-amber-50/50 to-amber-100/30 dark:from-amber-950/20 dark:to-amber-900/10">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Pending Orders</p>
-                <p className="text-2xl font-bold text-primary">{statistics.pendingOrders}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {statistics.completedOrders} completed
-                </p>
-              </div>
-              <div className="p-3 rounded-lg bg-amber-500/20">
-                <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 hover:border-primary/50 transition-all shadow-lg bg-gradient-to-br from-purple-50/50 to-purple-100/30 dark:from-purple-950/20 dark:to-purple-900/10">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Payment Status</p>
-                <p className="text-2xl font-bold text-primary">{statistics.paidOrders}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {statistics.unpaidOrders} unpaid
-                </p>
-              </div>
-              <div className="p-3 rounded-lg bg-purple-500/20">
-                <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Revenue Breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-2 bg-gradient-to-br from-green-50/50 to-green-100/30 dark:from-green-950/20 dark:to-green-900/10">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Paid Revenue</p>
-                <p className="text-xl font-bold text-green-600 dark:text-green-400">₱{Math.ceil(statistics.paidRevenue)}</p>
-              </div>
-              <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 bg-gradient-to-br from-orange-50/50 to-orange-100/30 dark:from-orange-950/20 dark:to-orange-900/10">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Pending Revenue</p>
-                <p className="text-xl font-bold text-orange-600 dark:text-orange-400">₱{Math.ceil(statistics.pendingRevenue)}</p>
-              </div>
-              <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 bg-gradient-to-br from-blue-50/50 to-blue-100/30 dark:from-blue-950/20 dark:to-blue-900/10">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">This Week</p>
-                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                  {statistics.weekOrders} orders • ₱{Math.ceil(statistics.weekRevenue)}
-                </p>
-              </div>
-              <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
+    <div className="w-full">
       {/* Main Orders Card */}
       <Card className="w-full flex flex-col shadow-xl border-2">
         <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b p-6">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
@@ -600,8 +488,47 @@ export function OrdersPage() {
               </div>
             </div>
 
+            {/* Statistics Cards - Simplified */}
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+              <div className="p-3 rounded-lg bg-muted/30 border">
+                <p className="text-xs text-muted-foreground mb-1">Total Orders</p>
+                <p className="text-lg font-bold text-primary">{statistics.totalOrders}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{statistics.todayOrders} today</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/30 border">
+                <p className="text-xs text-muted-foreground mb-1">Total Revenue</p>
+                <p className="text-lg font-bold text-primary">₱{Math.ceil(statistics.totalRevenue)}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">₱{Math.ceil(statistics.todayRevenue)} today</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/30 border">
+                <p className="text-xs text-muted-foreground mb-1">Pending Orders</p>
+                <p className="text-lg font-bold text-primary">{statistics.pendingOrders}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{statistics.completedOrders} completed</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/30 border">
+                <p className="text-xs text-muted-foreground mb-1">Payment Status</p>
+                <p className="text-lg font-bold text-primary">{statistics.paidOrders}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{statistics.unpaidOrders} unpaid</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/30 border">
+                <p className="text-xs text-muted-foreground mb-1">Paid Revenue</p>
+                <p className="text-lg font-bold text-green-600 dark:text-green-400">₱{Math.ceil(statistics.paidRevenue)}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/30 border">
+                <p className="text-xs text-muted-foreground mb-1">Pending Revenue</p>
+                <p className="text-lg font-bold text-orange-600 dark:text-orange-400">₱{Math.ceil(statistics.pendingRevenue)}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/30 border">
+                <p className="text-xs text-muted-foreground mb-1">This Week</p>
+                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{statistics.weekOrders} orders</p>
+                <p className="text-xs text-muted-foreground mt-0.5">₱{Math.ceil(statistics.weekRevenue)}</p>
+              </div>
+            </div>
+
+            <Separator />
+
             {/* Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
