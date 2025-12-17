@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Search, Inbox, AlertTriangle, User, Loader2, X, ArrowRight, Info } from 'lucide-react';
-import { RatingsList } from '@/components/ratings-list';
+import { AverageRatingCard } from '@/components/average-rating-card';
 import { useToast } from '@/hooks/use-toast';
 import { fetchOrderForCustomer, fetchMyOrders } from '@/lib/api/orders';
 import type { Order as OrderType } from '@/components/order-list';
@@ -215,9 +215,11 @@ export default function OrderStatusPage() {
             <CardHeader>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex-1">
-                  <CardTitle className="text-lg sm:text-xl">Customer Ratings</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">Check Order Status</CardTitle>
                   <CardDescription className="text-xs sm:text-sm">
-                    View customer reviews and ratings. Click on a rating to see full details.
+                    {user 
+                      ? 'View your active orders below or search for a specific order.'
+                      : 'Enter the Order ID and Name provided by the admin to track your laundry order status.'}
                   </CardDescription>
                 </div>
                 {user && (
@@ -227,15 +229,133 @@ export default function OrderStatusPage() {
                     onClick={() => router.push('/my-orders')}
                     className="flex items-center gap-2 w-full sm:w-auto"
                   >
-                    My Orders
+                    Show All Orders
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 )}
               </div>
             </CardHeader>
             <CardContent>
-              {/* Ratings List */}
-              <RatingsList />
+              {/* Average Rating Card */}
+              <div className="mb-6">
+                <AverageRatingCard />
+              </div>
+
+              {user && myOrders.length > 0 && (
+                <div className="mb-6 space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <Label className="text-base font-semibold">Your Active Orders</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">
+                              Only active orders are shown here. Completed orders are available in "My Orders".
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    
+                    {/* Search Controls */}
+                    <div className="space-y-3 mb-4">
+                      {/* Order ID Search */}
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search by Order ID (e.g., RKR001)"
+                          value={orderIdSearch}
+                          onChange={(e) => setOrderIdSearch(e.target.value)}
+                          className="pl-10 pr-10"
+                        />
+                        {orderIdSearch && (
+                          <button
+                            type="button"
+                            onClick={() => setOrderIdSearch('')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Orders List */}
+                    {filteredOrders.length > 0 ? (
+                      <div className="space-y-2 max-h-64 overflow-y-auto scrollable">
+                        {filteredOrders.map((order) => (
+                          <button
+                            key={order.id}
+                            type="button"
+                            onClick={() => setSelectedOrder(order)}
+                            className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                              selectedOrder?.id === order.id
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:bg-muted'
+                            }`}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <p className="font-semibold text-sm">Order #{order.id}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {order.customerName} • {new Date(order.orderDate).toLocaleDateString('en-US', { 
+                                    year: 'numeric', 
+                                    month: 'short', 
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold text-sm">₱{order.total.toFixed(2)}</p>
+                                <p className="text-xs text-muted-foreground">{order.status}</p>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 border border-dashed rounded-lg text-center text-sm text-muted-foreground">
+                        <Inbox className="h-8 w-8 mx-auto mb-2" />
+                        <p>No orders found matching your search.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {user && loadingMyOrders && (
+                <div className="mb-6 flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              )}
+
+              {user && myOrders.length === 0 && !loadingMyOrders && (
+                <div className="mb-6 p-4 border border-dashed rounded-lg text-center text-sm text-muted-foreground">
+                  <Inbox className="h-8 w-8 mx-auto mb-2" />
+                  <p>You don't have any orders yet.</p>
+                </div>
+              )}
+
+              {user && myOrders.length > 0 && filteredOrders.length === 0 && !loadingMyOrders && (
+                <div className="mb-6 p-4 border border-dashed rounded-lg text-center text-sm text-muted-foreground">
+                  <Inbox className="h-8 w-8 mx-auto mb-2" />
+                  <p>No active orders found. All your orders are completed.</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push('/my-orders')}
+                    className="mt-3 flex items-center gap-2"
+                  >
+                    View All Orders
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
 
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
