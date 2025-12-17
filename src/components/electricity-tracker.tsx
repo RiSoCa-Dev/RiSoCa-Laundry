@@ -12,6 +12,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,7 +29,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Plus, Trash2, Inbox, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Inbox, Loader2, Edit2, Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import {
@@ -48,6 +54,15 @@ export function ElectricityTracker() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [pricePerKwh, setPricePerKwh] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('electricity_price_per_kwh');
+      return saved ? parseFloat(saved) : 0;
+    }
+    return 0;
+  });
+  const [isEditingPrice, setIsEditingPrice] = useState(false);
+  const [priceInputValue, setPriceInputValue] = useState<string>('');
 
   const {
     register,
@@ -81,6 +96,82 @@ export function ElectricityTracker() {
   useEffect(() => {
     load();
   }, []);
+
+  // Calculate statistics
+  const calculateStats = () => {
+    if (readings.length === 0) {
+      return {
+        totalDays: 0,
+        consumption: 0,
+        total: 0,
+      };
+    }
+
+    // Sort readings by date (oldest first)
+    const sortedReadings = [...readings].sort(
+      (a, b) => new Date(a.reading_date).getTime() - new Date(b.reading_date).getTime()
+    );
+
+    const lastReading = sortedReadings[sortedReadings.length - 1];
+
+    // Business opening date: December 5
+    // Use the year of the first reading, or current year if no readings
+    const firstReadingYear = sortedReadings.length > 0 
+      ? new Date(sortedReadings[0].reading_date).getFullYear()
+      : new Date().getFullYear();
+    const businessStartDate = new Date(firstReadingYear, 11, 5); // December 5 (month is 0-indexed, so 11 = December)
+
+    // Calculate total days from business opening (December 5) to last reading
+    const lastDate = new Date(lastReading.reading_date);
+    const totalDays = Math.ceil(
+      (lastDate.getTime() - businessStartDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    // Consumption is just the last reading value
+    const consumption = lastReading.reading;
+
+    // Calculate total cost
+    const total = consumption * pricePerKwh;
+
+    return {
+      totalDays,
+      consumption,
+      total,
+    };
+  };
+
+  const stats = calculateStats();
+
+  const handlePriceEdit = () => {
+    setPriceInputValue(pricePerKwh.toString());
+    setIsEditingPrice(true);
+  };
+
+  const handlePriceSave = () => {
+    const newPrice = parseFloat(priceInputValue);
+    if (isNaN(newPrice) || newPrice < 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid Price',
+        description: 'Please enter a valid price (number >= 0)',
+      });
+      return;
+    }
+    setPricePerKwh(newPrice);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('electricity_price_per_kwh', newPrice.toString());
+    }
+    setIsEditingPrice(false);
+    toast({
+      title: 'Price Updated',
+      description: `Price per kWh set to ₱${newPrice.toFixed(2)}`,
+    });
+  };
+
+  const handlePriceCancel = () => {
+    setIsEditingPrice(false);
+    setPriceInputValue('');
+  };
 
   const onAddReading = async (data: ElectricityFormData) => {
     if (authLoading || !user) {
@@ -134,6 +225,72 @@ export function ElectricityTracker() {
 
   return (
     <div className="space-y-4">
+      {/* Calculation Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Electricity Cost Calculation</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="space-y-1">
+              <Label className="text-sm text-muted-foreground">Total Days</Label>
+              <p className="text-lg font-semibold">{stats.totalDays} days</p>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-sm text-muted-foreground">Current Reading / Consumption</Label>
+              <p className="text-lg font-semibold">{stats.consumption.toFixed(2)} kWh</p>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-sm text-muted-foreground">Price/kWh</Label>
+              {isEditingPrice ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={priceInputValue}
+                    onChange={(e) => setPriceInputValue(e.target.value)}
+                    className="w-24 h-8 text-sm"
+                    placeholder="0.00"
+                  />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8"
+                    onClick={handlePriceSave}
+                  >
+                    <Check className="h-4 w-4 text-green-600" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8"
+                    onClick={handlePriceCancel}
+                  >
+                    <X className="h-4 w-4 text-red-600" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-semibold">₱{pricePerKwh.toFixed(2)}</p>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8"
+                    onClick={handlePriceEdit}
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label className="text-sm text-muted-foreground">Total</Label>
+              <p className="text-lg font-semibold text-primary">₱{stats.total.toFixed(2)}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-end">
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
