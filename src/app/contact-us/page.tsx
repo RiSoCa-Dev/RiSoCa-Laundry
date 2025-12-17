@@ -3,7 +3,6 @@
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
 import { PromoBanner } from '@/components/promo-banner';
-import { ContactCard } from '@/components/contact-card';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -41,10 +40,6 @@ export default function ContactUsPage() {
               </p>
             </div>
 
-            {/* Main Contact Card */}
-            <div className="flex justify-center">
-              <ContactCard phoneNumbers={phoneNumbers} />
-            </div>
 
             {/* Contact Methods Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

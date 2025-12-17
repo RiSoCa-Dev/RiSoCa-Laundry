@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { AppHeader } from '@/components/app-header';
 import { AppFooter } from '@/components/app-footer';
 import { PromoBanner } from '@/components/promo-banner';
@@ -32,17 +33,95 @@ import {
   Globe,
   Handshake,
   BarChart3,
-  Smile
+  Smile,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase-client';
+import { getAverageRating } from '@/lib/api/ratings';
 
 export default function AboutUsPage() {
-  const stats = [
-    { label: 'Orders Completed', value: '500+', icon: Package, color: 'text-blue-600' },
-    { label: 'Happy Customers', value: '200+', icon: Smile, color: 'text-green-600' },
-    { label: 'Service Packages', value: '3', icon: Sparkles, color: 'text-purple-600' },
-    { label: 'Operating Days', value: '7', icon: Calendar, color: 'text-orange-600' },
-  ];
+  const [stats, setStats] = useState([
+    { label: 'Orders Completed', value: '...', icon: Package, color: 'text-blue-600', loading: true },
+    { label: 'Happy Customers', value: '...', icon: Smile, color: 'text-green-600', loading: true, subtitle: '' },
+    { label: 'Service Packages', value: '3', icon: Sparkles, color: 'text-purple-600', loading: false },
+    { label: 'Operating Days', value: '...', icon: Calendar, color: 'text-orange-600', loading: true },
+  ]);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        // Calculate operating days from December 5, 2025
+        const businessStartDate = new Date('2025-12-05');
+        const today = new Date();
+        const diffTime = Math.abs(today.getTime() - businessStartDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const operatingDays = diffDays.toString();
+
+        // Fetch completed orders count (status = 'Success' or 'Completed')
+        const { count: completedOrdersCount, error: ordersError } = await supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
+          .in('status', ['Success', 'Completed']);
+
+        if (ordersError) {
+          console.error('Error fetching completed orders:', ordersError);
+        }
+
+        // Fetch unique customers count (distinct customer_ids from orders)
+        const { data: ordersData, error: ordersDataError } = await supabase
+          .from('orders')
+          .select('customer_id');
+
+        let uniqueCustomers = 0;
+        if (!ordersDataError && ordersData) {
+          const uniqueCustomerIds = new Set(ordersData.map(o => o.customer_id).filter(Boolean));
+          uniqueCustomers = uniqueCustomerIds.size;
+        }
+
+        // Fetch average rating
+        const { average, count: ratingCount } = await getAverageRating();
+        const averageRating = average > 0 ? average.toFixed(1) : '0.0';
+        const ratingDisplay = average > 0 ? `${averageRating}/5` : '';
+
+        setStats([
+          { 
+            label: 'Orders Completed', 
+            value: completedOrdersCount ? `${completedOrdersCount}+` : '0+', 
+            icon: Package, 
+            color: 'text-blue-600',
+            loading: false
+          },
+          { 
+            label: 'Happy Customers', 
+            value: uniqueCustomers > 0 ? `${uniqueCustomers}+` : '0+', 
+            icon: Smile, 
+            color: 'text-green-600',
+            loading: false,
+            subtitle: ratingDisplay ? `⭐ ${ratingDisplay}` : ''
+          },
+          { 
+            label: 'Service Packages', 
+            value: '3', 
+            icon: Sparkles, 
+            color: 'text-purple-600',
+            loading: false
+          },
+          { 
+            label: 'Operating Days', 
+            value: operatingDays, 
+            icon: Calendar, 
+            color: 'text-orange-600',
+            loading: false
+          },
+        ]);
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    }
+
+    fetchStats();
+  }, []);
 
   return (
     <div className="flex flex-col h-screen">
@@ -91,10 +170,19 @@ export default function AboutUsPage() {
                 <Card key={index} className="text-center border-2 hover:border-primary/50 transition-all hover:shadow-lg">
                   <CardContent className="p-6">
                     <div className={`flex justify-center mb-3 ${stat.color}`}>
-                      <Icon className="h-8 w-8" />
+                      {stat.loading ? (
+                        <Loader2 className="h-8 w-8 animate-spin" />
+                      ) : (
+                        <Icon className="h-8 w-8" />
+                      )}
                     </div>
-                    <div className="text-3xl font-bold text-primary mb-1">{stat.value}</div>
+                    <div className="text-3xl font-bold text-primary mb-1">
+                      {stat.loading ? '...' : stat.value}
+                    </div>
                     <div className="text-xs sm:text-sm text-muted-foreground font-medium">{stat.label}</div>
+                    {stat.subtitle && (
+                      <div className="text-xs text-primary font-semibold mt-1">{stat.subtitle}</div>
+                    )}
                   </CardContent>
                 </Card>
               );
