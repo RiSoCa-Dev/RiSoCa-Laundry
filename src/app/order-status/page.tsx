@@ -116,19 +116,26 @@ export default function OrderStatusPage() {
   }, [user, authLoading]);
 
   // Filter orders based on search
-  // IMPORTANT: Filter out "Success" and "Completed" orders for logged-in users on Order Status page
+  // Show active orders by default, but allow searching for all orders including completed ones
   useEffect(() => {
     if (!user) return;
 
     let filtered = [...myOrders];
 
-    // Filter out "Success" and "Completed" orders (only show active/pending orders)
-    filtered = filtered.filter(order => 
-      order.status !== 'Success' && order.status !== 'Completed'
-    );
+    // Only filter out "Success" and "Completed" orders if NOT searching
+    // When searching, show all orders including completed ones so users can find past orders
+    const isSearching = orderIdSearch.trim().length > 0;
+    
+    if (!isSearching) {
+      // Default view: only show active/pending orders
+      filtered = filtered.filter(order => 
+        order.status !== 'Success' && order.status !== 'Completed'
+      );
+    }
+    // If searching, keep all orders (including completed) so users can find past orders
 
     // Filter by Order ID search (case-insensitive)
-    if (orderIdSearch.trim()) {
+    if (isSearching) {
       const searchLower = orderIdSearch.trim().toLowerCase();
       filtered = filtered.filter(order => 
         order.id.toLowerCase().includes(searchLower) ||
@@ -147,7 +154,7 @@ export default function OrderStatusPage() {
       if (!isCurrentSelectedInFiltered) {
         setSelectedOrder(filtered[0]);
       }
-    } else if (filtered.length === 0 && orderIdSearch.trim()) {
+    } else if (filtered.length === 0 && isSearching) {
       setSelectedOrder(null);
     }
   }, [myOrders, orderIdSearch, user, selectedOrder]);
@@ -273,7 +280,7 @@ export default function OrderStatusPage() {
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">
-                            Only active orders are shown here. Completed orders are available in "My Orders".
+                            Active orders are shown by default. Use the search box above to find completed orders, or visit "My Orders" to see all your orders.
                           </p>
                         </TooltipContent>
                       </Tooltip>
