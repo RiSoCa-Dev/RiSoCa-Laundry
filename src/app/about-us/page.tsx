@@ -619,7 +619,8 @@ export default function AboutUsPage() {
               </p>
             </div>
           </div>
-
+          
+        </div>
         </div>
       </main>
       <AppFooter />
