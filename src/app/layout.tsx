@@ -17,12 +17,16 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { rel: 'icon', url: '/favicon.ico', sizes: 'any' },
       { rel: 'icon', url: '/icons/favicon.ico', sizes: 'any' },
       { rel: 'icon', url: '/icons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
       { rel: 'icon', url: '/icons/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
     ],
     apple: [
       { url: '/icons/apple-touch-icon.png', sizes: '180x180' },
+    ],
+    shortcut: [
+      { url: '/favicon.ico', sizes: 'any' },
     ],
   },
   themeColor: '#6d28d9',
@@ -67,6 +71,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
         <link rel="manifest" href="/manifest.json" />
+        {/* Root-level favicon for Chrome fallback */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        {/* Additional favicon formats */}
         <link rel="icon" href="/icons/favicon.ico" sizes="any" />
         <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
