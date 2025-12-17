@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Search, Inbox, AlertTriangle, User, Loader2, Filter, X, ArrowRight, Info } from 'lucide-react';
+import { Search, Inbox, AlertTriangle, User, Loader2, X, ArrowRight, Info } from 'lucide-react';
+import { RatingsList } from '@/components/ratings-list';
 import { useToast } from '@/hooks/use-toast';
 import { fetchOrderForCustomer, fetchMyOrders } from '@/lib/api/orders';
 import type { Order as OrderType } from '@/components/order-list';
@@ -40,7 +41,6 @@ export default function OrderStatusPage() {
   const [loading, setLoading] = useState(false);
   const [loadingMyOrders, setLoadingMyOrders] = useState(false);
   const [orderIdSearch, setOrderIdSearch] = useState('');
-  const [dateFilter, setDateFilter] = useState<'recent' | 'oldest' | 'all'>('recent');
   const { toast } = useToast();
 
   // Auto-load orders for logged-in users with caching
@@ -115,7 +115,7 @@ export default function OrderStatusPage() {
     loadMyOrders();
   }, [user, authLoading]);
 
-  // Filter and sort orders based on search and date filter
+  // Filter orders based on search
   // IMPORTANT: Filter out "Success" and "Completed" orders for logged-in users on Order Status page
   useEffect(() => {
     if (!user) return;
@@ -136,12 +136,8 @@ export default function OrderStatusPage() {
       );
     }
 
-    // Sort by date filter
-    if (dateFilter === 'recent') {
-      filtered.sort((a, b) => b.orderDate.getTime() - a.orderDate.getTime());
-    } else if (dateFilter === 'oldest') {
-      filtered.sort((a, b) => a.orderDate.getTime() - b.orderDate.getTime());
-    }
+    // Sort by most recent
+    filtered.sort((a, b) => b.orderDate.getTime() - a.orderDate.getTime());
 
     setFilteredOrders(filtered);
 
@@ -154,7 +150,7 @@ export default function OrderStatusPage() {
     } else if (filtered.length === 0 && orderIdSearch.trim()) {
       setSelectedOrder(null);
     }
-  }, [myOrders, orderIdSearch, dateFilter, user, selectedOrder]);
+  }, [myOrders, orderIdSearch, user, selectedOrder]);
 
   const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -219,11 +215,9 @@ export default function OrderStatusPage() {
             <CardHeader>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex-1">
-                  <CardTitle className="text-lg sm:text-xl">Check Order Status</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">Customer Ratings</CardTitle>
                   <CardDescription className="text-xs sm:text-sm">
-                    {user 
-                      ? 'View your active orders below or search for a specific order.'
-                      : 'Enter the Order ID and Name provided by the admin to track your laundry order status.'}
+                    View customer reviews and ratings. Click on a rating to see full details.
                   </CardDescription>
                 </div>
                 {user && (
@@ -233,165 +227,15 @@ export default function OrderStatusPage() {
                     onClick={() => router.push('/my-orders')}
                     className="flex items-center gap-2 w-full sm:w-auto"
                   >
-                    Show All Orders
+                    My Orders
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 )}
               </div>
             </CardHeader>
             <CardContent>
-              {user && myOrders.length > 0 && (
-                <div className="mb-6 space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <Label className="text-base font-semibold">Your Active Orders</Label>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="max-w-xs">
-                              Only active orders are shown here. Completed orders are available in "My Orders".
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    
-                    {/* Search and Filter Controls */}
-                    <div className="space-y-3 mb-4">
-                      {/* Order ID Search */}
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Search by Order ID (e.g., RKR001)"
-                          value={orderIdSearch}
-                          onChange={(e) => setOrderIdSearch(e.target.value)}
-                          className="pl-10 pr-10"
-                        />
-                        {orderIdSearch && (
-                          <button
-                            type="button"
-                            onClick={() => setOrderIdSearch('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Date Filter */}
-                      <div className="flex items-center gap-2">
-                        <Filter className="h-4 w-4 text-muted-foreground" />
-                        <Label className="text-sm text-muted-foreground">Sort by:</Label>
-                        <div className="flex gap-2 flex-1">
-                          <Button
-                            type="button"
-                            variant={dateFilter === 'recent' ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setDateFilter('recent')}
-                            className="flex-1 text-xs"
-                          >
-                            Recent
-                          </Button>
-                          <Button
-                            type="button"
-                            variant={dateFilter === 'oldest' ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setDateFilter('oldest')}
-                            className="flex-1 text-xs"
-                          >
-                            Oldest
-                          </Button>
-                          {orderIdSearch && (
-                            <Button
-                              type="button"
-                              variant={dateFilter === 'all' ? 'default' : 'outline'}
-                              size="sm"
-                              onClick={() => setDateFilter('all')}
-                              className="flex-1 text-xs"
-                            >
-                              All
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Orders List */}
-                    {filteredOrders.length > 0 ? (
-                      <div className="space-y-2 max-h-64 overflow-y-auto scrollable">
-                        {filteredOrders.map((order) => (
-                          <button
-                            key={order.id}
-                            type="button"
-                            onClick={() => setSelectedOrder(order)}
-                            className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                              selectedOrder?.id === order.id
-                                ? 'border-primary bg-primary/5'
-                                : 'border-border hover:bg-muted'
-                            }`}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <p className="font-semibold text-sm">Order #{order.id}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {order.customerName} • {new Date(order.orderDate).toLocaleDateString('en-US', { 
-                                    year: 'numeric', 
-                                    month: 'short', 
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="font-semibold text-sm">₱{order.total.toFixed(2)}</p>
-                                <p className="text-xs text-muted-foreground">{order.status}</p>
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="p-4 border border-dashed rounded-lg text-center text-sm text-muted-foreground">
-                        <Inbox className="h-8 w-8 mx-auto mb-2" />
-                        <p>No orders found matching your search.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {user && loadingMyOrders && (
-                <div className="mb-6 flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              )}
-
-              {user && myOrders.length === 0 && !loadingMyOrders && (
-                <div className="mb-6 p-4 border border-dashed rounded-lg text-center text-sm text-muted-foreground">
-                  <Inbox className="h-8 w-8 mx-auto mb-2" />
-                  <p>You don't have any orders yet.</p>
-                </div>
-              )}
-
-              {user && myOrders.length > 0 && filteredOrders.length === 0 && !loadingMyOrders && (
-                <div className="mb-6 p-4 border border-dashed rounded-lg text-center text-sm text-muted-foreground">
-                  <Inbox className="h-8 w-8 mx-auto mb-2" />
-                  <p>No active orders found. All your orders are completed.</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => router.push('/my-orders')}
-                    className="mt-3 flex items-center gap-2"
-                  >
-                    View All Orders
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              {/* Ratings List */}
+              <RatingsList />
 
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
