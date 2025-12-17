@@ -9,15 +9,33 @@ import {
 } from '@/components/ui/card';
 import { OrderList } from '@/components/order-list';
 import type { Order, StatusHistory } from '@/components/order-list';
-import { Loader2, Inbox } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Loader2, 
+  Inbox, 
+  Package, 
+  DollarSign, 
+  TrendingUp, 
+  Clock, 
+  CheckCircle2, 
+  XCircle,
+  Search,
+  Filter,
+  Plus,
+  RefreshCw,
+  BarChart3
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ManualOrderDialog } from '@/components/manual-order-dialog';
 import { InternalOrderDialog } from '@/components/internal-order-dialog';
 import { createOrderWithHistory, fetchLatestOrderId, generateNextOrderId, updateOrderFields, updateOrderStatus } from '@/lib/api/orders';
 import { supabase } from '@/lib/supabase-client';
 import { useAuthSession } from '@/hooks/use-auth-session';
+import { format, startOfDay, endOfDay, subDays } from 'date-fns';
 
 export function OrdersPage() {
   const { toast } = useToast();
@@ -26,6 +44,10 @@ export function OrdersPage() {
   const [loadingAdmin, setLoadingAdmin] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isInternalDialogOpen, setIsInternalDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [paymentFilter, setPaymentFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('all');
 
   const mapOrder = (o: any): Order => {
     const totalNum = typeof o.total === 'string' ? parseFloat(o.total) : Number(o.total);
@@ -117,6 +139,108 @@ export function OrdersPage() {
     setAllOrders(mappedOrders);
     setLoadingAdmin(false);
   };
+
+  // Calculate statistics
+  const statistics = useMemo(() => {
+    const totalOrders = allOrders.length;
+    const totalRevenue = allOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const paidRevenue = allOrders.filter(o => o.isPaid).reduce((sum, o) => sum + (o.total || 0), 0);
+    const pendingRevenue = allOrders.filter(o => !o.isPaid).reduce((sum, o) => sum + ((o.balance || o.total) || 0), 0);
+    const completedOrders = allOrders.filter(o => o.status === 'Success' || o.status === 'Completed' || o.status === 'Delivered').length;
+    const pendingOrders = allOrders.filter(o => 
+      o.status !== 'Success' && 
+      o.status !== 'Completed' && 
+      o.status !== 'Delivered' && 
+      o.status !== 'Canceled'
+    ).length;
+    const canceledOrders = allOrders.filter(o => o.status === 'Canceled').length;
+    const paidOrders = allOrders.filter(o => o.isPaid).length;
+    const unpaidOrders = allOrders.filter(o => !o.isPaid).length;
+    
+    // Today's stats
+    const today = startOfDay(new Date());
+    const todayOrders = allOrders.filter(o => startOfDay(o.orderDate).getTime() === today.getTime());
+    const todayRevenue = todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    
+    // This week's stats
+    const weekStart = startOfDay(subDays(new Date(), 7));
+    const weekOrders = allOrders.filter(o => o.orderDate >= weekStart);
+    const weekRevenue = weekOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+
+    return {
+      totalOrders,
+      totalRevenue,
+      paidRevenue,
+      pendingRevenue,
+      completedOrders,
+      pendingOrders,
+      canceledOrders,
+      paidOrders,
+      unpaidOrders,
+      todayOrders: todayOrders.length,
+      todayRevenue,
+      weekOrders: weekOrders.length,
+      weekRevenue,
+    };
+  }, [allOrders]);
+
+  // Filter orders
+  const filteredOrders = useMemo(() => {
+    let filtered = [...allOrders];
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(order =>
+        order.id.toLowerCase().includes(query) ||
+        order.customerName.toLowerCase().includes(query) ||
+        order.contactNumber.toLowerCase().includes(query)
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      if (statusFilter === 'active') {
+        filtered = filtered.filter(o => 
+          o.status !== 'Success' && 
+          o.status !== 'Completed' && 
+          o.status !== 'Delivered' && 
+          o.status !== 'Canceled'
+        );
+      } else if (statusFilter === 'completed') {
+        filtered = filtered.filter(o => 
+          o.status === 'Success' || 
+          o.status === 'Completed' || 
+          o.status === 'Delivered'
+        );
+      } else {
+        filtered = filtered.filter(o => o.status === statusFilter);
+      }
+    }
+
+    // Payment filter
+    if (paymentFilter === 'paid') {
+      filtered = filtered.filter(o => o.isPaid);
+    } else if (paymentFilter === 'unpaid') {
+      filtered = filtered.filter(o => !o.isPaid);
+    } else if (paymentFilter === 'partial') {
+      filtered = filtered.filter(o => !o.isPaid && o.balance && o.balance > 0 && o.balance < o.total);
+    }
+
+    // Date filter
+    if (dateFilter === 'today') {
+      const today = startOfDay(new Date());
+      filtered = filtered.filter(o => startOfDay(o.orderDate).getTime() === today.getTime());
+    } else if (dateFilter === 'week') {
+      const weekStart = startOfDay(subDays(new Date(), 7));
+      filtered = filtered.filter(o => o.orderDate >= weekStart);
+    } else if (dateFilter === 'month') {
+      const monthStart = startOfDay(subDays(new Date(), 30));
+      filtered = filtered.filter(o => o.orderDate >= monthStart);
+    }
+
+    return filtered;
+  }, [allOrders, searchQuery, statusFilter, paymentFilter, dateFilter]);
 
   useEffect(() => {
     fetchOrders();
@@ -322,37 +446,254 @@ export function OrdersPage() {
   };
 
   return (
-    <>
-      <Card className="w-full flex flex-col max-h-[calc(100vh-12rem)] sm:max-h-[calc(100vh-14rem)] transition-all duration-300">
-        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sticky top-0 bg-background z-10 border-b rounded-t-lg">
-          <div>
-            <CardTitle className="text-lg sm:text-xl">Orders</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">View and update all customer orders.</CardDescription>
-          </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <Button onClick={() => setIsInternalDialogOpen(true)} variant="outline" className="flex-1 sm:flex-none">
-              Internal Order
-            </Button>
-            <Button onClick={() => setIsDialogOpen(true)} className="flex-1 sm:flex-none">
-              New Order
-            </Button>
+    <div className="w-full space-y-6">
+      {/* Statistics Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-2 hover:border-primary/50 transition-all shadow-lg bg-gradient-to-br from-blue-50/50 to-blue-100/30 dark:from-blue-950/20 dark:to-blue-900/10">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Total Orders</p>
+                <p className="text-2xl font-bold text-primary">{statistics.totalOrders}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {statistics.todayOrders} today
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-blue-500/20">
+                <Package className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 hover:border-primary/50 transition-all shadow-lg bg-gradient-to-br from-green-50/50 to-green-100/30 dark:from-green-950/20 dark:to-green-900/10">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Total Revenue</p>
+                <p className="text-2xl font-bold text-primary">₱{Math.ceil(statistics.totalRevenue)}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  ₱{Math.ceil(statistics.todayRevenue)} today
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-green-500/20">
+                <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 hover:border-primary/50 transition-all shadow-lg bg-gradient-to-br from-amber-50/50 to-amber-100/30 dark:from-amber-950/20 dark:to-amber-900/10">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Pending Orders</p>
+                <p className="text-2xl font-bold text-primary">{statistics.pendingOrders}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {statistics.completedOrders} completed
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-amber-500/20">
+                <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 hover:border-primary/50 transition-all shadow-lg bg-gradient-to-br from-purple-50/50 to-purple-100/30 dark:from-purple-950/20 dark:to-purple-900/10">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Payment Status</p>
+                <p className="text-2xl font-bold text-primary">{statistics.paidOrders}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {statistics.unpaidOrders} unpaid
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-purple-500/20">
+                <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Revenue Breakdown */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-2 bg-gradient-to-br from-green-50/50 to-green-100/30 dark:from-green-950/20 dark:to-green-900/10">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Paid Revenue</p>
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">₱{Math.ceil(statistics.paidRevenue)}</p>
+              </div>
+              <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 bg-gradient-to-br from-orange-50/50 to-orange-100/30 dark:from-orange-950/20 dark:to-orange-900/10">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Pending Revenue</p>
+                <p className="text-xl font-bold text-orange-600 dark:text-orange-400">₱{Math.ceil(statistics.pendingRevenue)}</p>
+              </div>
+              <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 bg-gradient-to-br from-blue-50/50 to-blue-100/30 dark:from-blue-950/20 dark:to-blue-900/10">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">This Week</p>
+                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                  {statistics.weekOrders} orders • ₱{Math.ceil(statistics.weekRevenue)}
+                </p>
+              </div>
+              <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Orders Card */}
+      <Card className="w-full flex flex-col shadow-xl border-2">
+        <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b p-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
+                  <Package className="h-6 w-6 text-primary" />
+                  Orders Dashboard
+                </CardTitle>
+                <CardDescription className="text-sm mt-1">
+                  Manage and track all customer orders
+                </CardDescription>
+              </div>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button 
+                  onClick={() => setIsInternalDialogOpen(true)} 
+                  variant="outline" 
+                  className="flex-1 sm:flex-none gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Internal Order
+                </Button>
+                <Button 
+                  onClick={() => setIsDialogOpen(true)} 
+                  className="flex-1 sm:flex-none gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  New Order
+                </Button>
+                <Button 
+                  onClick={fetchOrders} 
+                  variant="outline" 
+                  size="icon"
+                  disabled={loadingAdmin}
+                >
+                  <RefreshCw className={`h-4 w-4 ${loadingAdmin ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search orders..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 rounded-md border bg-background text-sm"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+                <option value="Order Created">Order Created</option>
+                <option value="Order Placed">Order Placed</option>
+                <option value="Washing">Washing</option>
+                <option value="Drying">Drying</option>
+                <option value="Folding">Folding</option>
+                <option value="Ready for Pick Up">Ready for Pick Up</option>
+                <option value="Out for Delivery">Out for Delivery</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Success">Success</option>
+                <option value="Canceled">Canceled</option>
+              </select>
+              <select
+                value={paymentFilter}
+                onChange={(e) => setPaymentFilter(e.target.value)}
+                className="px-3 py-2 rounded-md border bg-background text-sm"
+              >
+                <option value="all">All Payments</option>
+                <option value="paid">Paid</option>
+                <option value="unpaid">Unpaid</option>
+                <option value="partial">Partially Paid</option>
+              </select>
+              <select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="px-3 py-2 rounded-md border bg-background text-sm"
+              >
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+              </select>
+            </div>
+
+            {/* Results Summary */}
+            {!loadingAdmin && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2 border-t">
+                <Filter className="h-4 w-4" />
+                <span>
+                  Showing <strong className="text-foreground">{filteredOrders.length}</strong> of{' '}
+                  <strong className="text-foreground">{allOrders.length}</strong> orders
+                </span>
+              </div>
+            )}
           </div>
         </CardHeader>
-        <CardContent className="flex-1 overflow-y-auto overflow-x-hidden scrollable pt-4 pb-4">
+        <CardContent className="flex-1 overflow-y-auto overflow-x-hidden scrollable p-6">
           {loadingAdmin ? (
-            <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
-              <Loader2 className="h-12 w-12 mb-2 animate-spin" />
-              <p>Loading all orders...</p>
+            <div className="flex flex-col items-center justify-center h-64 text-center text-muted-foreground">
+              <Loader2 className="h-12 w-12 mb-4 animate-spin text-primary" />
+              <p className="text-base font-medium">Loading orders dashboard...</p>
             </div>
-          ) : allOrders && allOrders.length > 0 ? (
+          ) : filteredOrders && filteredOrders.length > 0 ? (
             <OrderList 
-              orders={allOrders} 
+              orders={filteredOrders} 
               onUpdateOrder={handleUpdateOrder}
             />
           ) : (
-            <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
-              <Inbox className="h-12 w-12 mb-2" />
-              <p>No orders have been placed yet across the platform.</p>
+            <div className="flex flex-col items-center justify-center h-64 text-center text-muted-foreground py-12">
+              <div className="p-4 rounded-full bg-muted mb-4">
+                <Inbox className="h-12 w-12" />
+              </div>
+              <p className="text-lg font-semibold mb-1">
+                {allOrders.length === 0 ? 'No orders yet' : 'No orders match your filters'}
+              </p>
+              <p className="text-sm">
+                {allOrders.length === 0 
+                  ? 'Create your first order to get started' 
+                  : 'Try adjusting your search or filter criteria'}
+              </p>
+              {allOrders.length === 0 && (
+                <Button onClick={() => setIsDialogOpen(true)} className="mt-4 gap-2">
+                  <Plus className="h-4 w-4" />
+                  Create First Order
+                </Button>
+              )}
             </div>
           )}
         </CardContent>
@@ -367,7 +708,7 @@ export function OrdersPage() {
         onClose={() => setIsInternalDialogOpen(false)}
         onAddOrder={handleAddOrder}
       />
-    </>
+    </div>
   );
 }
 
