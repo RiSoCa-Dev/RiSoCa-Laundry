@@ -530,7 +530,6 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                     <span className="text-base font-semibold">{workingOrder.customerName}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <DollarSign className="h-4 w-4 text-muted-foreground" />
                                     {(() => {
                                         const badgeInfo = getPaymentBadgeInfo(workingOrder.isPaid, isPartiallyPaid);
                                         const amountText = isPartiallyPaid 
