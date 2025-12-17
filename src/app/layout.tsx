@@ -123,6 +123,11 @@ export default function RootLayout({
                     '/contact-us',
                     '/admin',
                     '/employee',
+                    '/login',
+                    '/register',
+                    '/reset-password',
+                    '/profile',
+                    '/delete-account',
                   ];
                   
                   // Check if current page should have ads
