@@ -93,7 +93,7 @@ export default function RootLayout({
         <meta name="twitter:title" content="RKR Laundry Service" />
         <meta name="twitter:description" content="Fast, clean, and convenient laundry service at rkrlaundry.com. Real-time tracking and smart pricing for your laundry needs." />
         <meta name="twitter:image" content="https://rkrlaundry.com/icons/android-chrome-512x512.png" />
-        {/* Google AdSense Auto Ads */}
+        {/* Google AdSense Auto Ads - Only on pages with sufficient content */}
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1036864152624333"
@@ -103,10 +103,23 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               if (typeof window !== 'undefined' && !window.adsbygoogle) {
-                (adsbygoogle = window.adsbygoogle || []).push({
-                  google_ad_client: "ca-pub-1036864152624333",
-                  enable_page_level_ads: true
-                });
+                // Pages with minimal content that should not show ads
+                const minimalContentPages = [
+                  '/select-location',
+                  '/track-rider',
+                  '/download-app',
+                ];
+                
+                // Check if current page should have ads
+                const path = window.location.pathname;
+                const shouldShowAds = !minimalContentPages.some(page => path.startsWith(page));
+                
+                if (shouldShowAds) {
+                  (adsbygoogle = window.adsbygoogle || []).push({
+                    google_ad_client: "ca-pub-1036864152624333",
+                    enable_page_level_ads: true
+                  });
+                }
               }
             `,
           }}
