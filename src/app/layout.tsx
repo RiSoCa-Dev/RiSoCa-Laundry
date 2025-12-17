@@ -106,7 +106,6 @@ export default function RootLayout({
                 // Pages with minimal content that should not show ads
                 const minimalContentPages = [
                   '/select-location',
-                  '/track-rider',
                   '/download-app',
                 ];
                 
