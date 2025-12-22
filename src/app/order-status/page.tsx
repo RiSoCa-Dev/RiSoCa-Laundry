@@ -592,6 +592,84 @@ export default function OrderStatusPage() {
               </CardContent>
             </Card>
 
+            {/* Divider */}
+            <div className="relative my-12">
+              <div className="absolute inset-0 flex items-center">
+                <Separator className="w-full" />
+              </div>
+              <div className="relative flex justify-center">
+                <div className="bg-background px-4">
+                  <span className="text-sm text-muted-foreground font-medium">Learn More</span>
+                </div>
+              </div>
+            </div>
+
+            {/* How Tracking Works Section */}
+            <Card className="shadow-xl border-2 hover:shadow-2xl transition-shadow">
+              <CardHeader className="bg-gradient-to-r from-primary/15 via-primary/10 to-primary/5 border-b p-6">
+                <CardTitle className="text-2xl sm:text-3xl flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/20">
+                    <Sparkles className="h-6 w-6 text-primary" />
+                  </div>
+                  How Order Tracking Works
+                </CardTitle>
+                <CardDescription className="text-sm mt-2 text-base">
+                  Real-time updates on your laundry order status
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 sm:p-8 space-y-5">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Our order tracking system provides real-time updates on your laundry order from the moment it's placed until it's delivered or ready for pickup. You can monitor every stage of the process and know exactly when to expect your clean laundry.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                  <div className="space-y-2 p-5 rounded-xl border-2 bg-muted/30 hover:border-primary/30 hover:bg-muted/50 transition-all">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 rounded-lg bg-primary/15">
+                        <Clock className="h-5 w-5 text-primary" />
+                      </div>
+                      <h3 className="font-bold text-base">Real-Time Updates</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Your order status updates automatically as it progresses through each stage. No need to refresh - we keep you informed in real-time.
+                    </p>
+                  </div>
+                  <div className="space-y-2 p-5 rounded-xl border-2 bg-muted/30 hover:border-primary/30 hover:bg-muted/50 transition-all">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 rounded-lg bg-primary/15">
+                        <Package className="h-5 w-5 text-primary" />
+                      </div>
+                      <h3 className="font-bold text-base">Complete History</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      View the complete timeline of your order, including when each status change occurred. Track your laundry from start to finish.
+                    </p>
+                  </div>
+                  <div className="space-y-2 p-5 rounded-xl border-2 bg-muted/30 hover:border-primary/30 hover:bg-muted/50 transition-all">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 rounded-lg bg-primary/15">
+                        <CheckCircle2 className="h-5 w-5 text-primary" />
+                      </div>
+                      <h3 className="font-bold text-base">Status Notifications</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Get notified when your order reaches important milestones like "In Progress", "Ready for Pickup", or "Out for Delivery".
+                    </p>
+                  </div>
+                  <div className="space-y-2 p-5 rounded-xl border-2 bg-muted/30 hover:border-primary/30 hover:bg-muted/50 transition-all">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 rounded-lg bg-primary/15">
+                        <Phone className="h-5 w-5 text-primary" />
+                      </div>
+                      <h3 className="font-bold text-base">Easy Access</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Search for any order using your Order ID and name. No account required to track your order status.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Status Guide Card */}
             <Card className="shadow-xl border-2 hover:shadow-2xl transition-shadow">
               <CardHeader className="bg-gradient-to-r from-primary/15 via-primary/10 to-primary/5 border-b p-6">
