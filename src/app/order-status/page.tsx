@@ -221,14 +221,16 @@ export default function OrderStatusPage() {
         <div className="container mx-auto px-4 py-6 sm:py-8">
           <div className="w-full max-w-4xl mx-auto space-y-6">
             {/* Page Header */}
-            <div className="text-center space-y-2">
-              <div className="flex items-center justify-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Package className="h-6 w-6 text-primary" />
+            <div className="text-center space-y-3 mb-8">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-lg">
+                  <Package className="h-7 w-7 text-primary" />
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-bold">Check Order Status</h1>
+                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  Check Order Status
+                </h1>
               </div>
-              <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
                 {user 
                   ? 'Track your active orders in real-time or search for a specific order.'
                   : 'Enter your Order ID and Name to track your laundry order status.'}
@@ -236,65 +238,11 @@ export default function OrderStatusPage() {
             </div>
 
             {/* Average Rating Card */}
-            <AverageRatingCard />
+            <div className="mb-6">
+              <AverageRatingCard />
+            </div>
 
-            {/* How Tracking Works Section */}
-            <Card className="shadow-lg border-2">
-              <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b">
-                <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  How Order Tracking Works
-                </CardTitle>
-                <CardDescription className="text-sm mt-2">
-                  Real-time updates on your laundry order status
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Our order tracking system provides real-time updates on your laundry order from the moment it's placed until it's delivered or ready for pickup. You can monitor every stage of the process and know exactly when to expect your clean laundry.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div className="space-y-2 p-4 rounded-lg border bg-muted/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Clock className="h-4 w-4 text-primary" />
-                      <h3 className="font-semibold text-sm">Real-Time Updates</h3>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Your order status updates automatically as it progresses through each stage. No need to refresh - we keep you informed in real-time.
-                    </p>
-                  </div>
-                  <div className="space-y-2 p-4 rounded-lg border bg-muted/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Package className="h-4 w-4 text-primary" />
-                      <h3 className="font-semibold text-sm">Complete History</h3>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      View the complete timeline of your order, including when each status change occurred. Track your laundry from start to finish.
-                    </p>
-                  </div>
-                  <div className="space-y-2 p-4 rounded-lg border bg-muted/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                      <h3 className="font-semibold text-sm">Status Notifications</h3>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Get notified when your order reaches important milestones like "In Progress", "Ready for Pickup", or "Out for Delivery".
-                    </p>
-                  </div>
-                  <div className="space-y-2 p-4 rounded-lg border bg-muted/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Phone className="h-4 w-4 text-primary" />
-                      <h3 className="font-semibold text-sm">Easy Access</h3>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Search for any order using your Order ID and name. No account required to track your order status.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Main Content Card */}
+            {/* Main Content Card - Tracking/Search */}
             <Card className="shadow-lg">
               <CardHeader className="border-b bg-muted/30">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -645,115 +593,117 @@ export default function OrderStatusPage() {
             </Card>
 
             {/* Status Guide Card */}
-            <Card className="shadow-lg border-2">
-              <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b">
-                <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
-                  <Info className="h-5 w-5 text-primary" />
+            <Card className="shadow-xl border-2 hover:shadow-2xl transition-shadow">
+              <CardHeader className="bg-gradient-to-r from-primary/15 via-primary/10 to-primary/5 border-b p-6">
+                <CardTitle className="text-2xl sm:text-3xl flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/20">
+                    <Info className="h-6 w-6 text-primary" />
+                  </div>
                   Understanding Order Statuses
                 </CardTitle>
-                <CardDescription className="text-sm mt-2">
+                <CardDescription className="text-sm mt-2 text-base">
                   What each status means for your order
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div className="flex gap-4">
+              <CardContent className="p-6 sm:p-8">
+                <div className="space-y-5">
+                  <div className="flex gap-5 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                        <Package className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shadow-sm">
+                        <Package className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                       </div>
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-sm">Order Created</h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-bold text-base">Order Created</h3>
                         <Badge variant="outline" className="text-xs">Initial</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         Your order has been successfully placed and is waiting to be processed.
                       </p>
                     </div>
                   </div>
                   <Separator />
-                  <div className="flex gap-4">
+                  <div className="flex gap-5 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
-                        <WashingMachine className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                      <div className="w-10 h-10 rounded-full bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center shadow-sm">
+                        <WashingMachine className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
                       </div>
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-sm">In Progress</h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-bold text-base">In Progress</h3>
                         <Badge variant="outline" className="text-xs">Processing</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         Your laundry is being washed, dried, and folded with care. This typically takes 40-50 minutes per stage.
                       </p>
                     </div>
                   </div>
                   <Separator />
-                  <div className="flex gap-4">
+                  <div className="flex gap-5 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-                        <Wind className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                      <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center shadow-sm">
+                        <Wind className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                       </div>
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-sm">Drying</h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-bold text-base">Drying</h3>
                         <Badge variant="outline" className="text-xs">Processing</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         Your laundry is being dried to perfection. This stage typically takes 40-50 minutes.
                       </p>
                     </div>
                   </div>
                   <Separator />
-                  <div className="flex gap-4">
+                  <div className="flex gap-5 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-                        <Shirt className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                      <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center shadow-sm">
+                        <Shirt className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                       </div>
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-sm">Folding</h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-bold text-base">Folding</h3>
                         <Badge variant="outline" className="text-xs">Processing</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         Your clean laundry is being neatly folded and prepared for pickup or delivery. This takes 20-30 minutes.
                       </p>
                     </div>
                   </div>
                   <Separator />
-                  <div className="flex gap-4">
+                  <div className="flex gap-5 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                        <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shadow-sm">
+                        <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
                       </div>
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-sm">Ready for Pickup / Out for Delivery</h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-bold text-base">Ready for Pickup / Out for Delivery</h3>
                         <Badge variant="outline" className="text-xs">Ready</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         Your laundry is ready! You can pick it up at our location, or we're on our way to deliver it to you.
                       </p>
                     </div>
                   </div>
                   <Separator />
-                  <div className="flex gap-4">
+                  <div className="flex gap-5 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                        <Truck className="h-4 w-4 text-primary" />
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shadow-sm">
+                        <Truck className="h-5 w-5 text-primary" />
                       </div>
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-sm">Delivered / Completed</h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-bold text-base">Delivered / Completed</h3>
                         <Badge variant="outline" className="text-xs">Complete</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         Your order has been successfully completed and delivered or picked up. Thank you for choosing RKR Laundry!
                       </p>
                     </div>
@@ -763,61 +713,63 @@ export default function OrderStatusPage() {
             </Card>
 
             {/* Helpful Tips Section */}
-            <Card className="shadow-lg border-2">
-              <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b">
-                <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
-                  <HelpCircle className="h-5 w-5 text-primary" />
+            <Card className="shadow-xl border-2 hover:shadow-2xl transition-shadow">
+              <CardHeader className="bg-gradient-to-r from-primary/15 via-primary/10 to-primary/5 border-b p-6">
+                <CardTitle className="text-2xl sm:text-3xl flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/20">
+                    <HelpCircle className="h-6 w-6 text-primary" />
+                  </div>
                   Helpful Tips
                 </CardTitle>
-                <CardDescription className="text-sm mt-2">
+                <CardDescription className="text-sm mt-2 text-base">
                   Everything you need to know about tracking your order
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10">
-                      <Package className="h-4 w-4 text-primary" />
+              <CardContent className="p-6 sm:p-8">
+                <div className="space-y-5">
+                  <div className="flex gap-4 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
+                    <div className="flex-shrink-0 p-2.5 rounded-lg bg-primary/15">
+                      <Package className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-sm mb-1">Finding Your Order ID</h3>
-                      <p className="text-xs text-muted-foreground">
+                      <h3 className="font-bold text-base mb-2">Finding Your Order ID</h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         Your Order ID is provided when you place an order. It typically starts with "RKR" followed by numbers. You can find it in your order confirmation email or on your account's order history.
                       </p>
                     </div>
                   </div>
                   <Separator />
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10">
-                      <Clock className="h-4 w-4 text-primary" />
+                  <div className="flex gap-4 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
+                    <div className="flex-shrink-0 p-2.5 rounded-lg bg-primary/15">
+                      <Clock className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-sm mb-1">When to Expect Updates</h3>
-                      <p className="text-xs text-muted-foreground">
+                      <h3 className="font-bold text-base mb-2">When to Expect Updates</h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         Status updates occur in real-time as your order progresses. Standard service typically takes 24-48 hours from drop-off to completion. You'll see updates at each major stage of the process.
                       </p>
                     </div>
                   </div>
                   <Separator />
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10">
-                      <AlertTriangle className="h-4 w-4 text-primary" />
+                  <div className="flex gap-4 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
+                    <div className="flex-shrink-0 p-2.5 rounded-lg bg-primary/15">
+                      <AlertTriangle className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-sm mb-1">If Your Order is Delayed</h3>
-                      <p className="text-xs text-muted-foreground">
+                      <h3 className="font-bold text-base mb-2">If Your Order is Delayed</h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         If your order seems delayed, check the status tracker for the latest update. For urgent concerns, please contact us directly using the contact information provided on our website.
                       </p>
                     </div>
                   </div>
                   <Separator />
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10">
-                      <Phone className="h-4 w-4 text-primary" />
+                  <div className="flex gap-4 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
+                    <div className="flex-shrink-0 p-2.5 rounded-lg bg-primary/15">
+                      <Phone className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-sm mb-1">Need Help?</h3>
-                      <p className="text-xs text-muted-foreground">
+                      <h3 className="font-bold text-base mb-2">Need Help?</h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         If you have questions about your order or need assistance, visit our Contact Us page or check our FAQs. We're here to help ensure you have the best experience with RKR Laundry.
                       </p>
                     </div>
@@ -827,66 +779,68 @@ export default function OrderStatusPage() {
             </Card>
 
             {/* Related Services Card */}
-            <Card className="shadow-lg border-2 bg-gradient-to-br from-primary/5 to-primary/10">
-              <CardHeader className="border-b">
-                <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary" />
+            <Card className="shadow-xl border-2 bg-gradient-to-br from-primary/10 via-primary/5 to-primary/10 hover:shadow-2xl transition-shadow">
+              <CardHeader className="border-b p-6">
+                <CardTitle className="text-2xl sm:text-3xl flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/20">
+                    <Sparkles className="h-6 w-6 text-primary" />
+                  </div>
                   Related Services
                 </CardTitle>
-                <CardDescription className="text-sm">
+                <CardDescription className="text-sm mt-2 text-base">
                   Explore more of what we offer
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <CardContent className="p-6 sm:p-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <Link href="/create-order">
-                    <div className="p-4 rounded-lg border-2 hover:border-primary transition-all cursor-pointer bg-background">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 rounded-lg bg-primary/10">
+                    <div className="p-5 rounded-xl border-2 hover:border-primary hover:shadow-lg transition-all cursor-pointer bg-background/80 group">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2.5 rounded-lg bg-primary/15 group-hover:bg-primary/25 transition-colors">
                           <FileText className="h-5 w-5 text-primary" />
                         </div>
-                        <h3 className="font-semibold text-sm">Create New Order</h3>
+                        <h3 className="font-bold text-base">Create New Order</h3>
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         Place a new laundry order with our easy-to-use order form. Select your package and get instant pricing.
                       </p>
                     </div>
                   </Link>
                   <Link href="/service-rates">
-                    <div className="p-4 rounded-lg border-2 hover:border-primary transition-all cursor-pointer bg-background">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 rounded-lg bg-primary/10">
+                    <div className="p-5 rounded-xl border-2 hover:border-primary hover:shadow-lg transition-all cursor-pointer bg-background/80 group">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2.5 rounded-lg bg-primary/15 group-hover:bg-primary/25 transition-colors">
                           <DollarSign className="h-5 w-5 text-primary" />
                         </div>
-                        <h3 className="font-semibold text-sm">Service Rates</h3>
+                        <h3 className="font-bold text-base">Service Rates</h3>
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         View our transparent pricing structure. Standard rates, delivery fees, and package details.
                       </p>
                     </div>
                   </Link>
                   <Link href="/faqs">
-                    <div className="p-4 rounded-lg border-2 hover:border-primary transition-all cursor-pointer bg-background">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 rounded-lg bg-primary/10">
+                    <div className="p-5 rounded-xl border-2 hover:border-primary hover:shadow-lg transition-all cursor-pointer bg-background/80 group">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2.5 rounded-lg bg-primary/15 group-hover:bg-primary/25 transition-colors">
                           <HelpCircle className="h-5 w-5 text-primary" />
                         </div>
-                        <h3 className="font-semibold text-sm">FAQs</h3>
+                        <h3 className="font-bold text-base">FAQs</h3>
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         Find answers to common questions about our services, pricing, delivery, and more.
                       </p>
                     </div>
                   </Link>
                   <Link href="/contact-us">
-                    <div className="p-4 rounded-lg border-2 hover:border-primary transition-all cursor-pointer bg-background">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 rounded-lg bg-primary/10">
+                    <div className="p-5 rounded-xl border-2 hover:border-primary hover:shadow-lg transition-all cursor-pointer bg-background/80 group">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2.5 rounded-lg bg-primary/15 group-hover:bg-primary/25 transition-colors">
                           <Phone className="h-5 w-5 text-primary" />
                         </div>
-                        <h3 className="font-semibold text-sm">Contact Us</h3>
+                        <h3 className="font-bold text-base">Contact Us</h3>
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         Get in touch with us for questions, support, or special requests. We're here to help!
                       </p>
                     </div>
