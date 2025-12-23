@@ -8,7 +8,7 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { Loader2, TrendingUp, Users, PieChart as PieChartIcon, DollarSign, Share2, CheckCircle2, CheckSquare, Square } from 'lucide-react';
+import { Loader2, TrendingUp, TrendingDown, Users, PieChart as PieChartIcon, DollarSign, Share2, CheckCircle2, CheckSquare, Square } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 import { fetchExpenses } from '@/lib/api/expenses';
 import { useAuthSession } from '@/hooks/use-auth-session';
