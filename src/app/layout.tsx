@@ -107,38 +107,50 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <script
+          id="adsense-init"
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 if (typeof window === 'undefined') return;
                 
-                // Check if we've already initialized page-level ads
+                // Check if this script has already run by checking DOM
+                var scriptId = 'adsense-init';
+                if (document.getElementById(scriptId) && document.getElementById(scriptId).dataset.executed === 'true') {
+                  return;
+                }
+                
+                // Mark as executed immediately
+                var scriptEl = document.getElementById(scriptId);
+                if (scriptEl) {
+                  scriptEl.dataset.executed = 'true';
+                }
+                
+                // Also use window flag as backup
                 if (window.__adsbygoogle_page_level_initialized) return;
+                window.__adsbygoogle_page_level_initialized = true;
                 
                 // Initialize adsbygoogle array if it doesn't exist
                 window.adsbygoogle = window.adsbygoogle || [];
                 
                 // Check if enable_page_level_ads has already been pushed
-                const hasPageLevelAds = window.adsbygoogle.some(function(item) {
-                  return item && item.enable_page_level_ads === true;
-                });
+                var hasPageLevelAds = false;
+                try {
+                  for (var i = 0; i < window.adsbygoogle.length; i++) {
+                    if (window.adsbygoogle[i] && window.adsbygoogle[i].enable_page_level_ads === true) {
+                      hasPageLevelAds = true;
+                      break;
+                    }
+                  }
+                } catch (e) {
+                  // Array might not be accessible yet
+                }
                 
                 if (hasPageLevelAds) {
-                  window.__adsbygoogle_page_level_initialized = true;
                   return;
                 }
                 
                 // Pages with minimal content that should not show ads
-                // This includes:
-                // - All admin and employee pages (navigation/management interfaces)
-                // - Authentication pages (login, register, password reset)
-                // - Form pages (select-location)
-                // - User account pages (profile, delete-account, my-orders)
-                // - Legal pages (privacy-policy, terms-and-conditions)
-                // - Pages that might be empty (customer-ratings)
-                // - Download/app installation pages
-                // Note: /create-order and /order-status now have sufficient content for ads
-                const minimalContentPages = [
+                var minimalContentPages = [
                   '/select-location',
                   '/download-app',
                   '/branches',
@@ -158,29 +170,49 @@ export default function RootLayout({
                 ];
                 
                 // Check if current page should have ads
-                const path = window.location.pathname;
-                
-                // Exclude if path starts with any minimal content page
-                // Also exclude all admin and employee sub-pages
-                const shouldShowAds = !minimalContentPages.some(page => path.startsWith(page)) &&
-                                      !path.startsWith('/admin/') &&
-                                      !path.startsWith('/employee/');
+                var path = window.location.pathname;
+                var shouldShowAds = true;
+                for (var j = 0; j < minimalContentPages.length; j++) {
+                  if (path.startsWith(minimalContentPages[j])) {
+                    shouldShowAds = false;
+                    break;
+                  }
+                }
+                if (path.startsWith('/admin/') || path.startsWith('/employee/')) {
+                  shouldShowAds = false;
+                }
                 
                 if (shouldShowAds) {
-                  try {
-                    window.adsbygoogle.push({
-                      google_ad_client: "ca-pub-1036864152624333",
-                      enable_page_level_ads: true
-                    });
-                    
-                    // Mark as initialized to prevent duplicate calls
-                    window.__adsbygoogle_page_level_initialized = true;
-                  } catch (e) {
-                    console.warn('AdSense initialization error:', e);
+                  // Wait for adsbygoogle script to load, then push
+                  function initAds() {
+                    try {
+                      if (!window.adsbygoogle) {
+                        window.adsbygoogle = [];
+                      }
+                      
+                      // Final check before pushing
+                      var alreadyPushed = false;
+                      for (var k = 0; k < window.adsbygoogle.length; k++) {
+                        if (window.adsbygoogle[k] && window.adsbygoogle[k].enable_page_level_ads === true) {
+                          alreadyPushed = true;
+                          break;
+                        }
+                      }
+                      
+                      if (!alreadyPushed) {
+                        window.adsbygoogle.push({
+                          google_ad_client: "ca-pub-1036864152624333",
+                          enable_page_level_ads: true
+                        });
+                      }
+                    } catch (e) {
+                      console.warn('AdSense initialization error:', e);
+                    }
                   }
-                } else {
-                  // Mark as initialized even if we're not showing ads to prevent retries
-                  window.__adsbygoogle_page_level_initialized = true;
+                  
+                  // Try immediately, then retry after a short delay if needed
+                  initAds();
+                  setTimeout(initAds, 200);
                 }
               })();
             `,
