@@ -161,62 +161,70 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) form.reset(); onClose(); }}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Create Manual Order</DialogTitle>
-          <DialogDescription>
-            Enter the details for the new order.
+          <DialogTitle className="text-2xl font-bold">Create Manual Order</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            Fill in the order details below. All fields marked with * are required.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="form-group">
-            <Input
-              id="customerName"
-              placeholder=" "
-              {...form.register('customerName')}
-              disabled={isSaving}
-              className="form-input text-center"
-            />
-            <Label htmlFor="customerName" className="form-label">Customer Name</Label>
-            {form.formState.errors.customerName && (
-              <p className="text-xs text-destructive pt-1">{form.formState.errors.customerName.message}</p>
-            )}
-          </div>
-           <div className="form-group">
-            <Input
-              id="contactNumber"
-              placeholder=" "
-              {...form.register('contactNumber')}
-              disabled={isSaving}
-              className="form-input text-center"
-            />
-             <Label htmlFor="contactNumber" className="form-label">Contact Number (Optional)</Label>
-            {form.formState.errors.contactNumber && (
-              <p className="text-xs text-destructive pt-1">{form.formState.errors.contactNumber.message}</p>
-            )}
-          </div>
-          <div className="form-group">
-             <Controller
-              name="weight"
-              control={form.control}
-              render={({ field }) => (
-                <Input
-                  id="weight"
-                  type="number"
-                  step="0.1"
-                  placeholder=" "
-                  {...field}
-                  onChange={handleWeightChange}
-                  value={field.value ?? ''}
-                  disabled={isSaving}
-                  className="form-input text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <div className="space-y-4">
+            <div className="form-group">
+              <Input
+                id="customerName"
+                placeholder=" "
+                {...form.register('customerName')}
+                disabled={isSaving}
+                className="form-input text-center"
+              />
+              <Label htmlFor="customerName" className="form-label">
+                Customer Name <span className="text-destructive">*</span>
+              </Label>
+              {form.formState.errors.customerName && (
+                <p className="text-xs text-destructive pt-1">{form.formState.errors.customerName.message}</p>
               )}
-            />
-            <Label htmlFor="weight" className="form-label">Total Weight (kg)</Label>
-            {form.formState.errors.weight && (
-              <p className="text-xs text-destructive pt-1">{form.formState.errors.weight.message}</p>
-            )}
+            </div>
+            
+            <div className="form-group">
+              <Input
+                id="contactNumber"
+                placeholder=" "
+                {...form.register('contactNumber')}
+                disabled={isSaving}
+                className="form-input text-center"
+              />
+              <Label htmlFor="contactNumber" className="form-label">Contact Number (Optional)</Label>
+              {form.formState.errors.contactNumber && (
+                <p className="text-xs text-destructive pt-1">{form.formState.errors.contactNumber.message}</p>
+              )}
+            </div>
+            
+            <div className="form-group">
+              <Controller
+                name="weight"
+                control={form.control}
+                render={({ field }) => (
+                  <Input
+                    id="weight"
+                    type="number"
+                    step="0.1"
+                    placeholder=" "
+                    {...field}
+                    onChange={handleWeightChange}
+                    value={field.value ?? ''}
+                    disabled={isSaving}
+                    className="form-input text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                )}
+              />
+              <Label htmlFor="weight" className="form-label">
+                Total Weight (kg) <span className="text-destructive">*</span>
+              </Label>
+              {form.formState.errors.weight && (
+                <p className="text-xs text-destructive pt-1">{form.formState.errors.weight.message}</p>
+              )}
+            </div>
           </div>
             
           {distribution.length > 0 && (
@@ -259,56 +267,102 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
               <p className="text-xs text-destructive pt-1">{form.formState.errors.total.message}</p>
             )}
           </div>
+
+          <Separator className="my-4" />
           
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label className="flex items-center gap-2 text-sm font-medium">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              Assign Employee (Optional)
+              <Users className="h-4 w-4 text-primary" />
+              Assign Employee <span className="text-destructive">*</span>
             </Label>
             <Controller
               name="assigned_employee_id"
               control={form.control}
-              render={({ field }) => (
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant={!field.value ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => field.onChange(undefined)}
-                    disabled={isSaving || loadingEmployees}
-                    className={!field.value ? "bg-gray-300 hover:bg-gray-400 text-gray-800" : ""}
-                  >
-                    No employee
-                  </Button>
-                  {employees.map((emp) => (
-                    <Button
-                      key={emp.id}
-                      type="button"
-                      variant={field.value === emp.id ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => field.onChange(emp.id)}
-                      disabled={isSaving || loadingEmployees}
-                      className={field.value === emp.id ? "bg-primary hover:bg-primary/90" : ""}
-                    >
-                      {emp.first_name || ''} {emp.last_name || ''}
-                    </Button>
-                  ))}
-                </div>
-              )}
+              render={({ field }) => {
+                const employee1 = employees[0];
+                const employee2 = employees[1];
+                const isEmployee1 = field.value === employee1?.id;
+                const isEmployee2 = field.value === employee2?.id;
+                const isBoth = field.value === 'BOTH';
+                
+                return (
+                  <div className="grid grid-cols-3 gap-2">
+                    {employee1 && (
+                      <Button
+                        type="button"
+                        variant={isEmployee1 ? "default" : "outline"}
+                        size="lg"
+                        onClick={() => field.onChange(employee1.id)}
+                        disabled={isSaving || loadingEmployees}
+                        className={cn(
+                          "h-12 font-semibold transition-all",
+                          isEmployee1 
+                            ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-md" 
+                            : "hover:border-primary hover:text-primary"
+                        )}
+                      >
+                        Employee 1
+                      </Button>
+                    )}
+                    {employee2 && (
+                      <Button
+                        type="button"
+                        variant={isEmployee2 ? "default" : "outline"}
+                        size="lg"
+                        onClick={() => field.onChange(employee2.id)}
+                        disabled={isSaving || loadingEmployees}
+                        className={cn(
+                          "h-12 font-semibold transition-all",
+                          isEmployee2 
+                            ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-md" 
+                            : "hover:border-primary hover:text-primary"
+                        )}
+                      >
+                        Employee 2
+                      </Button>
+                    )}
+                    {employee1 && employee2 && (
+                      <Button
+                        type="button"
+                        variant={isBoth ? "default" : "outline"}
+                        size="lg"
+                        onClick={() => field.onChange('BOTH')}
+                        disabled={isSaving || loadingEmployees}
+                        className={cn(
+                          "h-12 font-semibold transition-all",
+                          isBoth 
+                            ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-md" 
+                            : "hover:border-primary hover:text-primary"
+                        )}
+                      >
+                        BOTH
+                      </Button>
+                    )}
+                  </div>
+                );
+              }}
             />
+            {form.formState.errors.assigned_employee_id && (
+              <p className="text-xs text-destructive pt-1">{form.formState.errors.assigned_employee_id.message}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Select how the load will be assigned. "BOTH" divides the load equally between both employees.
+            </p>
           </div>
 
-          <div className="space-y-2 text-center">
-            <Label>Payment Status</Label>
-            <div className="flex justify-center gap-2">
+          <Separator className="my-4" />
+
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Payment Status <span className="text-destructive">*</span></Label>
+            <div className="grid grid-cols-2 gap-3">
                 <Button
                     type="button"
                     onClick={() => form.setValue('isPaid', true)}
                     className={cn(
-                        "w-24",
+                        "h-12 font-semibold transition-all",
                         isPaid === true
-                        ? 'bg-green-500 hover:bg-green-600'
-                        : 'bg-gray-300 hover:bg-gray-400 text-gray-800'
+                        ? 'bg-green-600 hover:bg-green-700 text-white shadow-md'
+                        : 'bg-muted hover:bg-muted/80 text-muted-foreground'
                     )}
                     disabled={isSaving}
                 >
@@ -317,11 +371,11 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
                 <Button
                     type="button"
                     onClick={() => form.setValue('isPaid', false)}
-                     className={cn(
-                        "w-24",
+                    className={cn(
+                        "h-12 font-semibold transition-all",
                         isPaid === false
-                        ? 'bg-red-500 hover:bg-red-600'
-                        : 'bg-gray-300 hover:bg-gray-400 text-gray-800'
+                        ? 'bg-red-600 hover:bg-red-700 text-white shadow-md'
+                        : 'bg-muted hover:bg-muted/80 text-muted-foreground'
                     )}
                     disabled={isSaving}
                 >
@@ -331,11 +385,21 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
           </div>
 
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => { form.reset(); onClose(); }} disabled={isSaving}>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => { form.reset(); onClose(); }} 
+              disabled={isSaving}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSaving || isPaid === undefined || !!form.formState.errors.weight}>
+            <Button 
+              type="submit" 
+              disabled={isSaving || isPaid === undefined || !!form.formState.errors.weight || !form.watch('assigned_employee_id')}
+              className="w-full sm:w-auto"
+            >
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Add Order
             </Button>
