@@ -141,7 +141,19 @@ export default function PrivacyPolicyPage() {
                       </p>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground mb-1">5.3 Vercel</h3>
+                      <h3 className="font-semibold text-foreground mb-1">5.3 Google AdSense</h3>
+                      <p className="leading-relaxed">
+                        We use Google AdSense to display advertisements on our website. Google AdSense uses cookies and similar technologies to serve ads based on your prior visits to our website or other websites. This helps us provide free content to our users. You can opt out of personalized advertising by visiting{' '}
+                        <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          Google's Ads Settings
+                        </a>.
+                        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline ml-1">
+                          View Google Privacy Policy
+                        </a>
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">5.4 Vercel</h3>
                       <p className="leading-relaxed">
                         Our website is hosted on Vercel. Vercel may collect technical information about your visit.
                         <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline ml-1">

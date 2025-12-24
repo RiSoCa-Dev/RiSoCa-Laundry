@@ -34,6 +34,19 @@ import { useToast } from '@/hooks/use-toast';
 
 const SALARY_PER_LOAD = 30;
 
+// Filter orders by status - only count orders that are ready for salary calculation
+// Orders must be: "Ready for Pick Up", "Out for Delivery", "Delivered", "Success", or "Washing" (and beyond)
+// Orders that are not in these statuses will be moved to the next day
+const ELIGIBLE_STATUSES = [
+  'Ready for Pick Up',
+  'Out for Delivery',
+  'Delivered',
+  'Success',
+  'Washing',
+  'Drying',
+  'Folding',
+];
+
 type DailySalary = {
     date: Date;
     orders: Order[];
@@ -104,9 +117,48 @@ export function EmployeeSalary() {
   useEffect(() => {
     fetchOrders();
     fetchEmployees();
+    // Fetch all existing daily salary payments from database on initial load
+    fetchAllDailyPayments();
   }, []);
 
-  // Fetch all daily payments when orders are loaded and auto-save calculated salaries
+  // Fetch all daily salary payments to ensure existing records are loaded from database
+  const fetchAllDailyPayments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('daily_salary_payments')
+        .select('*')
+        .order('date', { ascending: false })
+        .limit(1000); // Limit to recent records
+
+      if (error) {
+        console.error("Failed to load all daily payments", error);
+        return;
+      }
+
+      // Group payments by date
+      const paymentsByDate: Record<string, DailyPaymentStatus> = {};
+      (data || []).forEach((payment: any) => {
+        const dateStr = payment.date;
+        if (!paymentsByDate[dateStr]) {
+          paymentsByDate[dateStr] = {};
+        }
+        paymentsByDate[dateStr][payment.employee_id] = {
+          is_paid: payment.is_paid,
+          amount: payment.amount,
+        };
+      });
+
+      setDailyPayments(prev => ({
+        ...prev,
+        ...paymentsByDate,
+      }));
+    } catch (error) {
+      console.error('Error fetching all daily payments', error);
+    }
+  };
+
+  // Auto-save calculated salaries when orders and employees are loaded
+  // This runs after fetchAllDailyPayments has loaded existing records
   useEffect(() => {
     if (orders.length === 0 || employees.length === 0) return;
     
@@ -117,14 +169,9 @@ export function EmployeeSalary() {
       uniqueDates.add(dateKey);
     });
     
-    // Fetch existing payments for all dates first
-    const fetchPromises = Array.from(uniqueDates).map(dateStr => fetchDailyPayments(dateStr));
-    Promise.all(fetchPromises).then(() => {
-      // After fetching, auto-save calculated salaries for each day
-      autoSaveDailySalaries(Array.from(uniqueDates), orders, employees);
-    }).catch(error => {
-      console.error('Error fetching daily payments:', error);
-    });
+    // Auto-save calculated salaries for dates with orders
+    // This will only create new records if they don't exist (existing records are preserved)
+    autoSaveDailySalaries(Array.from(uniqueDates), orders, employees);
   }, [orders, employees]);
 
   // Auto-save calculated daily salaries to database
@@ -139,9 +186,10 @@ export function EmployeeSalary() {
     const savePromises: Promise<void>[] = [];
 
     dateStrings.forEach(dateStr => {
+      // Filter orders by status - only count eligible orders
       const dayOrders = currentOrders.filter(order => {
         const orderDateKey = format(startOfDay(new Date(order.orderDate)), 'yyyy-MM-dd');
-        return orderDateKey === dateStr;
+        return orderDateKey === dateStr && ELIGIBLE_STATUSES.includes(order.status);
       });
 
       currentEmployees.forEach(emp => {
@@ -320,9 +368,8 @@ export function EmployeeSalary() {
     }
   };
 
-  // Count ALL orders for salary calculation - no status filter needed
-  // Payment is daily and all loads are paid immediately
   const completedOrdersByDate = orders
+    .filter(order => ELIGIBLE_STATUSES.includes(order.status))
     .reduce((acc, order) => {
         const dateStr = startOfDay(new Date(order.orderDate)).toISOString();
         if (!acc[dateStr]) {
@@ -341,13 +388,13 @@ export function EmployeeSalary() {
         const internalOrderBonus = orders
           .filter(o => o.orderType === 'internal' && o.assignedEmployeeId)
           .length * 30;
-        const totalSalary = baseSalary + internalOrderBonus;
+        const calculatedTotalSalary = baseSalary + internalOrderBonus;
         
         return {
             date: new Date(dateStr),
             orders: orders,
             totalLoads: totalLoads,
-            totalSalary: totalSalary,
+            totalSalary: calculatedTotalSalary, // This will be overridden with actual payment amounts in display
         };
     })
     .sort((a, b) => b.date.getTime() - a.date.getTime());
@@ -524,6 +571,55 @@ export function EmployeeSalary() {
     }
   };
 
+  // Helper function to calculate actual total salary from payment records (adjusted amounts)
+  const calculateActualTotalSalary = (date: Date, dayOrders: Order[]) => {
+    const dateKey = format(date, 'yyyy-MM-dd');
+    let actualTotal = 0;
+    
+    employees.forEach(emp => {
+      const payment = dailyPayments[dateKey]?.[emp.id];
+      if (payment) {
+        // Use adjusted amount from database
+        actualTotal += payment.amount;
+      } else {
+        // If no payment record exists, calculate it
+        const myraEmployee = employees.find(e => 
+          e.first_name?.toUpperCase() === 'MYRA' || 
+          e.first_name?.toUpperCase() === 'MYRA GAMMAL'
+        );
+        const isMyra = myraEmployee?.id === emp.id;
+        
+        const customerOrdersForEmployee = dayOrders.filter(
+          o => o.orderType !== 'internal' && o.assignedEmployeeId === emp.id
+        );
+        
+        const bothOrders = employees.length === 2
+          ? dayOrders.filter(o => o.orderType !== 'internal' && !o.assignedEmployeeId)
+          : [];
+        const bothLoadsForEmployee = bothOrders.length > 0 
+          ? bothOrders.reduce((sum, o) => sum + o.load, 0) / employees.length
+          : 0;
+        
+        const unassignedCustomerOrders = isMyra && employees.length === 1
+          ? dayOrders.filter(o => o.orderType !== 'internal' && !o.assignedEmployeeId)
+          : [];
+        
+        const allCustomerOrdersForEmployee = [...customerOrdersForEmployee, ...unassignedCustomerOrders];
+        const customerLoadsForEmployee = allCustomerOrdersForEmployee.reduce((sum, o) => sum + o.load, 0) + bothLoadsForEmployee;
+        const customerSalary = customerLoadsForEmployee * SALARY_PER_LOAD;
+        
+        const internalOrdersForEmployee = dayOrders.filter(
+          o => o.orderType === 'internal' && o.assignedEmployeeId === emp.id
+        );
+        const internalBonus = internalOrdersForEmployee.length * 30;
+        
+        actualTotal += customerSalary + internalBonus;
+      }
+    });
+    
+    return actualTotal;
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="p-4 sm:p-6">
@@ -532,6 +628,7 @@ export function EmployeeSalary() {
             <CardTitle>Daily Salary Calculation</CardTitle>
             <CardDescription>
               Salary is calculated at ₱{SALARY_PER_LOAD} per load assigned to each employee. 
+              Only orders with status "Ready for Pick Up", "Out for Delivery", "Delivered", "Success", or "Washing" (and beyond) are counted. 
               Old unassigned orders are automatically counted for MYRA (the original employee).
             </CardDescription>
           </div>
@@ -637,7 +734,7 @@ export function EmployeeSalary() {
                         </div>
                         <div className="flex gap-4 text-sm text-right">
                            <span>Loads: <span className="font-bold">{totalLoads}</span></span>
-                           <span className="text-primary">Salary: <span className="font-bold">₱{totalSalary.toFixed(2)}</span></span>
+                           <span className="text-primary">Salary: <span className="font-bold">₱{calculateActualTotalSalary(date, orders).toFixed(2)}</span></span>
                         </div>
                     </div>
                 </AccordionTrigger>
@@ -1003,7 +1100,7 @@ export function EmployeeSalary() {
                             <TableRow>
                                 <TableCell colSpan={4} className="font-bold text-xs">Total</TableCell>
                                 <TableCell className="text-center font-bold text-xs">{totalLoads}</TableCell>
-                                <TableCell className="text-right font-bold text-xs">₱{totalSalary.toFixed(2)}</TableCell>
+                                <TableCell className="text-right font-bold text-xs">₱{calculateActualTotalSalary(date, orders).toFixed(2)}</TableCell>
                             </TableRow>
                         </TableFooter>
                     </Table>
