@@ -507,15 +507,26 @@ export function EmployeeSalary() {
                              o => o.orderType !== 'internal' && o.assignedEmployeeId === emp.id
                            );
                            
-                           // For MYRA: also include unassigned customer orders (old records)
-                           const unassignedCustomerOrders = isMyra 
+                           // Orders assigned to BOTH (null assigned_employee_id) - split between both employees
+                           const bothOrders = employees.length === 2
+                             ? orders.filter(
+                                 o => o.orderType !== 'internal' && !o.assignedEmployeeId
+                               )
+                             : [];
+                           const bothLoadsForEmployee = bothOrders.length > 0 
+                             ? bothOrders.reduce((sum, o) => sum + o.load, 0) / employees.length
+                             : 0;
+                           
+                           // For MYRA: also include old unassigned customer orders (before BOTH feature)
+                           // Only if there's only 1 employee or if it's an old order pattern
+                           const unassignedCustomerOrders = isMyra && employees.length === 1
                              ? orders.filter(
                                  o => o.orderType !== 'internal' && !o.assignedEmployeeId
                                )
                              : [];
                            
                            const allCustomerOrdersForEmployee = [...customerOrdersForEmployee, ...unassignedCustomerOrders];
-                           const customerLoadsForEmployee = allCustomerOrdersForEmployee.reduce((sum, o) => sum + o.load, 0);
+                           const customerLoadsForEmployee = allCustomerOrdersForEmployee.reduce((sum, o) => sum + o.load, 0) + bothLoadsForEmployee;
                            const customerSalary = customerLoadsForEmployee * SALARY_PER_LOAD;
                            
                            // Bonus: +30 for each internal order assigned to this employee

@@ -19,13 +19,6 @@ import { Loader2, Layers, Users } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { supabase } from '@/lib/supabase-client';
 
 const manualOrderSchema = z.object({
@@ -37,7 +30,7 @@ const manualOrderSchema = z.object({
   ),
   total: z.coerce.number().min(0, 'Price must be 0 or greater.'),
   isPaid: z.boolean().optional(),
-  assigned_employee_id: z.string().optional(),
+  assigned_employee_id: z.string().min(1, 'Please select an employee assignment.'),
 });
 
 type ManualOrderFormValues = z.infer<typeof manualOrderSchema>;
@@ -67,7 +60,7 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
       weight: undefined,
       total: undefined,
       isPaid: undefined,
-      assigned_employee_id: undefined,
+      assigned_employee_id: '',
     },
     mode: 'onChange',
   });
@@ -158,7 +151,7 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
       distance: 0,
       orderDate: new Date(),
       statusHistory: [{ status: initialStatus, timestamp: new Date() }],
-      assignedEmployeeId: data.assigned_employee_id || null,
+      assignedEmployeeId: data.assigned_employee_id === 'BOTH' ? null : (data.assigned_employee_id || null),
     };
     await onAddOrder(newOrder);
     setIsSaving(false);
@@ -276,23 +269,31 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
               name="assigned_employee_id"
               control={form.control}
               render={({ field }) => (
-                <Select
-                  value={field.value || 'none'}
-                  onValueChange={(value) => field.onChange(value === 'none' ? undefined : value)}
-                  disabled={isSaving || loadingEmployees}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Employee (Optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No employee</SelectItem>
-                    {employees.map((emp) => (
-                      <SelectItem key={emp.id} value={emp.id}>
-                        {emp.first_name || ''} {emp.last_name || ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant={!field.value ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => field.onChange(undefined)}
+                    disabled={isSaving || loadingEmployees}
+                    className={!field.value ? "bg-gray-300 hover:bg-gray-400 text-gray-800" : ""}
+                  >
+                    No employee
+                  </Button>
+                  {employees.map((emp) => (
+                    <Button
+                      key={emp.id}
+                      type="button"
+                      variant={field.value === emp.id ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => field.onChange(emp.id)}
+                      disabled={isSaving || loadingEmployees}
+                      className={field.value === emp.id ? "bg-primary hover:bg-primary/90" : ""}
+                    >
+                      {emp.first_name || ''} {emp.last_name || ''}
+                    </Button>
+                  ))}
+                </div>
               )}
             />
           </div>
