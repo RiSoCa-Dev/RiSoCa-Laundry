@@ -92,75 +92,59 @@ export function StatusDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Update Order Status</DialogTitle>
-          <DialogDescription className="text-xs sm:text-sm">
-            Order: {orderId}
+      <DialogContent className="w-[95vw] max-w-[500px]">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-base sm:text-lg">Update Status</DialogTitle>
+          <DialogDescription className="text-xs">
+            {orderId} • Current: <span className={cn("font-semibold px-2 py-0.5 rounded text-white text-xs", getStatusColor(currentStatus))}>{currentStatus}</span>
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          {/* Current Status */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Current Status</label>
-            <div className="flex items-center justify-center p-3 bg-muted rounded-md">
-              <span className={cn(
-                "text-xs sm:text-sm font-semibold px-3 py-1.5 rounded text-white whitespace-nowrap",
-                getStatusColor(currentStatus)
-              )}>
-                {currentStatus}
-              </span>
-            </div>
-          </div>
-
+        <div className="space-y-3 py-2">
           {/* Status Options */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Select New Status</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[50vh] sm:max-h-[300px] overflow-y-auto">
-              {statusOptions.map((status) => (
-                <Button
-                  key={status}
-                  type="button"
-                  variant={selectedStatus === status ? "default" : "outline"}
-                  onClick={() => setSelectedStatus(status)}
-                  disabled={isProcessing || status === currentStatus}
-                  className={cn(
-                    "h-auto py-3 px-4 font-semibold transition-all text-sm sm:text-base",
-                    selectedStatus === status 
-                      ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-md" 
-                      : status === currentStatus
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:border-primary hover:text-primary"
-                  )}
-                >
-                  {status}
-                </Button>
-              ))}
-            </div>
+          <div className="grid grid-cols-2 gap-2 max-h-[50vh] overflow-y-auto">
+            {statusOptions.map((status) => (
+              <Button
+                key={status}
+                type="button"
+                variant={selectedStatus === status ? "default" : "outline"}
+                onClick={() => setSelectedStatus(status)}
+                disabled={isProcessing || status === currentStatus}
+                className={cn(
+                  "h-9 py-1.5 px-3 text-xs font-medium transition-all",
+                  selectedStatus === status 
+                    ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-md" 
+                    : status === currentStatus
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:border-primary hover:text-primary"
+                )}
+              >
+                {status}
+              </Button>
+            ))}
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+          <div className="flex gap-2 pt-1">
             <Button
               variant="outline"
               onClick={onClose}
               disabled={isProcessing}
-              className="flex-1 h-11 sm:h-10"
+              className="flex-1 h-9 text-sm"
             >
               Cancel
             </Button>
             <Button
               onClick={handleConfirm}
               disabled={isProcessing || !selectedStatus || selectedStatus === currentStatus}
-              className="flex-1 h-11 sm:h-10"
+              className="flex-1 h-9 text-sm"
             >
               {isProcessing ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
                   Updating...
                 </>
               ) : (
-                'Update Status'
+                'Update'
               )}
             </Button>
           </div>
