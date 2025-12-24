@@ -749,14 +749,18 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                         className={cn(
                                             getStatusColor(workingOrder.status),
                                             "hover:" + getStatusColor(workingOrder.status),
-                                            "text-white text-xs font-semibold shadow-sm px-3 py-1.5 cursor-pointer"
+                                            "text-white text-xs font-semibold shadow-sm px-3 py-1.5 cursor-pointer hover:opacity-90 transition-opacity"
                                         )}
-                                        onClick={() => setIsStatusDialogOpen(true)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsStatusDialogOpen(true);
+                                        }}
                                         role="button"
                                         tabIndex={0}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' || e.key === ' ') {
                                                 e.preventDefault();
+                                                e.stopPropagation();
                                                 setIsStatusDialogOpen(true);
                                             }
                                         }}
