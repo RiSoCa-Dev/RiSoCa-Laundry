@@ -92,11 +92,11 @@ export function StatusDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Update Order Status - {orderId}</DialogTitle>
-          <DialogDescription>
-            Select a new status for this order
+          <DialogTitle className="text-lg sm:text-xl">Update Order Status</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">
+            Order: {orderId}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -105,7 +105,7 @@ export function StatusDialog({
             <label className="text-sm font-medium">Current Status</label>
             <div className="flex items-center justify-center p-3 bg-muted rounded-md">
               <span className={cn(
-                "text-sm font-semibold px-3 py-1.5 rounded text-white",
+                "text-xs sm:text-sm font-semibold px-3 py-1.5 rounded text-white whitespace-nowrap",
                 getStatusColor(currentStatus)
               )}>
                 {currentStatus}
@@ -116,7 +116,7 @@ export function StatusDialog({
           {/* Status Options */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Select New Status</label>
-            <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[50vh] sm:max-h-[300px] overflow-y-auto">
               {statusOptions.map((status) => (
                 <Button
                   key={status}
@@ -125,7 +125,7 @@ export function StatusDialog({
                   onClick={() => setSelectedStatus(status)}
                   disabled={isProcessing || status === currentStatus}
                   className={cn(
-                    "h-auto py-3 font-semibold transition-all",
+                    "h-auto py-3 px-4 font-semibold transition-all text-sm sm:text-base",
                     selectedStatus === status 
                       ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-md" 
                       : status === currentStatus
@@ -140,19 +140,19 @@ export function StatusDialog({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-2 pt-2">
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
             <Button
               variant="outline"
               onClick={onClose}
               disabled={isProcessing}
-              className="flex-1"
+              className="flex-1 h-11 sm:h-10"
             >
               Cancel
             </Button>
             <Button
               onClick={handleConfirm}
               disabled={isProcessing || !selectedStatus || selectedStatus === currentStatus}
-              className="flex-1"
+              className="flex-1 h-11 sm:h-10"
             >
               {isProcessing ? (
                 <>
