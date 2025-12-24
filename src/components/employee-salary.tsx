@@ -63,6 +63,9 @@ export function EmployeeSalary() {
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [dailyPayments, setDailyPayments] = useState<Record<string, DailyPaymentStatus>>({});
   const [updatingPayment, setUpdatingPayment] = useState<string | null>(null);
+  const [editingPaymentAmount, setEditingPaymentAmount] = useState<string | null>(null);
+  const [editingPaymentValue, setEditingPaymentValue] = useState<string>('');
+  const [assigningOldOrders, setAssigningOldOrders] = useState(false);
   const { toast } = useToast();
 
   const fetchOrders = async () => {
@@ -326,6 +329,70 @@ export function EmployeeSalary() {
     }
   };
 
+  const handleEditPaymentAmount = (employeeId: string, date: Date, currentAmount: number) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const paymentKey = `${employeeId}-${dateStr}`;
+    setEditingPaymentAmount(paymentKey);
+    setEditingPaymentValue(currentAmount.toFixed(2));
+  };
+
+  const handleCancelEditPaymentAmount = () => {
+    setEditingPaymentAmount(null);
+    setEditingPaymentValue('');
+  };
+
+  const handleSavePaymentAmount = async (employeeId: string, date: Date, currentStatus: boolean) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const paymentKey = `${employeeId}-${dateStr}`;
+    const amount = parseFloat(editingPaymentValue);
+
+    if (isNaN(amount) || amount < 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid Amount',
+        description: 'Please enter a valid positive number.',
+      });
+      return;
+    }
+
+    setUpdatingPayment(paymentKey);
+
+    try {
+      const { error } = await supabase
+        .from('daily_salary_payments')
+        .upsert({
+          employee_id: employeeId,
+          date: dateStr,
+          amount: amount,
+          is_paid: currentStatus,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'employee_id,date',
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Amount Updated',
+        description: `Payment amount has been updated to ₱${amount.toFixed(2)}.`,
+      });
+
+      // Refresh payments for this date
+      await fetchDailyPayments(dateStr);
+      setEditingPaymentAmount(null);
+      setEditingPaymentValue('');
+    } catch (error: any) {
+      console.error('Failed to update payment amount:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Update Failed',
+        description: error.message || 'Failed to update payment amount.',
+      });
+    } finally {
+      setUpdatingPayment(null);
+    }
+  };
+
   const handleTogglePayment = async (employeeId: string, date: Date, currentStatus: boolean, amount: number) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     const paymentKey = `${employeeId}-${dateStr}`;
@@ -538,45 +605,126 @@ export function EmployeeSalary() {
                            // Total salary = only loads assigned to this employee + internal bonuses
                            const employeeSalary = customerSalary + internalBonus;
                            const paymentKey = `${emp.id}-${dateKey}`;
+                           const isEditingAmount = editingPaymentAmount === paymentKey;
+                           const currentAmount = payment?.amount ?? employeeSalary;
                            
                            return (
-                             <div key={emp.id} className="flex items-center justify-between p-3 border rounded-md bg-background">
-                               <div className="flex flex-col">
-                                 <span className="text-sm font-medium">
-                                   {emp.first_name || ''} {emp.last_name || ''}
-                                 </span>
-                                 <div className="flex flex-col gap-0.5 mt-1">
-                                   <span className="text-xs text-muted-foreground">
-                                     {customerLoadsForEmployee} load{customerLoadsForEmployee !== 1 ? 's' : ''} × ₱{SALARY_PER_LOAD} = ₱{customerSalary.toFixed(2)}
-                                     {isMyra && unassignedCustomerOrders.length > 0 && (
-                                       <span className="text-orange-600 ml-1">
-                                         ({unassignedCustomerOrders.length} unassigned)
+                             <div key={emp.id} className="flex flex-col gap-2 p-3 border rounded-md bg-background">
+                               <div className="flex items-center justify-between">
+                                 <div className="flex flex-col">
+                                   <span className="text-sm font-medium">
+                                     {emp.first_name || ''} {emp.last_name || ''}
+                                   </span>
+                                   <div className="flex flex-col gap-0.5 mt-1">
+                                     <span className="text-xs text-muted-foreground">
+                                       {customerLoadsForEmployee} load{customerLoadsForEmployee !== 1 ? 's' : ''} × ₱{SALARY_PER_LOAD} = ₱{customerSalary.toFixed(2)}
+                                       {isMyra && unassignedCustomerOrders.length > 0 && (
+                                         <span className="text-orange-600 ml-1">
+                                           ({unassignedCustomerOrders.length} unassigned)
+                                         </span>
+                                       )}
+                                     </span>
+                                     {internalBonus > 0 && (
+                                       <span className="text-xs text-green-600">
+                                         + {internalOrdersForEmployee.length} internal order{internalOrdersForEmployee.length !== 1 ? 's' : ''} (₱{internalBonus.toFixed(2)})
                                        </span>
                                      )}
-                                   </span>
-                                   {internalBonus > 0 && (
-                                     <span className="text-xs text-green-600">
-                                       + {internalOrdersForEmployee.length} internal order{internalOrdersForEmployee.length !== 1 ? 's' : ''} (₱{internalBonus.toFixed(2)})
+                                     <span className="text-xs font-semibold text-primary mt-0.5">
+                                       Calculated: ₱{employeeSalary.toFixed(2)}
                                      </span>
-                                   )}
-                                   <span className="text-xs font-semibold text-primary mt-0.5">
-                                     Total: ₱{employeeSalary.toFixed(2)}
-                                   </span>
+                                   </div>
                                  </div>
                                </div>
-                               <Button
-                                 size="sm"
-                                 variant={isPaid ? "default" : "outline"}
-                                 onClick={() => handleTogglePayment(emp.id, date, isPaid, employeeSalary)}
-                                 disabled={updatingPayment === paymentKey}
-                                 className={isPaid ? "bg-green-600 hover:bg-green-700" : ""}
-                               >
-                                 {updatingPayment === paymentKey ? (
-                                   <Loader2 className="h-4 w-4 animate-spin" />
-                                 ) : (
-                                   isPaid ? 'Paid' : 'Unpaid'
-                                 )}
-                               </Button>
+                               <div className="flex items-center gap-2 pt-2 border-t">
+                                 <div className="flex-1">
+                                   {isEditingAmount ? (
+                                     <div className="flex items-center gap-2">
+                                       <span className="text-xs text-muted-foreground">Amount:</span>
+                                       <Input
+                                         type="number"
+                                         step="0.01"
+                                         min="0"
+                                         value={editingPaymentValue}
+                                         onChange={(e) => setEditingPaymentValue(e.target.value)}
+                                         className="h-8 text-xs flex-1"
+                                         placeholder="0.00"
+                                         disabled={updatingPayment === paymentKey}
+                                       />
+                                       <Button
+                                         size="sm"
+                                         variant="ghost"
+                                         className="h-8 w-8 p-0"
+                                         onClick={() => handleSavePaymentAmount(emp.id, date, isPaid)}
+                                         disabled={updatingPayment === paymentKey}
+                                       >
+                                         {updatingPayment === paymentKey ? (
+                                           <Loader2 className="h-3 w-3 animate-spin" />
+                                         ) : (
+                                           <Check className="h-3 w-3 text-green-600" />
+                                         )}
+                                       </Button>
+                                       <Button
+                                         size="sm"
+                                         variant="ghost"
+                                         className="h-8 w-8 p-0"
+                                         onClick={handleCancelEditPaymentAmount}
+                                         disabled={updatingPayment === paymentKey}
+                                       >
+                                         <X className="h-3 w-3 text-red-600" />
+                                       </Button>
+                                     </div>
+                                   ) : (
+                                     <div className="flex items-center gap-2">
+                                       <span className="text-xs text-muted-foreground">Payment:</span>
+                                       <span className="text-sm font-semibold text-primary">
+                                         ₱{currentAmount.toFixed(2)}
+                                       </span>
+                                       {currentAmount !== employeeSalary && (
+                                         <span className="text-xs text-muted-foreground">
+                                           (adjusted)
+                                         </span>
+                                       )}
+                                       <Button
+                                         size="sm"
+                                         variant="ghost"
+                                         className="h-6 w-6 p-0"
+                                         onClick={() => handleEditPaymentAmount(emp.id, date, currentAmount)}
+                                         disabled={updatingPayment === paymentKey || isPaid}
+                                         title="Edit payment amount"
+                                       >
+                                         <svg
+                                           xmlns="http://www.w3.org/2000/svg"
+                                           width="12"
+                                           height="12"
+                                           viewBox="0 0 24 24"
+                                           fill="none"
+                                           stroke="currentColor"
+                                           strokeWidth="2"
+                                           strokeLinecap="round"
+                                           strokeLinejoin="round"
+                                           className="text-muted-foreground hover:text-foreground"
+                                         >
+                                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                         </svg>
+                                       </Button>
+                                     </div>
+                                   )}
+                                 </div>
+                                 <Button
+                                   size="sm"
+                                   variant={isPaid ? "default" : "outline"}
+                                   onClick={() => handleTogglePayment(emp.id, date, isPaid, currentAmount)}
+                                   disabled={updatingPayment === paymentKey || isEditingAmount}
+                                   className={isPaid ? "bg-green-600 hover:bg-green-700" : ""}
+                                 >
+                                   {updatingPayment === paymentKey ? (
+                                     <Loader2 className="h-4 w-4 animate-spin" />
+                                   ) : (
+                                     isPaid ? 'Paid' : 'Mark Paid'
+                                   )}
+                                 </Button>
+                               </div>
                              </div>
                            );
                          })}
