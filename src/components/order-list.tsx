@@ -724,7 +724,7 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                     )}
                                 </div>
                             </div>
-                            <div className="space-y-1.5">
+                            <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
                                 <Label className="flex items-center gap-2">
                                     <CheckCircle2 className="h-3 w-3 text-muted-foreground" />
                                     Status
@@ -752,8 +752,17 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                             "text-white text-xs font-semibold shadow-sm px-3 py-1.5 cursor-pointer hover:opacity-90 transition-opacity"
                                         )}
                                         onClick={(e) => {
+                                            e.preventDefault();
                                             e.stopPropagation();
                                             setIsStatusDialogOpen(true);
+                                        }}
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        onTouchStart={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
                                         }}
                                         role="button"
                                         tabIndex={0}
