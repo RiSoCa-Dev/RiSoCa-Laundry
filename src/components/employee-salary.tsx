@@ -927,17 +927,17 @@ export function EmployeeSalary() {
                                  </div>
                                </div>
                                <div className="flex items-center gap-2 pt-2 border-t">
-                                 <div className="flex-1">
+                                 <div className="flex-1 min-w-0">
                                    {isEditingAmount ? (
                                      <div className="flex items-center gap-2">
-                                       <span className="text-xs text-muted-foreground">Amount:</span>
+                                       <span className="text-xs text-muted-foreground whitespace-nowrap">Amount:</span>
                                        <Input
                                          type="number"
                                          step="0.01"
                                          min="0"
                                          value={editingPaymentValue}
                                          onChange={(e) => setEditingPaymentValue(e.target.value)}
-                                         className="h-8 text-xs flex-1"
+                                         className="h-8 text-xs flex-1 min-w-[120px] sm:min-w-[150px]"
                                          placeholder="0.00"
                                          disabled={updatingPayment === paymentKey}
                                        />
@@ -966,7 +966,7 @@ export function EmployeeSalary() {
                                      </div>
                                    ) : (
                                      <div className="flex items-center gap-2">
-                                       <span className="text-xs text-muted-foreground">Payment:</span>
+                                       <span className="text-xs text-muted-foreground whitespace-nowrap">Payment:</span>
                                        <span className="text-sm font-semibold text-primary">
                                          ₱{currentAmount.toFixed(2)}
                                        </span>
