@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Gift, Sparkles, Clock } from 'lucide-react';
+import { Gift, Sparkles, Clock, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePromo } from '@/contexts/promo-context';
 import type { Promo } from '@/lib/api/promos';
+import { Button } from '@/components/ui/button';
 
 function CountdownTimer({ promo }: { promo: Promo }) {
   const [timeLeft, setTimeLeft] = useState<{
@@ -89,7 +90,14 @@ function CountdownTimer({ promo }: { promo: Promo }) {
 }
 
 export function PromoBanner() {
-  const { promo, loading } = usePromo();
+  const { promo, loading, refreshPromo } = usePromo();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refreshPromo();
+    setIsRefreshing(false);
+  };
 
   // Don't render if loading or no active promo
   if (loading || !promo) {
@@ -189,9 +197,24 @@ export function PromoBanner() {
             </span>
           </div>
 
-          {/* Right side sparkle */}
-          <div className="flex-shrink-0 animate-pulse">
-            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
+          {/* Right side - Refresh button and sparkle */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isRefreshing || loading}
+              className="h-6 w-6 sm:h-7 sm:w-7 p-0 hover:bg-yellow-200/50 rounded-full"
+              title="Refresh promo"
+            >
+              <RefreshCw className={cn(
+                "h-3 w-3 sm:h-4 sm:w-4 text-yellow-700",
+                isRefreshing && "animate-spin"
+              )} />
+            </Button>
+            <div className="animate-pulse">
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
+            </div>
           </div>
         </div>
       </div>

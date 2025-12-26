@@ -6,35 +6,38 @@ import { getActivePromo, type Promo } from '@/lib/api/promos';
 interface PromoContextType {
   promo: Promo | null;
   loading: boolean;
+  refreshPromo: () => Promise<void>;
 }
 
 const PromoContext = createContext<PromoContextType>({
   promo: null,
   loading: true,
+  refreshPromo: async () => {},
 });
 
 export function PromoProvider({ children }: { children: ReactNode }) {
   const [promo, setPromo] = useState<Promo | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchPromo = async () => {
+  const fetchPromo = async () => {
+    setLoading(true);
+    try {
       const { data } = await getActivePromo();
       setPromo(data);
+    } catch (error) {
+      console.error('Error fetching promo:', error);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
-    // Initial fetch
+  useEffect(() => {
+    // Initial fetch only - no automatic refresh
     fetchPromo();
-    
-    // Refresh every 10 minutes (600000ms)
-    const interval = setInterval(fetchPromo, 600000);
-
-    return () => clearInterval(interval);
   }, []);
 
   return (
-    <PromoContext.Provider value={{ promo, loading }}>
+    <PromoContext.Provider value={{ promo, loading, refreshPromo: fetchPromo }}>
       {children}
     </PromoContext.Provider>
   );
