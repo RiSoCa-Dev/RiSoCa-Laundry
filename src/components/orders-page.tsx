@@ -89,7 +89,9 @@ export function OrdersPage() {
       branchId: o.branch_id ?? null,
       orderType: o.order_type || 'customer',
       assignedEmployeeId: o.assigned_employee_id ?? null, // For backward compatibility
-      assignedEmployeeIds: Array.isArray(o.assigned_employee_ids) ? o.assigned_employee_ids : (o.assigned_employee_ids ? [o.assigned_employee_ids] : undefined),
+      assignedEmployeeIds: Array.isArray(o.assigned_employee_ids) && o.assigned_employee_ids.length > 0 
+        ? o.assigned_employee_ids 
+        : undefined,
     };
 
     // CRITICAL: Ensure balance is never undefined

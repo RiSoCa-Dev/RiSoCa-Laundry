@@ -255,6 +255,22 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                     </Select>
                 ) : (
                     (() => {
+                        // Check for multiple employees assigned
+                        if (workingOrder.assignedEmployeeIds && Array.isArray(workingOrder.assignedEmployeeIds) && workingOrder.assignedEmployeeIds.length > 0) {
+                            const assignedEmps = employees.filter(e => workingOrder.assignedEmployeeIds!.includes(e.id));
+                            if (assignedEmps.length > 0) {
+                                return (
+                                    <div className="flex flex-wrap gap-1">
+                                        {assignedEmps.map((emp) => (
+                                            <span key={emp.id} className="font-medium text-xs">
+                                                {emp.first_name || ''} {emp.last_name || ''}
+                                            </span>
+                                        ))}
+                                    </div>
+                                );
+                            }
+                        }
+                        // Check for single employee assignment (backward compatibility)
                         const assignedEmp = employees.find(e => e.id === workingOrder.assignedEmployeeId);
                         return assignedEmp ? (
                             <span className="font-medium">
@@ -707,6 +723,22 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                         </Select>
                                     ) : (
                                         (() => {
+                                            // Check for multiple employees assigned
+                                            if (workingOrder.assignedEmployeeIds && Array.isArray(workingOrder.assignedEmployeeIds) && workingOrder.assignedEmployeeIds.length > 0) {
+                                                const assignedEmps = employees.filter(e => workingOrder.assignedEmployeeIds!.includes(e.id));
+                                                if (assignedEmps.length > 0) {
+                                                    return (
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {assignedEmps.map((emp) => (
+                                                                <span key={emp.id} className="font-medium text-xs">
+                                                                    {emp.first_name || ''} {emp.last_name || ''}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    );
+                                                }
+                                            }
+                                            // Check for single employee assignment (backward compatibility)
                                             const assignedEmp = employees.find(e => e.id === workingOrder.assignedEmployeeId);
                                             return assignedEmp ? (
                                                 <span className="font-medium">
