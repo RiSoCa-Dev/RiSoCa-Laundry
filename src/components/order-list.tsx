@@ -129,6 +129,7 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
     const [employees, setEmployees] = useState<Employee[]>([]);
+    const [loadingEmployees, setLoadingEmployees] = useState(true);
 
     // SAFETY CHECK: If balance is undefined but order is not paid, set balance to total
     // This handles cases where the mapping function fails or old code is running
@@ -149,6 +150,54 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
     useEffect(() => {
         setEditableOrder(safeOrder);
     }, [order.id, order.balance, order.isPaid, order.total, order.assignedEmployeeId, order.assignedEmployeeIds]);
+
+    // Fetch employees for employee display
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            setLoadingEmployees(true);
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('id, first_name, last_name')
+                    .eq('role', 'employee')
+                    .order('first_name', { ascending: true });
+
+                if (error) {
+                    console.error('Error fetching employees', error);
+                    setEmployees([]);
+                    return;
+                }
+                setEmployees(data || []);
+            } catch (error) {
+                console.error('Error fetching employees', error);
+                setEmployees([]);
+            } finally {
+                setLoadingEmployees(false);
+            }
+        };
+        fetchEmployees();
+        
+        // Subscribe to profile changes to refresh employees when new ones are added
+        const channel = supabase
+            .channel('profiles-changes-row')
+            .on('postgres_changes', 
+                { 
+                    event: '*', 
+                    schema: 'public', 
+                    table: 'profiles',
+                    filter: 'role=eq.employee'
+                },
+                () => {
+                    // Refresh employees when profiles change
+                    fetchEmployees();
+                }
+            )
+            .subscribe();
+        
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
 
     const handleFieldChange = (field: keyof Order, value: string | number | boolean | null) => {
         let newOrderState = { ...editableOrder };
