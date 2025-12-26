@@ -954,7 +954,7 @@ export function NetIncomeDistribution() {
             <p className="text-xs text-muted-foreground mt-1 mb-3">
               Net Income - Bank Savings
             </p>
-            {distributionPeriod !== 'all' && distributionData.availableForDistribution > 0 && (
+            {distributionData.availableForDistribution > 0 && (
               <div className="flex flex-col gap-2 pt-2 border-t">
                 <p className="text-xs text-muted-foreground">Quick Transfer to Bank Savings:</p>
                 {showCustomTransfer ? (
@@ -1017,6 +1017,14 @@ export function NetIncomeDistribution() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
+                        if (distributionPeriod === 'all') {
+                          toast({
+                            variant: 'destructive',
+                            title: 'Select a period',
+                            description: 'Please select Monthly or Yearly period to transfer funds to bank savings.',
+                          });
+                          return;
+                        }
                         const amount = Math.min(distributionData.availableForDistribution, 1000);
                         setBankSavingsInput((bankSavings + amount).toFixed(2));
                         setEditingBankSavings(true);
@@ -1030,6 +1038,14 @@ export function NetIncomeDistribution() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
+                        if (distributionPeriod === 'all') {
+                          toast({
+                            variant: 'destructive',
+                            title: 'Select a period',
+                            description: 'Please select Monthly or Yearly period to transfer funds to bank savings.',
+                          });
+                          return;
+                        }
                         const amount = Math.min(distributionData.availableForDistribution, 5000);
                         setBankSavingsInput((bankSavings + amount).toFixed(2));
                         setEditingBankSavings(true);
@@ -1043,6 +1059,14 @@ export function NetIncomeDistribution() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
+                        if (distributionPeriod === 'all') {
+                          toast({
+                            variant: 'destructive',
+                            title: 'Select a period',
+                            description: 'Please select Monthly or Yearly period to transfer funds to bank savings.',
+                          });
+                          return;
+                        }
                         const amount = Math.min(distributionData.availableForDistribution, 10000);
                         setBankSavingsInput((bankSavings + amount).toFixed(2));
                         setEditingBankSavings(true);
@@ -1056,6 +1080,14 @@ export function NetIncomeDistribution() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
+                        if (distributionPeriod === 'all') {
+                          toast({
+                            variant: 'destructive',
+                            title: 'Select a period',
+                            description: 'Please select Monthly or Yearly period to transfer funds to bank savings.',
+                          });
+                          return;
+                        }
                         setBankSavingsInput((bankSavings + distributionData.availableForDistribution).toFixed(2));
                         setEditingBankSavings(true);
                       }}
@@ -1067,13 +1099,28 @@ export function NetIncomeDistribution() {
                     <Button
                       size="sm"
                       variant="default"
-                      onClick={() => setShowCustomTransfer(true)}
+                      onClick={() => {
+                        if (distributionPeriod === 'all') {
+                          toast({
+                            variant: 'destructive',
+                            title: 'Select a period',
+                            description: 'Please select Monthly or Yearly period to transfer funds to bank savings.',
+                          });
+                        } else {
+                          setShowCustomTransfer(true);
+                        }
+                      }}
                       className="h-8 text-xs"
                       disabled={savingBankSavings}
                     >
                       Custom Amount
                     </Button>
                   </div>
+                )}
+                {distributionPeriod === 'all' && (
+                  <p className="text-xs text-orange-600 mt-1">
+                    Select Monthly or Yearly period to enable transfers
+                  </p>
                 )}
               </div>
             )}
