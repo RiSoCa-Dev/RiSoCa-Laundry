@@ -31,7 +31,6 @@ import type { Order } from '@/components/order-list';
 import { format, startOfDay } from 'date-fns';
 import { supabase } from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
-import { fetchEmployeesWithCache, clearEmployeeCache } from '@/lib/employee-cache';
 
 const SALARY_PER_LOAD = 30;
 
@@ -133,8 +132,7 @@ export function EmployeeSalary() {
             filter: 'role=eq.employee'
           },
           () => {
-            // Clear cache and refresh employees when profiles change
-            clearEmployeeCache();
+            // Refresh employees when profiles change
             fetchEmployees();
           }
       )
@@ -313,8 +311,18 @@ export function EmployeeSalary() {
 
   const fetchEmployees = async () => {
     try {
-      const employees = await fetchEmployeesWithCache();
-      setEmployees(employees);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .eq('role', 'employee')
+        .order('first_name', { ascending: true });
+
+      if (error) {
+        console.error("Failed to load employees", error);
+        setEmployees([]);
+        return;
+      }
+      setEmployees(data || []);
     } catch (error) {
       console.error('Error fetching employees', error);
       setEmployees([]);

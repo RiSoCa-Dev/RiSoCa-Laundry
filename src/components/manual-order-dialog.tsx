@@ -20,7 +20,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase-client';
-import { fetchEmployeesWithCache, clearEmployeeCache, type Employee } from '@/lib/employee-cache';
 
 const manualOrderSchema = z.object({
   customerName: z.string().min(2, 'Name is required.'),
@@ -42,6 +41,11 @@ type ManualOrderDialogProps = {
   onAddOrder: (order: Omit<Order, 'id' | 'userId'>) => Promise<void>;
 };
 
+type Employee = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+};
 
 export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
@@ -101,8 +105,18 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
   const fetchEmployees = async () => {
     setLoadingEmployees(true);
     try {
-      const employees = await fetchEmployeesWithCache();
-      setEmployees(employees);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .eq('role', 'employee')
+        .order('first_name', { ascending: true });
+
+      if (error) {
+        console.error("Failed to load employees", error);
+        setEmployees([]);
+        return;
+      }
+      setEmployees(data || []);
     } catch (error) {
       console.error('Error fetching employees', error);
       setEmployees([]);

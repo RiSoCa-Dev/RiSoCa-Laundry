@@ -116,6 +116,11 @@ const getPaymentBadgeInfo = (isPaid: boolean, isPartiallyPaid: boolean) => {
     }
 }
 
+type Employee = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+};
 
 function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: OrderListProps['onUpdateOrder'] }) {
     const [isEditing, setIsEditing] = useState(false);
@@ -146,13 +151,23 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
         setEditableOrder(safeOrder);
     }, [order.id, order.balance, order.isPaid, order.total, order.assignedEmployeeId, order.assignedEmployeeIds]);
 
-    // Fetch employees for employee display with caching
+    // Fetch employees for employee display
     useEffect(() => {
         const fetchEmployees = async () => {
             setLoadingEmployees(true);
             try {
-                const employeesData = await fetchEmployeesWithCache();
-                setEmployees(employeesData);
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('id, first_name, last_name')
+                    .eq('role', 'employee')
+                    .order('first_name', { ascending: true });
+
+                if (error) {
+                    console.error('Error fetching employees', error);
+                    setEmployees([]);
+                    return;
+                }
+                setEmployees(data || []);
             } catch (error) {
                 console.error('Error fetching employees', error);
                 setEmployees([]);
@@ -173,8 +188,7 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                     filter: 'role=eq.employee'
                 },
                 () => {
-                    // Clear cache and refresh employees when profiles change
-                    clearEmployeeCache();
+                    // Refresh employees when profiles change
                     fetchEmployees();
                 }
             )
@@ -298,11 +312,6 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                             return <span className="text-muted-foreground text-xs">Loading employees...</span>;
                         }
                         
-                        // If employees haven't loaded yet, show loading
-                        if (employees.length === 0) {
-                            return <span className="text-muted-foreground text-xs">Loading...</span>;
-                        }
-                        
                         // Check for multiple employees assigned
                         if (workingOrder.assignedEmployeeIds && Array.isArray(workingOrder.assignedEmployeeIds) && workingOrder.assignedEmployeeIds.length > 0) {
                             const assignedEmps = employees.filter(e => workingOrder.assignedEmployeeIds!.includes(e.id));
@@ -317,12 +326,6 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                                     </div>
                                 );
                             }
-                            // If assignedEmployeeIds exist but no matching employees found, show IDs as fallback
-                            return (
-                                <span className="text-muted-foreground text-xs">
-                                    {workingOrder.assignedEmployeeIds.length} employee(s)
-                                </span>
-                            );
                         }
                         // Check for single employee assignment (backward compatibility)
                         if (workingOrder.assignedEmployeeId) {
@@ -334,12 +337,6 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                                     </span>
                                 );
                             }
-                            // If assignedEmployeeId exists but no matching employee found, show ID as fallback
-                            return (
-                                <span className="text-muted-foreground text-xs">
-                                    Employee assigned
-                                </span>
-                            );
                         }
                         return <span className="text-muted-foreground">Unassigned</span>;
                     })()
@@ -586,8 +583,18 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
         const fetchEmployees = async () => {
             setLoadingEmployees(true);
             try {
-                const employees = await fetchEmployeesWithCache();
-                setEmployees(employees);
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('id, first_name, last_name')
+                    .eq('role', 'employee')
+                    .order('first_name', { ascending: true });
+
+                if (error) {
+                    console.error("Failed to load employees", error);
+                    setEmployees([]);
+                    return;
+                }
+                setEmployees(data || []);
             } catch (error) {
                 console.error('Error fetching employees', error);
                 setEmployees([]);
@@ -608,8 +615,7 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                     filter: 'role=eq.employee'
                 },
                 () => {
-                    // Clear cache and refresh employees when profiles change
-                    clearEmployeeCache();
+                    // Refresh employees when profiles change
                     fetchEmployees();
                 }
             )
@@ -807,16 +813,6 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                         </Select>
                                     ) : (
                                         (() => {
-                                            // Show loading state
-                                            if (loadingEmployees) {
-                                                return <span className="text-muted-foreground text-xs">Loading employees...</span>;
-                                            }
-                                            
-                                            // If employees haven't loaded yet, show loading
-                                            if (employees.length === 0) {
-                                                return <span className="text-muted-foreground text-xs">Loading...</span>;
-                                            }
-                                            
                                             // Check for multiple employees assigned
                                             if (workingOrder.assignedEmployeeIds && Array.isArray(workingOrder.assignedEmployeeIds) && workingOrder.assignedEmployeeIds.length > 0) {
                                                 const assignedEmps = employees.filter(e => workingOrder.assignedEmployeeIds!.includes(e.id));
@@ -831,12 +827,6 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                                         </div>
                                                     );
                                                 }
-                                                // If assignedEmployeeIds exist but no matching employees found, show count as fallback
-                                                return (
-                                                    <span className="text-muted-foreground text-xs">
-                                                        {workingOrder.assignedEmployeeIds.length} employee(s)
-                                                    </span>
-                                                );
                                             }
                                             // Check for single employee assignment (backward compatibility)
                                             if (workingOrder.assignedEmployeeId) {
@@ -848,12 +838,6 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                                         </span>
                                                     );
                                                 }
-                                                // If assignedEmployeeId exists but no matching employee found, show fallback
-                                                return (
-                                                    <span className="text-muted-foreground text-xs">
-                                                        Employee assigned
-                                                    </span>
-                                                );
                                             }
                                             return <span className="text-muted-foreground">Unassigned</span>;
                                         })()

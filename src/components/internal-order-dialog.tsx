@@ -26,7 +26,6 @@ import { Loader2, Layers, Shirt } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { Separator } from './ui/separator';
 import { supabase } from '@/lib/supabase-client';
-import { fetchEmployeesWithCache, clearEmployeeCache, type Employee } from '@/lib/employee-cache';
 
 const internalOrderSchema = z.object({
   weight: z.preprocess(
@@ -38,6 +37,11 @@ const internalOrderSchema = z.object({
 
 type InternalOrderFormValues = z.infer<typeof internalOrderSchema>;
 
+type Employee = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+};
 
 type InternalOrderDialogProps = {
   isOpen: boolean;
@@ -90,11 +94,19 @@ export function InternalOrderDialog({ isOpen, onClose, onAddOrder }: InternalOrd
   const fetchEmployees = async () => {
     setLoadingEmployees(true);
     try {
-      const employees = await fetchEmployeesWithCache();
-      setEmployees(employees);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .eq('role', 'employee')
+        .order('first_name', { ascending: true });
+
+      if (error) {
+        console.error("Failed to load employees", error);
+        return;
+      }
+      setEmployees(data || []);
     } catch (error) {
       console.error('Error fetching employees', error);
-      setEmployees([]);
     } finally {
       setLoadingEmployees(false);
     }
@@ -139,7 +151,7 @@ export function InternalOrderDialog({ isOpen, onClose, onAddOrder }: InternalOrd
 
   const selectedEmployee = employees.find(emp => emp.id === assignedEmployeeId);
   const employeeName = selectedEmployee 
-    ? `${selectedEmployee.first_name || ''} ${selectedEmployee.last_name || ''}`.trim()
+    ? (selectedEmployee.first_name || '').trim()
     : null;
 
   return (
