@@ -20,6 +20,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase-client';
+import { useEmployees } from '@/hooks/use-employees';
 
 const manualOrderSchema = z.object({
   customerName: z.string().min(2, 'Name is required.'),
@@ -49,8 +50,7 @@ type Employee = {
 
 export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const { employees, loading: loadingEmployees } = useEmployees();
   
   const form = useForm<ManualOrderFormValues>({
     resolver: zodResolver(manualOrderSchema),
@@ -96,34 +96,7 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
     }
   }, [loads, form]);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchEmployees();
-    }
-  }, [isOpen]);
-
-  const fetchEmployees = async () => {
-    setLoadingEmployees(true);
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name')
-        .eq('role', 'employee')
-        .order('first_name', { ascending: true });
-
-      if (error) {
-        console.error("Failed to load employees", error);
-        setEmployees([]);
-        return;
-      }
-      setEmployees(data || []);
-    } catch (error) {
-      console.error('Error fetching employees', error);
-      setEmployees([]);
-    } finally {
-      setLoadingEmployees(false);
-    }
-  };
+  // Employees are now fetched via useEmployees hook with caching
 
   const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = parseFloat(e.target.value);

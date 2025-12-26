@@ -24,6 +24,7 @@ import { Edit, Save, X, Loader2, Package, User, Phone, Weight, Layers, DollarSig
 import { supabase } from '@/lib/supabase-client';
 import { PaymentDialog } from '@/components/payment-dialog';
 import { StatusDialog } from '@/components/status-dialog';
+import { useEmployees } from '@/hooks/use-employees';
 import {
     Accordion,
     AccordionContent,
@@ -128,8 +129,7 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
     const [editableOrder, setEditableOrder] = useState(order);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
-    const [employees, setEmployees] = useState<Employee[]>([]);
-    const [loadingEmployees, setLoadingEmployees] = useState(true);
+    const { employees, loading: loadingEmployees } = useEmployees();
 
     // SAFETY CHECK: If balance is undefined but order is not paid, set balance to total
     // This handles cases where the mapping function fails or old code is running
@@ -151,53 +151,7 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
         setEditableOrder(safeOrder);
     }, [order.id, order.balance, order.isPaid, order.total, order.assignedEmployeeId, order.assignedEmployeeIds]);
 
-    // Fetch employees for employee display
-    useEffect(() => {
-        const fetchEmployees = async () => {
-            setLoadingEmployees(true);
-            try {
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .select('id, first_name, last_name')
-                    .eq('role', 'employee')
-                    .order('first_name', { ascending: true });
-
-                if (error) {
-                    console.error('Error fetching employees', error);
-                    setEmployees([]);
-                    return;
-                }
-                setEmployees(data || []);
-            } catch (error) {
-                console.error('Error fetching employees', error);
-                setEmployees([]);
-            } finally {
-                setLoadingEmployees(false);
-            }
-        };
-        fetchEmployees();
-        
-        // Subscribe to profile changes to refresh employees when new ones are added
-        const channel = supabase
-            .channel('profiles-changes-row')
-            .on('postgres_changes', 
-                { 
-                    event: '*', 
-                    schema: 'public', 
-                    table: 'profiles',
-                    filter: 'role=eq.employee'
-                },
-                () => {
-                    // Refresh employees when profiles change
-                    fetchEmployees();
-                }
-            )
-            .subscribe();
-        
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, []);
+    // Employees are now fetched via useEmployees hook with caching
 
     const handleFieldChange = (field: keyof Order, value: string | number | boolean | null) => {
         let newOrderState = { ...editableOrder };
@@ -555,8 +509,7 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
     const [editableOrder, setEditableOrder] = useState(order);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
-    const [employees, setEmployees] = useState<Employee[]>([]);
-    const [loadingEmployees, setLoadingEmployees] = useState(true);
+    const { employees, loading: loadingEmployees } = useEmployees();
 
     // SAFETY CHECK: If balance is undefined but order is not paid, set balance to total
     // This handles cases where the mapping function fails or old code is running
@@ -578,53 +531,7 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
         setEditableOrder(safeOrder);
     }, [order.id, order.balance, order.isPaid, order.total, order.assignedEmployeeId, order.assignedEmployeeIds]);
 
-    // Fetch employees for employee selection
-    useEffect(() => {
-        const fetchEmployees = async () => {
-            setLoadingEmployees(true);
-            try {
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .select('id, first_name, last_name')
-                    .eq('role', 'employee')
-                    .order('first_name', { ascending: true });
-
-                if (error) {
-                    console.error("Failed to load employees", error);
-                    setEmployees([]);
-                    return;
-                }
-                setEmployees(data || []);
-            } catch (error) {
-                console.error('Error fetching employees', error);
-                setEmployees([]);
-            } finally {
-                setLoadingEmployees(false);
-            }
-        };
-        fetchEmployees();
-        
-        // Subscribe to profile changes to refresh employees when new ones are added
-        const channel = supabase
-            .channel('profiles-changes-card')
-            .on('postgres_changes', 
-                { 
-                    event: '*', 
-                    schema: 'public', 
-                    table: 'profiles',
-                    filter: 'role=eq.employee'
-                },
-                () => {
-                    // Refresh employees when profiles change
-                    fetchEmployees();
-                }
-            )
-            .subscribe();
-        
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, []);
+    // Employees are now fetched via useEmployees hook with caching
 
     const handleFieldChange = (field: keyof Order, value: string | number | boolean | null) => {
         let newOrderState = { ...editableOrder };

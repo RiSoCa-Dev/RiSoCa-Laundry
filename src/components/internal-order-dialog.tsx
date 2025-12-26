@@ -26,6 +26,7 @@ import { Loader2, Layers, Shirt } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { Separator } from './ui/separator';
 import { supabase } from '@/lib/supabase-client';
+import { useEmployees } from '@/hooks/use-employees';
 
 const internalOrderSchema = z.object({
   weight: z.preprocess(
@@ -51,8 +52,7 @@ type InternalOrderDialogProps = {
 
 export function InternalOrderDialog({ isOpen, onClose, onAddOrder }: InternalOrderDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const { employees, loading: loadingEmployees } = useEmployees();
   
   const form = useForm<InternalOrderFormValues>({
     resolver: zodResolver(internalOrderSchema),
@@ -85,32 +85,7 @@ export function InternalOrderDialog({ isOpen, onClose, onAddOrder }: InternalOrd
     return { loads: numLoads, distribution: dist };
   }, [watchedWeight]);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchEmployees();
-    }
-  }, [isOpen]);
-
-  const fetchEmployees = async () => {
-    setLoadingEmployees(true);
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name')
-        .eq('role', 'employee')
-        .order('first_name', { ascending: true });
-
-      if (error) {
-        console.error("Failed to load employees", error);
-        return;
-      }
-      setEmployees(data || []);
-    } catch (error) {
-      console.error('Error fetching employees', error);
-    } finally {
-      setLoadingEmployees(false);
-    }
-  };
+  // Employees are now fetched via useEmployees hook with caching
 
   const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = parseFloat(e.target.value);

@@ -31,6 +31,7 @@ import type { Order } from '@/components/order-list';
 import { format, startOfDay } from 'date-fns';
 import { supabase } from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
+import { useEmployees } from '@/hooks/use-employees';
 
 const SALARY_PER_LOAD = 30;
 
@@ -69,7 +70,7 @@ type DailyPaymentStatus = {
 
 export function EmployeeSalary() {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const { employees } = useEmployees();
   const [loading, setLoading] = useState(true);
   const [editingDateOrderId, setEditingDateOrderId] = useState<string | null>(null);
   const [editingDateValue, setEditingDateValue] = useState<string>('');
@@ -117,30 +118,9 @@ export function EmployeeSalary() {
 
   useEffect(() => {
     fetchOrders();
-    fetchEmployees();
     // Fetch all existing daily salary payments from database on initial load
     fetchAllDailyPayments();
-    
-    // Subscribe to profile changes to refresh employees when new ones are added
-    const channel = supabase
-      .channel('profiles-changes-salary')
-      .on('postgres_changes', 
-          { 
-            event: '*', 
-            schema: 'public', 
-            table: 'profiles',
-            filter: 'role=eq.employee'
-          },
-          () => {
-            // Refresh employees when profiles change
-            fetchEmployees();
-          }
-      )
-      .subscribe();
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Employees are now fetched via useEmployees hook with caching
   }, []);
 
   // Fetch all daily salary payments to ensure existing records are loaded from database
@@ -309,25 +289,7 @@ export function EmployeeSalary() {
     }
   };
 
-  const fetchEmployees = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name')
-        .eq('role', 'employee')
-        .order('first_name', { ascending: true });
-
-      if (error) {
-        console.error("Failed to load employees", error);
-        setEmployees([]);
-        return;
-      }
-      setEmployees(data || []);
-    } catch (error) {
-      console.error('Error fetching employees', error);
-      setEmployees([]);
-    }
-  };
+  // Employees are now fetched via useEmployees hook with caching
 
   const fetchDailyPayments = async (dateStr: string) => {
     try {
