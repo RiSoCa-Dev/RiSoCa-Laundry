@@ -136,7 +136,10 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
         ...order,
         balance: order.balance !== undefined 
             ? order.balance 
-            : (order.isPaid ? 0 : order.total)
+            : (order.isPaid ? 0 : order.total),
+        // Ensure assignedEmployeeIds is properly included
+        assignedEmployeeId: order.assignedEmployeeId ?? null,
+        assignedEmployeeIds: order.assignedEmployeeIds ?? undefined,
     };
 
     // Use safeOrder for all calculations to ensure balance is never undefined
@@ -145,7 +148,7 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
     // Fix: Watch for balance and isPaid changes, not just order.id
     useEffect(() => {
         setEditableOrder(safeOrder);
-    }, [order.id, order.balance, order.isPaid, order.total]);
+    }, [order.id, order.balance, order.isPaid, order.total, order.assignedEmployeeId, order.assignedEmployeeIds]);
 
     const handleFieldChange = (field: keyof Order, value: string | number | boolean | null) => {
         let newOrderState = { ...editableOrder };
@@ -255,6 +258,11 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                     </Select>
                 ) : (
                     (() => {
+                        // Debug: Check what we have
+                        if (employees.length === 0) {
+                            return <span className="text-muted-foreground text-xs">Loading employees...</span>;
+                        }
+                        
                         // Check for multiple employees assigned
                         if (workingOrder.assignedEmployeeIds && Array.isArray(workingOrder.assignedEmployeeIds) && workingOrder.assignedEmployeeIds.length > 0) {
                             const assignedEmps = employees.filter(e => workingOrder.assignedEmployeeIds!.includes(e.id));
@@ -271,14 +279,17 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                             }
                         }
                         // Check for single employee assignment (backward compatibility)
-                        const assignedEmp = employees.find(e => e.id === workingOrder.assignedEmployeeId);
-                        return assignedEmp ? (
-                            <span className="font-medium">
-                                {assignedEmp.first_name || ''} {assignedEmp.last_name || ''}
-                            </span>
-                        ) : (
-                            <span className="text-muted-foreground">Unassigned</span>
-                        );
+                        if (workingOrder.assignedEmployeeId) {
+                            const assignedEmp = employees.find(e => e.id === workingOrder.assignedEmployeeId);
+                            if (assignedEmp) {
+                                return (
+                                    <span className="font-medium">
+                                        {assignedEmp.first_name || ''} {assignedEmp.last_name || ''}
+                                    </span>
+                                );
+                            }
+                        }
+                        return <span className="text-muted-foreground">Unassigned</span>;
                     })()
                 )}
             </TableCell>
@@ -503,7 +514,10 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
         ...order,
         balance: order.balance !== undefined 
             ? order.balance 
-            : (order.isPaid ? 0 : order.total)
+            : (order.isPaid ? 0 : order.total),
+        // Ensure assignedEmployeeIds is properly included
+        assignedEmployeeId: order.assignedEmployeeId ?? null,
+        assignedEmployeeIds: order.assignedEmployeeIds ?? undefined,
     };
 
     // Use safeOrder for all calculations to ensure balance is never undefined
@@ -512,7 +526,7 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
     // Fix: Watch for balance and isPaid changes, not just order.id
     useEffect(() => {
         setEditableOrder(safeOrder);
-    }, [order.id, order.balance, order.isPaid, order.total]);
+    }, [order.id, order.balance, order.isPaid, order.total, order.assignedEmployeeId, order.assignedEmployeeIds]);
 
     // Fetch employees for employee selection
     useEffect(() => {

@@ -361,6 +361,10 @@ export function OrdersPage() {
       if (updatedOrder.assignedEmployeeId !== undefined) {
         patch.assigned_employee_id = updatedOrder.assignedEmployeeId;
       }
+      // Include assigned_employee_ids (multiple employees)
+      if (updatedOrder.assignedEmployeeIds !== undefined) {
+        patch.assigned_employee_ids = updatedOrder.assignedEmployeeIds.length > 0 ? updatedOrder.assignedEmployeeIds : null;
+      }
 
       // Use finalOrderId (which might be the new RKR ID) for the update
       const { error: patchError } = await updateOrderFields(finalOrderId, patch as any);
