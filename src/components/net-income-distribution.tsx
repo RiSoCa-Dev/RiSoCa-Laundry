@@ -17,6 +17,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -86,7 +95,8 @@ export function NetIncomeDistribution() {
   const [expenses, setExpenses] = useState<ExpenseData[]>([]);
   const [salaryPayments, setSalaryPayments] = useState<SalaryPaymentData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [distributionPeriod, setDistributionPeriod] = useState<'monthly' | 'yearly' | 'all'>('all');
+  const [distributionPeriod, setDistributionPeriod] = useState<'monthly' | 'yearly' | 'all'>('monthly');
+  const [bankSavingsHistory, setBankSavingsHistory] = useState<Array<{period_start: string, period_end: string, period_type: string, amount: number, created_at: string}>>([]);
   const [selectedOwners, setSelectedOwners] = useState<Set<string>>(new Set(OWNERS));
   const [existingDistributions, setExistingDistributions] = useState<DistributionRecord[]>([]);
   const [claimingDistribution, setClaimingDistribution] = useState(false);
@@ -107,7 +117,24 @@ export function NetIncomeDistribution() {
 
   useEffect(() => {
     fetchBankSavings();
+    fetchBankSavingsHistory();
   }, [distributionPeriod]);
+
+  const fetchBankSavingsHistory = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bank_savings')
+        .select('period_start, period_end, period_type, amount, created_at')
+        .order('period_start', { ascending: false })
+        .limit(50);
+
+      if (!error && data) {
+        setBankSavingsHistory(data);
+      }
+    } catch (error) {
+      console.error('Error fetching bank savings history:', error);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -311,6 +338,7 @@ export function NetIncomeDistribution() {
       } else {
         setBankSavings(amount);
         setEditingBankSavings(false);
+        fetchBankSavingsHistory(); // Refresh history
         toast({
           title: 'Bank Savings Updated',
           description: `Bank savings for ${distributionPeriod === 'monthly' ? format(now, 'MMMM yyyy') : format(now, 'yyyy')} has been updated.`,
@@ -337,6 +365,7 @@ export function NetIncomeDistribution() {
       } else {
         setBankSavings(amount);
         setEditingBankSavings(false);
+        fetchBankSavingsHistory(); // Refresh history
         toast({
           title: 'Bank Savings Saved',
           description: `Bank savings for ${distributionPeriod === 'monthly' ? format(now, 'MMMM yyyy') : format(now, 'yyyy')} has been saved.`,
@@ -725,39 +754,8 @@ export function NetIncomeDistribution() {
           Refresh
         </Button>
       </div>
-      {/* Period Selector & Owner Selection */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PieChartIcon className="h-5 w-5" />
-              Distribution Period
-            </CardTitle>
-            <CardDescription>Select the time period for net income distribution</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {(['monthly', 'yearly', 'all'] as const).map((period) => (
-                <button
-                  key={period}
-                  onClick={() => setDistributionPeriod(period)}
-                  className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                    distributionPeriod === period
-                      ? 'bg-primary text-primary-foreground shadow-md scale-105'
-                      : 'bg-muted hover:bg-muted/80 hover:scale-105'
-                  }`}
-                >
-                  {period === 'monthly' ? 'This Month' : period === 'yearly' ? 'This Year' : 'All Time'}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
-              <Info className="h-3 w-3" />
-              Select a period to view distribution calculations for that timeframe
-            </p>
-          </CardContent>
-        </Card>
-
+      {/* Owner Selection */}
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -988,6 +986,7 @@ export function NetIncomeDistribution() {
                             setEditingBankSavings(true);
                             setShowCustomTransfer(false);
                             setCustomTransferAmount('');
+                            // After saving, history will be refreshed by saveBankSavings
                           } else {
                             toast({
                               variant: 'destructive',
@@ -1038,11 +1037,6 @@ export function NetIncomeDistribution() {
                   >
                     Deposit
                   </Button>
-                )}
-                {distributionPeriod === 'all' && (
-                  <p className="text-xs text-orange-600 mt-1">
-                    Select Monthly or Yearly period to enable deposits
-                  </p>
                 )}
               </div>
             )}
@@ -1341,6 +1335,76 @@ export function NetIncomeDistribution() {
           ) : (
             <div className="flex items-center justify-center h-[400px] text-muted-foreground">
               No data available for the selected period
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Bank Savings History */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Bank Savings History
+          </CardTitle>
+          <CardDescription>View all bank savings deposits by period</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {bankSavingsHistory.length > 0 ? (
+            <div className="space-y-2">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Period</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {bankSavingsHistory.map((record, index) => {
+                    const startDate = new Date(record.period_start);
+                    const endDate = new Date(record.period_end);
+                    const periodLabel = record.period_type === 'monthly'
+                      ? format(startDate, 'MMMM yyyy')
+                      : record.period_type === 'yearly'
+                      ? format(startDate, 'yyyy')
+                      : `${format(startDate, 'MMM dd')} - ${format(endDate, 'MMM dd, yyyy')}`;
+                    
+                    return (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{periodLabel}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {record.period_type === 'monthly' ? 'Monthly' : record.period_type === 'yearly' ? 'Yearly' : 'Custom'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-blue-600">
+                          ₱{record.amount.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground text-sm">
+                          {format(new Date(record.created_at), 'MMM dd, yyyy')}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+                <TableFooter>
+                  <TableRow>
+                    <TableCell colSpan={2} className="font-bold">Total Bank Savings</TableCell>
+                    <TableCell className="text-right font-bold text-blue-600">
+                      ₱{bankSavingsHistory.reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                </TableFooter>
+              </Table>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
+              <DollarSign className="h-12 w-12 mb-2 opacity-50" />
+              <p className="text-sm">No bank savings records yet</p>
+              <p className="text-xs mt-1">Deposits will appear here</p>
             </div>
           )}
         </CardContent>
