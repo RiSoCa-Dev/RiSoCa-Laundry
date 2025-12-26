@@ -75,7 +75,6 @@ export function EmployeeSalary() {
   const [updatingPayment, setUpdatingPayment] = useState<string | null>(null);
   const [editingPaymentAmount, setEditingPaymentAmount] = useState<string | null>(null);
   const [editingPaymentValue, setEditingPaymentValue] = useState<string>('');
-  const [assigningOldOrders, setAssigningOldOrders] = useState(false);
   const { toast } = useToast();
 
   const fetchOrders = async () => {
@@ -434,73 +433,6 @@ export function EmployeeSalary() {
     })
     .sort((a, b) => b.date.getTime() - a.date.getTime());
 
-  const handleAssignOldOrdersToMyra = async () => {
-    // Find MYRA employee
-    const myraEmployee = employees.find(e => 
-      e.first_name?.toUpperCase() === 'MYRA' || 
-      e.first_name?.toUpperCase().includes('MYRA')
-    );
-
-    if (!myraEmployee) {
-      toast({
-        variant: 'destructive',
-        title: 'MYRA not found',
-        description: 'Could not find MYRA employee. Please ensure MYRA is registered as an employee.',
-      });
-      return;
-    }
-
-    setAssigningOldOrders(true);
-    try {
-      // Find all unassigned customer orders
-      const { data: unassignedOrders, error: fetchError } = await supabase
-        .from('orders')
-        .select('id')
-        .is('assigned_employee_id', null)
-        .or('order_type.is.null,order_type.eq.customer');
-
-      if (fetchError) {
-        throw fetchError;
-      }
-
-      if (!unassignedOrders || unassignedOrders.length === 0) {
-        toast({
-          title: 'No unassigned orders',
-          description: 'All orders are already assigned.',
-        });
-        setAssigningOldOrders(false);
-        return;
-      }
-
-      // Update all unassigned orders to MYRA
-      const { error: updateError } = await supabase
-        .from('orders')
-        .update({ assigned_employee_id: myraEmployee.id })
-        .is('assigned_employee_id', null)
-        .or('order_type.is.null,order_type.eq.customer');
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      toast({
-        title: 'Old orders assigned',
-        description: `${unassignedOrders.length} unassigned order(s) have been assigned to ${myraEmployee.first_name}.`,
-      });
-
-      // Refresh orders
-      await fetchOrders();
-    } catch (error: any) {
-      console.error('Failed to assign old orders:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Assignment failed',
-        description: error.message || 'Failed to assign old orders to MYRA.',
-      });
-    } finally {
-      setAssigningOldOrders(false);
-    }
-  };
 
   const handleEditPaymentAmount = (employeeId: string, date: Date, currentAmount: number) => {
     const dateStr = format(date, 'yyyy-MM-dd');
@@ -756,35 +688,6 @@ export function EmployeeSalary() {
               Old unassigned orders are automatically counted for MYRA (the original employee).
             </CardDescription>
           </div>
-          {(() => {
-            const hasUnassignedOrders = orders.some(
-              o => o.orderType !== 'internal' && !o.assignedEmployeeId
-            );
-            const myraEmployee = employees.find(e => 
-              e.first_name?.toUpperCase() === 'MYRA' || 
-              e.first_name?.toUpperCase().includes('MYRA')
-            );
-            return hasUnassignedOrders && myraEmployee ? (
-              <Button
-                onClick={handleAssignOldOrdersToMyra}
-                disabled={assigningOldOrders}
-                variant="outline"
-                size="sm"
-                className="whitespace-nowrap"
-              >
-                {assigningOldOrders ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Assigning...
-                  </>
-                ) : (
-                  <>
-                    Assign Old Orders to {myraEmployee.first_name}
-                  </>
-                )}
-              </Button>
-            ) : null;
-          })()}
         </div>
       </CardHeader>
       <CardContent className="p-2 sm:p-6">

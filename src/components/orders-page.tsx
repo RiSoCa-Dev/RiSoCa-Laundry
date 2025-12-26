@@ -231,12 +231,12 @@ export function OrdersPage() {
     const paidOrders = paidCustomerOrders.length;
     const unpaidOrders = unpaidCustomerOrders.length;
     
-    // Today's stats - only paid customer orders
+    // Today's stats - all customer orders created today (not just paid)
     const today = startOfDay(new Date());
-    const todayPaidCustomerOrders = customerOrders.filter(o => 
-      o.isPaid === true && 
+    const todayCustomerOrders = customerOrders.filter(o => 
       startOfDay(o.orderDate).getTime() === today.getTime()
     );
+    const todayPaidCustomerOrders = todayCustomerOrders.filter(o => o.isPaid === true);
     const todayRevenue = todayPaidCustomerOrders.reduce((sum, o) => sum + (o.total || 0), 0);
     
     // This week's stats
@@ -254,7 +254,7 @@ export function OrdersPage() {
       canceledOrders,
       paidOrders,
       unpaidOrders,
-      todayOrders: todayPaidCustomerOrders.length,
+      todayOrders: todayCustomerOrders.length,
       todayRevenue,
       weekOrders: weekOrders.length,
       weekRevenue,
