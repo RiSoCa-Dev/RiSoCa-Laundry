@@ -148,12 +148,17 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
 
     // Fix: Watch for balance and isPaid changes, not just order.id
     useEffect(() => {
-        setEditableOrder(safeOrder);
+        setEditableOrder({
+            ...safeOrder,
+            // Ensure assignedEmployeeIds is properly initialized
+            assignedEmployeeIds: safeOrder.assignedEmployeeIds || 
+                (safeOrder.assignedEmployeeId ? [safeOrder.assignedEmployeeId] : undefined)
+        });
     }, [order.id, order.balance, order.isPaid, order.total, order.assignedEmployeeId, order.assignedEmployeeIds]);
 
     // Employees are now fetched via useEmployees hook with caching
 
-    const handleFieldChange = (field: keyof Order, value: string | number | boolean | null) => {
+    const handleFieldChange = (field: keyof Order, value: string | number | boolean | null | string[]) => {
         let newOrderState = { ...editableOrder };
 
         if (field === 'status' && typeof value === 'string' && value !== editableOrder.status) {
@@ -161,6 +166,14 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                 ...newOrderState,
                 status: value,
                 statusHistory: [...(editableOrder.statusHistory || []), { status: value, timestamp: new Date() }]
+            };
+        } else if (field === 'assignedEmployeeIds' && Array.isArray(value)) {
+            // Handle multi-select employee assignment
+            newOrderState = {
+                ...newOrderState,
+                assignedEmployeeIds: value.length > 0 ? value : undefined,
+                // For backward compatibility, set assignedEmployeeId to first employee or null
+                assignedEmployeeId: value.length > 0 ? value[0] : null
             };
         } else {
             const numericFields = ['weight', 'load', 'total'];
@@ -242,23 +255,36 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
             </TableCell>
             <TableCell>
                 {isEditing ? (
-                    <Select
-                        value={editableOrder.assignedEmployeeId || ''}
-                        onValueChange={(value) => handleFieldChange('assignedEmployeeId', value === 'none' ? null : value)}
-                        disabled={isSaving}
-                    >
-                        <SelectTrigger className="h-9 w-full min-w-[140px] max-w-[200px] border-2">
-                            <SelectValue placeholder="Select employee" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">No Employee</SelectItem>
-                            {employees.map((emp) => (
-                                <SelectItem key={emp.id} value={emp.id}>
-                                    {emp.first_name || ''}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <div className="flex flex-wrap gap-1.5 min-w-[140px] max-w-[250px]">
+                        {employees.map((emp) => {
+                            const selectedIds = editableOrder.assignedEmployeeIds || [];
+                            const isSelected = selectedIds.includes(emp.id);
+                            return (
+                                <Button
+                                    key={emp.id}
+                                    type="button"
+                                    variant={isSelected ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => {
+                                        const currentIds = editableOrder.assignedEmployeeIds || [];
+                                        const newIds = isSelected
+                                            ? currentIds.filter(id => id !== emp.id)
+                                            : [...currentIds, emp.id];
+                                        handleFieldChange('assignedEmployeeIds', newIds);
+                                    }}
+                                    disabled={isSaving || loadingEmployees}
+                                    className={cn(
+                                        "h-8 text-xs font-medium transition-all",
+                                        isSelected 
+                                            ? "bg-primary hover:bg-primary/90 text-primary-foreground" 
+                                            : "hover:border-primary hover:text-primary"
+                                    )}
+                                >
+                                    {emp.first_name || 'Employee'}
+                                </Button>
+                            );
+                        })}
+                    </div>
                 ) : (
                     (() => {
                         // Show loading state
@@ -528,12 +554,17 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
 
     // Fix: Watch for balance and isPaid changes, not just order.id
     useEffect(() => {
-        setEditableOrder(safeOrder);
+        setEditableOrder({
+            ...safeOrder,
+            // Ensure assignedEmployeeIds is properly initialized
+            assignedEmployeeIds: safeOrder.assignedEmployeeIds || 
+                (safeOrder.assignedEmployeeId ? [safeOrder.assignedEmployeeId] : undefined)
+        });
     }, [order.id, order.balance, order.isPaid, order.total, order.assignedEmployeeId, order.assignedEmployeeIds]);
 
     // Employees are now fetched via useEmployees hook with caching
 
-    const handleFieldChange = (field: keyof Order, value: string | number | boolean | null) => {
+    const handleFieldChange = (field: keyof Order, value: string | number | boolean | null | string[]) => {
         let newOrderState = { ...editableOrder };
 
         if (field === 'status' && typeof value === 'string' && value !== editableOrder.status) {
@@ -541,6 +572,14 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                 ...newOrderState,
                 status: value,
                 statusHistory: [...(editableOrder.statusHistory || []), { status: value, timestamp: new Date() }]
+            };
+        } else if (field === 'assignedEmployeeIds' && Array.isArray(value)) {
+            // Handle multi-select employee assignment
+            newOrderState = {
+                ...newOrderState,
+                assignedEmployeeIds: value.length > 0 ? value : undefined,
+                // For backward compatibility, set assignedEmployeeId to first employee or null
+                assignedEmployeeId: value.length > 0 ? value[0] : null
             };
         } else {
             const numericFields = ['weight', 'load', 'total'];
@@ -701,23 +740,36 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                         Employee
                                     </Label>
                                     {isEditing ? (
-                                        <Select
-                                            value={editableOrder.assignedEmployeeId || ''}
-                                            onValueChange={(value) => handleFieldChange('assignedEmployeeId', value === 'none' ? null : value)}
-                                            disabled={isSaving}
-                                        >
-                                            <SelectTrigger className="h-9 border-2">
-                                                <SelectValue placeholder="Select employee" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="none">No Employee</SelectItem>
-                                                {employees.map((emp) => (
-                                                    <SelectItem key={emp.id} value={emp.id}>
-                                                        {emp.first_name || ''}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {employees.map((emp) => {
+                                                const selectedIds = editableOrder.assignedEmployeeIds || [];
+                                                const isSelected = selectedIds.includes(emp.id);
+                                                return (
+                                                    <Button
+                                                        key={emp.id}
+                                                        type="button"
+                                                        variant={isSelected ? "default" : "outline"}
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            const currentIds = editableOrder.assignedEmployeeIds || [];
+                                                            const newIds = isSelected
+                                                                ? currentIds.filter(id => id !== emp.id)
+                                                                : [...currentIds, emp.id];
+                                                            handleFieldChange('assignedEmployeeIds', newIds);
+                                                        }}
+                                                        disabled={isSaving || loadingEmployees}
+                                                        className={cn(
+                                                            "h-8 text-xs font-medium transition-all",
+                                                            isSelected 
+                                                                ? "bg-primary hover:bg-primary/90 text-primary-foreground" 
+                                                                : "hover:border-primary hover:text-primary"
+                                                        )}
+                                                    >
+                                                        {emp.first_name || 'Employee'}
+                                                    </Button>
+                                                );
+                                            })}
+                                        </div>
                                     ) : (
                                         (() => {
                                             // Check for multiple employees assigned
