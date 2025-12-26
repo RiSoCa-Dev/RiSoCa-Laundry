@@ -883,6 +883,13 @@ export function EmployeeSalary() {
                            // Handle both single employee assignment (assignedEmployeeId) and multiple employees (assignedEmployeeIds)
                            let customerLoadsForEmployee = 0;
                            
+                           // Track unassigned orders for MYRA display
+                           const unassignedCustomerOrders = isMyra && employees.length === 1
+                             ? orders.filter(
+                                 o => o.orderType !== 'internal' && !o.assignedEmployeeId && !o.assignedEmployeeIds
+                               )
+                             : [];
+                           
                            orders.forEach(order => {
                              if (order.orderType === 'internal') return; // Skip internal orders here
                              
