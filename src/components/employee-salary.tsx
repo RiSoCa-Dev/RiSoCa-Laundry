@@ -31,6 +31,7 @@ import type { Order } from '@/components/order-list';
 import { format, startOfDay } from 'date-fns';
 import { supabase } from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
+import { fetchEmployeesWithCache, clearEmployeeCache } from '@/lib/employee-cache';
 
 const SALARY_PER_LOAD = 30;
 
@@ -132,7 +133,8 @@ export function EmployeeSalary() {
             filter: 'role=eq.employee'
           },
           () => {
-            // Refresh employees when profiles change
+            // Clear cache and refresh employees when profiles change
+            clearEmployeeCache();
             fetchEmployees();
           }
       )
@@ -311,18 +313,8 @@ export function EmployeeSalary() {
 
   const fetchEmployees = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name')
-        .eq('role', 'employee')
-        .order('first_name', { ascending: true });
-
-      if (error) {
-        console.error("Failed to load employees", error);
-        setEmployees([]);
-        return;
-      }
-      setEmployees(data || []);
+      const employees = await fetchEmployeesWithCache();
+      setEmployees(employees);
     } catch (error) {
       console.error('Error fetching employees', error);
       setEmployees([]);
@@ -511,7 +503,7 @@ export function EmployeeSalary() {
 
       toast({
         title: 'Old orders assigned',
-        description: `${unassignedOrders.length} unassigned order(s) have been assigned to ${myraEmployee.first_name} ${myraEmployee.last_name}.`,
+        description: `${unassignedOrders.length} unassigned order(s) have been assigned to ${myraEmployee.first_name}.`,
       });
 
       // Refresh orders
@@ -969,7 +961,7 @@ export function EmployeeSalary() {
                                <div className="flex items-center justify-between">
                                  <div className="flex flex-col">
                                    <span className="text-sm font-medium">
-                                     {emp.first_name || ''} {emp.last_name || ''}
+                                     {emp.first_name || ''}
                                    </span>
                                    <div className="flex flex-col gap-0.5 mt-1">
                                      <span className="text-xs text-muted-foreground">
@@ -1224,7 +1216,7 @@ export function EmployeeSalary() {
                                             className="h-6 px-2 text-xs bg-green-600 hover:bg-green-700"
                                             onClick={() => handleAssign(null)}
                                           >
-                                            {assignedEmp.first_name} {assignedEmp.last_name} ×
+                                            {assignedEmp.first_name} ×
                                           </Button>
                                         ) : (
                                           <Button
@@ -1247,7 +1239,7 @@ export function EmployeeSalary() {
                                               className="h-6 px-2 text-xs"
                                               onClick={() => handleAssign(emp.id)}
                                             >
-                                              {emp.first_name} {emp.last_name}
+                                              {emp.first_name}
                                             </Button>
                                           );
                                         })}
@@ -1265,7 +1257,7 @@ export function EmployeeSalary() {
                                         <div className="flex flex-wrap items-center justify-center gap-1">
                                           {assignedEmps.map((emp) => (
                                             <span key={emp.id} className="text-xs">
-                                              {emp.first_name} {emp.last_name}
+                                              {emp.first_name}
                                             </span>
                                           ))}
                                         </div>
@@ -1275,7 +1267,7 @@ export function EmployeeSalary() {
                                   // Check for single employee assignment (backward compatibility)
                                   const assignedEmp = employees.find(e => e.id === order.assignedEmployeeId);
                                   return assignedEmp ? (
-                                    <span className="text-xs">{assignedEmp.first_name} {assignedEmp.last_name}</span>
+                                    <span className="text-xs">{assignedEmp.first_name}</span>
                                   ) : (
                                     <span className="text-xs text-muted-foreground">Unassigned</span>
                                   );

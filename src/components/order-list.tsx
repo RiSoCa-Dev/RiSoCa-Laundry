@@ -116,11 +116,6 @@ const getPaymentBadgeInfo = (isPaid: boolean, isPartiallyPaid: boolean) => {
     }
 }
 
-type Employee = {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-};
 
 function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: OrderListProps['onUpdateOrder'] }) {
     const [isEditing, setIsEditing] = useState(false);
@@ -151,23 +146,13 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
         setEditableOrder(safeOrder);
     }, [order.id, order.balance, order.isPaid, order.total, order.assignedEmployeeId, order.assignedEmployeeIds]);
 
-    // Fetch employees for employee display
+    // Fetch employees for employee display with caching
     useEffect(() => {
         const fetchEmployees = async () => {
             setLoadingEmployees(true);
             try {
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .select('id, first_name, last_name')
-                    .eq('role', 'employee')
-                    .order('first_name', { ascending: true });
-
-                if (error) {
-                    console.error('Error fetching employees', error);
-                    setEmployees([]);
-                    return;
-                }
-                setEmployees(data || []);
+                const employees = await fetchEmployeesWithCache();
+                setEmployees(employees);
             } catch (error) {
                 console.error('Error fetching employees', error);
                 setEmployees([]);
@@ -188,7 +173,8 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                     filter: 'role=eq.employee'
                 },
                 () => {
-                    // Refresh employees when profiles change
+                    // Clear cache and refresh employees when profiles change
+                    clearEmployeeCache();
                     fetchEmployees();
                 }
             )
@@ -300,7 +286,7 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                             <SelectItem value="none">No Employee</SelectItem>
                             {employees.map((emp) => (
                                 <SelectItem key={emp.id} value={emp.id}>
-                                    {emp.first_name || ''} {emp.last_name || ''}
+                                    {emp.first_name || ''}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -320,7 +306,7 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                                     <div className="flex flex-wrap gap-1">
                                         {assignedEmps.map((emp) => (
                                             <span key={emp.id} className="font-medium text-xs">
-                                                {emp.first_name || ''} {emp.last_name || ''}
+                                                {emp.first_name || ''}
                                             </span>
                                         ))}
                                     </div>
@@ -333,7 +319,7 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                             if (assignedEmp) {
                                 return (
                                     <span className="font-medium">
-                                        {assignedEmp.first_name || ''} {assignedEmp.last_name || ''}
+                                        {assignedEmp.first_name || ''}
                                     </span>
                                 );
                             }
@@ -583,18 +569,8 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
         const fetchEmployees = async () => {
             setLoadingEmployees(true);
             try {
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .select('id, first_name, last_name')
-                    .eq('role', 'employee')
-                    .order('first_name', { ascending: true });
-
-                if (error) {
-                    console.error("Failed to load employees", error);
-                    setEmployees([]);
-                    return;
-                }
-                setEmployees(data || []);
+                const employees = await fetchEmployeesWithCache();
+                setEmployees(employees);
             } catch (error) {
                 console.error('Error fetching employees', error);
                 setEmployees([]);
@@ -615,7 +591,8 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                     filter: 'role=eq.employee'
                 },
                 () => {
-                    // Refresh employees when profiles change
+                    // Clear cache and refresh employees when profiles change
+                    clearEmployeeCache();
                     fetchEmployees();
                 }
             )
@@ -806,7 +783,7 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                                 <SelectItem value="none">No Employee</SelectItem>
                                                 {employees.map((emp) => (
                                                     <SelectItem key={emp.id} value={emp.id}>
-                                                        {emp.first_name || ''} {emp.last_name || ''}
+                                                        {emp.first_name || ''}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -821,7 +798,7 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                                         <div className="flex flex-wrap gap-1">
                                                             {assignedEmps.map((emp) => (
                                                                 <span key={emp.id} className="font-medium text-xs">
-                                                                    {emp.first_name || ''} {emp.last_name || ''}
+                                                                    {emp.first_name || ''}
                                                                 </span>
                                                             ))}
                                                         </div>
@@ -834,7 +811,7 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                                 if (assignedEmp) {
                                                     return (
                                                         <span className="font-medium">
-                                                            {assignedEmp.first_name || ''} {assignedEmp.last_name || ''}
+                                                            {assignedEmp.first_name || ''}
                                                         </span>
                                                     );
                                                 }
