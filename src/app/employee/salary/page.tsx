@@ -156,7 +156,7 @@ export default function EmployeeSalaryPage() {
       // Fetch all orders, we'll filter by status and is_paid in the component
       const { data, error } = await supabase
         .from('orders')
-        .select('*');
+        .select('*, order_type, assigned_employee_id, assigned_employee_ids');
 
       if (error) {
         setOrders([]);
@@ -176,6 +176,9 @@ export default function EmployeeSalaryPage() {
           servicePackage: o.service_package,
           distance: o.distance ?? 0,
           statusHistory: [],
+          orderType: o.order_type || 'customer',
+          assignedEmployeeId: o.assigned_employee_id ?? null,
+          assignedEmployeeIds: Array.isArray(o.assigned_employee_ids) ? o.assigned_employee_ids : (o.assigned_employee_ids ? [o.assigned_employee_ids] : undefined),
         }));
         setOrders(mapped);
       }
