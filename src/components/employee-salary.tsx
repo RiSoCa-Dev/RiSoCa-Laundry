@@ -120,6 +120,27 @@ export function EmployeeSalary() {
     fetchEmployees();
     // Fetch all existing daily salary payments from database on initial load
     fetchAllDailyPayments();
+    
+    // Subscribe to profile changes to refresh employees when new ones are added
+    const channel = supabase
+      .channel('profiles-changes-salary')
+      .on('postgres_changes', 
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'profiles',
+            filter: 'role=eq.employee'
+          },
+          () => {
+            // Refresh employees when profiles change
+            fetchEmployees();
+          }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Fetch all daily salary payments to ensure existing records are loaded from database
@@ -293,15 +314,18 @@ export function EmployeeSalary() {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, first_name, last_name')
-        .eq('role', 'employee');
+        .eq('role', 'employee')
+        .order('first_name', { ascending: true });
 
       if (error) {
         console.error("Failed to load employees", error);
+        setEmployees([]);
         return;
       }
       setEmployees(data || []);
     } catch (error) {
       console.error('Error fetching employees', error);
+      setEmployees([]);
     }
   };
 

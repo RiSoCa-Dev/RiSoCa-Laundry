@@ -113,11 +113,13 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
 
       if (error) {
         console.error("Failed to load employees", error);
+        setEmployees([]);
         return;
       }
       setEmployees(data || []);
     } catch (error) {
       console.error('Error fetching employees', error);
+      setEmployees([]);
     } finally {
       setLoadingEmployees(false);
     }

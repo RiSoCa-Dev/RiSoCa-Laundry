@@ -61,7 +61,9 @@ export default function EmployeePage() {
       branchId: o.branch_id ?? null,
       orderType: o.order_type || 'customer',
       assignedEmployeeId: o.assigned_employee_id ?? null,
-      assignedEmployeeIds: Array.isArray(o.assigned_employee_ids) ? o.assigned_employee_ids : (o.assigned_employee_ids ? [o.assigned_employee_ids] : undefined),
+      assignedEmployeeIds: Array.isArray(o.assigned_employee_ids) && o.assigned_employee_ids.length > 0 
+        ? o.assigned_employee_ids 
+        : undefined,
     };
   };
 
@@ -168,8 +170,13 @@ export default function EmployeePage() {
       total: newOrder.total,
       is_paid: newOrder.isPaid,
       order_type: newOrder.orderType || 'customer',
-      assigned_employee_id: newOrder.assignedEmployeeId || null,
-      assigned_employee_ids: newOrder.assignedEmployeeIds || null,
+      // Normalize employee assignments - use assigned_employee_ids as source of truth
+      assigned_employee_ids: newOrder.assignedEmployeeIds && newOrder.assignedEmployeeIds.length > 0 
+        ? newOrder.assignedEmployeeIds 
+        : null,
+      assigned_employee_id: (newOrder.assignedEmployeeIds && newOrder.assignedEmployeeIds.length > 0)
+        ? newOrder.assignedEmployeeIds[0] // First employee for backward compatibility
+        : (newOrder.assignedEmployeeId || null), // Fallback to single assignment
     });
 
     if (error) {

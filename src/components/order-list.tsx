@@ -258,8 +258,8 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                     </Select>
                 ) : (
                     (() => {
-                        // Debug: Check what we have
-                        if (employees.length === 0) {
+                        // Show loading state
+                        if (loadingEmployees) {
                             return <span className="text-muted-foreground text-xs">Loading employees...</span>;
                         }
                         
@@ -507,6 +507,7 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
     const [employees, setEmployees] = useState<Employee[]>([]);
+    const [loadingEmployees, setLoadingEmployees] = useState(true);
 
     // SAFETY CHECK: If balance is undefined but order is not paid, set balance to total
     // This handles cases where the mapping function fails or old code is running
@@ -531,6 +532,7 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
     // Fetch employees for employee selection
     useEffect(() => {
         const fetchEmployees = async () => {
+            setLoadingEmployees(true);
             try {
                 const { data, error } = await supabase
                     .from('profiles')
@@ -540,14 +542,39 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
 
                 if (error) {
                     console.error("Failed to load employees", error);
+                    setEmployees([]);
                     return;
                 }
                 setEmployees(data || []);
             } catch (error) {
                 console.error('Error fetching employees', error);
+                setEmployees([]);
+            } finally {
+                setLoadingEmployees(false);
             }
         };
         fetchEmployees();
+        
+        // Subscribe to profile changes to refresh employees when new ones are added
+        const channel = supabase
+            .channel('profiles-changes-card')
+            .on('postgres_changes', 
+                { 
+                    event: '*', 
+                    schema: 'public', 
+                    table: 'profiles',
+                    filter: 'role=eq.employee'
+                },
+                () => {
+                    // Refresh employees when profiles change
+                    fetchEmployees();
+                }
+            )
+            .subscribe();
+        
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     const handleFieldChange = (field: keyof Order, value: string | number | boolean | null) => {
@@ -753,14 +780,17 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                                 }
                                             }
                                             // Check for single employee assignment (backward compatibility)
-                                            const assignedEmp = employees.find(e => e.id === workingOrder.assignedEmployeeId);
-                                            return assignedEmp ? (
-                                                <span className="font-medium">
-                                                    {assignedEmp.first_name || ''} {assignedEmp.last_name || ''}
-                                                </span>
-                                            ) : (
-                                                <span className="text-muted-foreground">Unassigned</span>
-                                            );
+                                            if (workingOrder.assignedEmployeeId) {
+                                                const assignedEmp = employees.find(e => e.id === workingOrder.assignedEmployeeId);
+                                                if (assignedEmp) {
+                                                    return (
+                                                        <span className="font-medium">
+                                                            {assignedEmp.first_name || ''} {assignedEmp.last_name || ''}
+                                                        </span>
+                                                    );
+                                                }
+                                            }
+                                            return <span className="text-muted-foreground">Unassigned</span>;
                                         })()
                                     )}
                                 </div>

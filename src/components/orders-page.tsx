@@ -358,12 +358,28 @@ export function OrdersPage() {
       if (updatedOrder.orderType !== undefined) {
         patch.order_type = updatedOrder.orderType;
       }
-      if (updatedOrder.assignedEmployeeId !== undefined) {
-        patch.assigned_employee_id = updatedOrder.assignedEmployeeId;
-      }
-      // Include assigned_employee_ids (multiple employees)
+      
+      // Normalize employee assignments to prevent duplication
       if (updatedOrder.assignedEmployeeIds !== undefined) {
-        patch.assigned_employee_ids = updatedOrder.assignedEmployeeIds.length > 0 ? updatedOrder.assignedEmployeeIds : null;
+        // If assignedEmployeeIds is provided, use it as the source of truth
+        if (updatedOrder.assignedEmployeeIds.length > 0) {
+          patch.assigned_employee_ids = updatedOrder.assignedEmployeeIds;
+          // Set assigned_employee_id to first employee for backward compatibility
+          patch.assigned_employee_id = updatedOrder.assignedEmployeeIds[0];
+        } else {
+          // Empty array means no employees assigned
+          patch.assigned_employee_ids = null;
+          patch.assigned_employee_id = null;
+        }
+      } else if (updatedOrder.assignedEmployeeId !== undefined) {
+        // If only assignedEmployeeId is provided (backward compatibility)
+        if (updatedOrder.assignedEmployeeId) {
+          patch.assigned_employee_id = updatedOrder.assignedEmployeeId;
+          patch.assigned_employee_ids = [updatedOrder.assignedEmployeeId];
+        } else {
+          patch.assigned_employee_id = null;
+          patch.assigned_employee_ids = null;
+        }
       }
 
       // Use finalOrderId (which might be the new RKR ID) for the update
@@ -434,8 +450,13 @@ export function OrdersPage() {
       total: newOrder.total,
       is_paid: newOrder.isPaid,
       order_type: newOrder.orderType || 'customer',
-      assigned_employee_id: newOrder.assignedEmployeeId || null, // For backward compatibility
-      assigned_employee_ids: newOrder.assignedEmployeeIds || null, // Multiple employees (JSON array)
+      // Normalize employee assignments - use assigned_employee_ids as source of truth
+      assigned_employee_ids: newOrder.assignedEmployeeIds && newOrder.assignedEmployeeIds.length > 0 
+        ? newOrder.assignedEmployeeIds 
+        : null,
+      assigned_employee_id: (newOrder.assignedEmployeeIds && newOrder.assignedEmployeeIds.length > 0)
+        ? newOrder.assignedEmployeeIds[0] // First employee for backward compatibility
+        : (newOrder.assignedEmployeeId || null), // Fallback to single assignment
     });
 
     if (error) {
@@ -466,7 +487,13 @@ export function OrdersPage() {
         total: newOrder.total,
         is_paid: newOrder.isPaid,
         order_type: newOrder.orderType || 'customer',
-        assigned_employee_id: newOrder.assignedEmployeeId || null,
+        // Normalize employee assignments - use assigned_employee_ids as source of truth
+        assigned_employee_ids: newOrder.assignedEmployeeIds && newOrder.assignedEmployeeIds.length > 0 
+          ? newOrder.assignedEmployeeIds 
+          : null,
+        assigned_employee_id: (newOrder.assignedEmployeeIds && newOrder.assignedEmployeeIds.length > 0)
+          ? newOrder.assignedEmployeeIds[0] // First employee for backward compatibility
+          : (newOrder.assignedEmployeeId || null), // Fallback to single assignment
         });
         if (retryCreateError) {
           toast({ 
