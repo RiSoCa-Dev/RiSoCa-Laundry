@@ -98,6 +98,8 @@ export function NetIncomeDistribution() {
   const [editingBankSavings, setEditingBankSavings] = useState(false);
   const [bankSavingsInput, setBankSavingsInput] = useState<string>('');
   const [savingBankSavings, setSavingBankSavings] = useState(false);
+  const [showCustomTransfer, setShowCustomTransfer] = useState(false);
+  const [customTransferAmount, setCustomTransferAmount] = useState<string>('');
 
   useEffect(() => {
     fetchData();
@@ -949,9 +951,132 @@ export function NetIncomeDistribution() {
             <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               ₱{distributionData.availableForDistribution.toFixed(2)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1 mb-3">
               Net Income - Bank Savings
             </p>
+            {distributionPeriod !== 'all' && distributionData.availableForDistribution > 0 && (
+              <div className="flex flex-col gap-2 pt-2 border-t">
+                <p className="text-xs text-muted-foreground">Quick Transfer to Bank Savings:</p>
+                {showCustomTransfer ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max={distributionData.availableForDistribution}
+                        value={customTransferAmount}
+                        onChange={(e) => setCustomTransferAmount(e.target.value)}
+                        className="h-8 text-xs flex-1"
+                        placeholder={`Max: ₱${distributionData.availableForDistribution.toFixed(2)}`}
+                        disabled={savingBankSavings}
+                      />
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => {
+                          const amount = parseFloat(customTransferAmount);
+                          if (!isNaN(amount) && amount > 0 && amount <= distributionData.availableForDistribution) {
+                            setBankSavingsInput((bankSavings + amount).toFixed(2));
+                            setEditingBankSavings(true);
+                            setShowCustomTransfer(false);
+                            setCustomTransferAmount('');
+                          } else {
+                            toast({
+                              variant: 'destructive',
+                              title: 'Invalid amount',
+                              description: `Please enter a valid amount between ₱0.01 and ₱${distributionData.availableForDistribution.toFixed(2)}.`,
+                            });
+                          }
+                        }}
+                        className="h-8 text-xs"
+                        disabled={savingBankSavings}
+                      >
+                        Transfer
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setShowCustomTransfer(false);
+                          setCustomTransferAmount('');
+                        }}
+                        className="h-8 w-8 p-0"
+                        disabled={savingBankSavings}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Available: ₱{distributionData.availableForDistribution.toFixed(2)}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const amount = Math.min(distributionData.availableForDistribution, 1000);
+                        setBankSavingsInput((bankSavings + amount).toFixed(2));
+                        setEditingBankSavings(true);
+                      }}
+                      className="h-8 text-xs"
+                      disabled={savingBankSavings}
+                    >
+                      +₱1,000
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const amount = Math.min(distributionData.availableForDistribution, 5000);
+                        setBankSavingsInput((bankSavings + amount).toFixed(2));
+                        setEditingBankSavings(true);
+                      }}
+                      className="h-8 text-xs"
+                      disabled={savingBankSavings}
+                    >
+                      +₱5,000
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const amount = Math.min(distributionData.availableForDistribution, 10000);
+                        setBankSavingsInput((bankSavings + amount).toFixed(2));
+                        setEditingBankSavings(true);
+                      }}
+                      className="h-8 text-xs"
+                      disabled={savingBankSavings}
+                    >
+                      +₱10,000
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setBankSavingsInput((bankSavings + distributionData.availableForDistribution).toFixed(2));
+                        setEditingBankSavings(true);
+                      }}
+                      className="h-8 text-xs"
+                      disabled={savingBankSavings}
+                    >
+                      Transfer All
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => setShowCustomTransfer(true)}
+                      className="h-8 text-xs"
+                      disabled={savingBankSavings}
+                    >
+                      Custom Amount
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
