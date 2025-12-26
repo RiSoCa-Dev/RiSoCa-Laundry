@@ -206,29 +206,42 @@ export function OrdersPage() {
 
   // Calculate statistics
   const statistics = useMemo(() => {
-    const totalOrders = allOrders.length;
-    const totalRevenue = allOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-    const paidRevenue = allOrders.filter(o => o.isPaid).reduce((sum, o) => sum + (o.total || 0), 0);
-    const pendingRevenue = allOrders.filter(o => !o.isPaid).reduce((sum, o) => sum + ((o.balance || o.total) || 0), 0);
-    const completedOrders = allOrders.filter(o => o.status === 'Success' || o.status === 'Completed' || o.status === 'Delivered').length;
-    const pendingOrders = allOrders.filter(o => 
+    // Filter out internal orders - only count customer orders
+    const customerOrders = allOrders.filter(o => o.orderType !== 'internal');
+    
+    const totalOrders = customerOrders.length;
+    
+    // Total Revenue: Only paid customer orders (exclude internal, exclude unpaid)
+    const paidCustomerOrders = customerOrders.filter(o => o.isPaid === true);
+    const totalRevenue = paidCustomerOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    
+    // Paid and pending revenue (for other cards)
+    const paidRevenue = paidCustomerOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const unpaidCustomerOrders = customerOrders.filter(o => !o.isPaid);
+    const pendingRevenue = unpaidCustomerOrders.reduce((sum, o) => sum + ((o.balance || o.total) || 0), 0);
+    
+    const completedOrders = customerOrders.filter(o => o.status === 'Success' || o.status === 'Completed' || o.status === 'Delivered').length;
+    const pendingOrders = customerOrders.filter(o => 
       o.status !== 'Success' && 
       o.status !== 'Completed' && 
       o.status !== 'Delivered' && 
       o.status !== 'Canceled'
     ).length;
-    const canceledOrders = allOrders.filter(o => o.status === 'Canceled').length;
-    const paidOrders = allOrders.filter(o => o.isPaid).length;
-    const unpaidOrders = allOrders.filter(o => !o.isPaid).length;
+    const canceledOrders = customerOrders.filter(o => o.status === 'Canceled').length;
+    const paidOrders = paidCustomerOrders.length;
+    const unpaidOrders = unpaidCustomerOrders.length;
     
-    // Today's stats
+    // Today's stats - only paid customer orders
     const today = startOfDay(new Date());
-    const todayOrders = allOrders.filter(o => startOfDay(o.orderDate).getTime() === today.getTime());
-    const todayRevenue = todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const todayPaidCustomerOrders = customerOrders.filter(o => 
+      o.isPaid === true && 
+      startOfDay(o.orderDate).getTime() === today.getTime()
+    );
+    const todayRevenue = todayPaidCustomerOrders.reduce((sum, o) => sum + (o.total || 0), 0);
     
     // This week's stats
     const weekStart = startOfDay(subDays(new Date(), 7));
-    const weekOrders = allOrders.filter(o => o.orderDate >= weekStart);
+    const weekOrders = customerOrders.filter(o => o.orderDate >= weekStart);
     const weekRevenue = weekOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
     return {
@@ -241,7 +254,7 @@ export function OrdersPage() {
       canceledOrders,
       paidOrders,
       unpaidOrders,
-      todayOrders: todayOrders.length,
+      todayOrders: todayPaidCustomerOrders.length,
       todayRevenue,
       weekOrders: weekOrders.length,
       weekRevenue,
@@ -636,9 +649,9 @@ export function OrdersPage() {
                 <p className="text-xs text-muted-foreground mt-0.5">{statistics.todayOrders} today</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border">
-                <p className="text-xs text-muted-foreground mb-1">Total Revenue</p>
+                <p className="text-xs text-muted-foreground mb-1">Total Revenue (all paid)</p>
                 <p className="text-lg font-bold text-primary">₱{Math.ceil(statistics.totalRevenue)}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">₱{Math.ceil(statistics.todayRevenue)} today</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Today's Revenue (paid): ₱{Math.ceil(statistics.todayRevenue)}</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border">
                 <p className="text-xs text-muted-foreground mb-1">Pending Orders</p>
