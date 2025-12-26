@@ -104,44 +104,104 @@ export function OrdersPage() {
 
   const fetchOrders = async () => {
     setLoadingAdmin(true);
-    const { data, error } = await supabase
-      .from('orders')
-      .select(`
-        id,
-        customer_id,
-        customer_name,
-        contact_number,
-        loads,
-        weight,
-        status,
-        total,
-        created_at,
-        is_paid,
-        balance,
-        delivery_option,
-        service_package,
-        distance,
-        branch_id,
-        order_type,
-        assigned_employee_id,
-        assigned_employee_ids,
-        order_status_history(*)
-      `)
-      .order('id', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          id,
+          customer_id,
+          customer_name,
+          contact_number,
+          loads,
+          weight,
+          status,
+          total,
+          created_at,
+          is_paid,
+          balance,
+          delivery_option,
+          service_package,
+          distance,
+          branch_id,
+          order_type,
+          assigned_employee_id,
+          assigned_employee_ids,
+          order_status_history(*)
+        `)
+        .order('id', { ascending: false });
 
-    if (error) {
+      if (error) {
+        // If error is about assigned_employee_ids column not existing, try without it
+        // Error codes: 42703 = column doesn't exist, 400 = bad request (often column issues)
+        if (error.message?.includes('assigned_employee_ids') || 
+            error.message?.includes('column') ||
+            error.code === '42703' || 
+            error.code === 'PGRST116' ||
+            (error.code && error.code.toString().startsWith('42'))) {
+          console.warn('assigned_employee_ids column may not exist, fetching without it:', error.message);
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('orders')
+            .select(`
+              id,
+              customer_id,
+              customer_name,
+              contact_number,
+              loads,
+              weight,
+              status,
+              total,
+              created_at,
+              is_paid,
+              balance,
+              delivery_option,
+              service_package,
+              distance,
+              branch_id,
+              order_type,
+              assigned_employee_id,
+              order_status_history(*)
+            `)
+            .order('id', { ascending: false });
+          
+          if (fallbackError) {
+            console.error('Fallback query also failed:', fallbackError);
+            toast({ 
+              variant: 'default', 
+              title: 'Unable to load orders', 
+              description: fallbackError.message || 'Please refresh the page to see the latest orders.' 
+            });
+            setLoadingAdmin(false);
+            return;
+          }
+          
+          const mappedOrders = (fallbackData ?? []).map(mapOrder);
+          setAllOrders(mappedOrders);
+          setLoadingAdmin(false);
+          return;
+        }
+        
+        console.error('Error fetching orders:', error);
+        toast({ 
+          variant: 'default', 
+          title: 'Unable to load orders', 
+          description: error.message || 'Please refresh the page to see the latest orders.' 
+        });
+        setLoadingAdmin(false);
+        return;
+      }
+
+      const mappedOrders = (data ?? []).map(mapOrder);
+      setAllOrders(mappedOrders);
+      setLoadingAdmin(false);
+    } catch (err: any) {
+      console.error('Unexpected error fetching orders:', err);
       toast({ 
         variant: 'default', 
         title: 'Unable to load orders', 
-        description: 'Please refresh the page to see the latest orders.' 
+        description: err.message || 'Please refresh the page to see the latest orders.' 
       });
       setLoadingAdmin(false);
-      return;
     }
-
-    const mappedOrders = (data ?? []).map(mapOrder);
-    setAllOrders(mappedOrders);
-    setLoadingAdmin(false);
   };
 
   // Calculate statistics
