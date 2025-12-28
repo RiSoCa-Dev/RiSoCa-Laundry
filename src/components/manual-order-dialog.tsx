@@ -225,7 +225,7 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
           )}
 
           <div>
-            <Label htmlFor="total" className="text-xs font-medium mb-1 block">
+            <Label htmlFor="total" className="text-xs font-medium mb-1 block text-center">
               Total Price
             </Label>
             <Controller
@@ -240,12 +240,12 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
                   {...field}
                   value={field.value ?? ''}
                   disabled={isSaving}
-                  className="h-9 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="h-9 text-sm text-center text-green-600 dark:text-green-400 font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               )}
             />
             {form.formState.errors.total && (
-              <p className="text-xs text-destructive mt-0.5">{form.formState.errors.total.message}</p>
+              <p className="text-xs text-destructive mt-0.5 text-center">{form.formState.errors.total.message}</p>
             )}
           </div>
 
