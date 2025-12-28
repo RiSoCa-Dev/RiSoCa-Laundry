@@ -15,16 +15,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { Order } from './order-list';
-import { Loader2, Layers, Users } from 'lucide-react';
+import { Loader2, Layers, Users, Calendar } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase-client';
 import { useEmployees } from '@/hooks/use-employees';
+import { format } from 'date-fns';
 
 const manualOrderSchema = z.object({
   customerName: z.string().min(2, 'Name is required.'),
-  contactNumber: z.string().optional(),
+  orderDate: z.string().min(1, 'Date is required.'),
   weight: z.preprocess(
     (val) => (String(val).trim() === '' ? undefined : Number(val)),
     z.number({invalid_type_error: "Input Valid Weight"}).min(0.1, "Weight must be greater than 0.")
@@ -56,7 +57,7 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
     resolver: zodResolver(manualOrderSchema),
     defaultValues: {
       customerName: '',
-      contactNumber: '',
+      orderDate: format(new Date(), 'yyyy-MM-dd'), // Default to today's date
       weight: undefined,
       total: undefined,
       isPaid: undefined,
@@ -119,9 +120,12 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
     const assignedEmployeeIds = data.assigned_employee_ids || [];
     const firstEmployeeId = assignedEmployeeIds.length > 0 ? assignedEmployeeIds[0] : null;
     
+    // Parse the date string to a Date object
+    const orderDate = new Date(data.orderDate);
+    
     const newOrder: Omit<Order, 'id' | 'userId'> = {
       customerName: data.customerName,
-      contactNumber: data.contactNumber || 'N/A',
+      contactNumber: 'N/A', // Contact will be added in the dashboard
       load: loads,
       weight: data.weight,
       status: initialStatus,
@@ -129,14 +133,21 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
       isPaid: data.isPaid || false,
       servicePackage: 'package1',
       distance: 0,
-      orderDate: new Date(),
+      orderDate: orderDate,
       statusHistory: [{ status: initialStatus, timestamp: new Date() }],
       assignedEmployeeId: firstEmployeeId, // For backward compatibility
       assignedEmployeeIds: assignedEmployeeIds.length > 0 ? assignedEmployeeIds : undefined, // New field for multiple employees
     };
     await onAddOrder(newOrder);
     setIsSaving(false);
-    form.reset();
+    form.reset({
+      customerName: '',
+      orderDate: format(new Date(), 'yyyy-MM-dd'), // Reset to today's date
+      weight: undefined,
+      total: undefined,
+      isPaid: undefined,
+      assigned_employee_ids: [],
+    });
     onClose();
   };
 
@@ -168,16 +179,22 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
             </div>
             
             <div className="form-group">
-              <Input
-                id="contactNumber"
-                placeholder=" "
-                {...form.register('contactNumber')}
-                disabled={isSaving}
-                className="form-input text-center"
-              />
-              <Label htmlFor="contactNumber" className="form-label">Contact Number (Optional)</Label>
-              {form.formState.errors.contactNumber && (
-                <p className="text-xs text-destructive pt-1">{form.formState.errors.contactNumber.message}</p>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  id="orderDate"
+                  type="date"
+                  placeholder=" "
+                  {...form.register('orderDate')}
+                  disabled={isSaving}
+                  className="form-input text-center pl-10"
+                />
+              </div>
+              <Label htmlFor="orderDate" className="form-label">
+                Date <span className="text-destructive">*</span>
+              </Label>
+              {form.formState.errors.orderDate && (
+                <p className="text-xs text-destructive pt-1">{form.formState.errors.orderDate.message}</p>
               )}
             </div>
             

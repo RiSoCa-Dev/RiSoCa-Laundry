@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Edit, Save, X, Loader2, Package, User, Phone, Weight, Layers, DollarSign, CreditCard, CheckCircle2, MoreVertical, ChevronLeft, ChevronRight, Users } from 'lucide-react';
+import { Edit, Save, X, Loader2, Package, User, Phone, Weight, Layers, DollarSign, CreditCard, CheckCircle2, MoreVertical, ChevronLeft, ChevronRight, Users, Calendar } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 import { PaymentDialog } from '@/components/payment-dialog';
 import { StatusDialog } from '@/components/status-dialog';
@@ -32,6 +32,7 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion";
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 export type StatusHistory = {
   status: string;
@@ -158,7 +159,7 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
 
     // Employees are now fetched via useEmployees hook with caching
 
-    const handleFieldChange = (field: keyof Order, value: string | number | boolean | null | string[]) => {
+    const handleFieldChange = (field: keyof Order, value: string | number | boolean | null | string[] | Date) => {
         let newOrderState = { ...editableOrder };
 
         if (field === 'status' && typeof value === 'string' && value !== editableOrder.status) {
@@ -174,6 +175,12 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                 assignedEmployeeIds: value.length > 0 ? value : undefined,
                 // For backward compatibility, set assignedEmployeeId to first employee or null
                 assignedEmployeeId: value.length > 0 ? value[0] : null
+            };
+        } else if (field === 'orderDate' && value instanceof Date) {
+            // Handle date field
+            newOrderState = {
+                ...newOrderState,
+                orderDate: value
             };
         } else {
             const numericFields = ['weight', 'load', 'total'];
@@ -240,18 +247,53 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                 )}
               </div>
             </TableCell>
-            <TableCell>
+            <TableCell className="text-center">
                 {isEditing ? (
                     <Input 
-                        type="text" 
-                        value={editableOrder.customerName} 
-                        onChange={e => handleFieldChange('customerName', e.target.value)} 
-                        className="h-9 w-full min-w-[120px] max-w-[200px] border-2" 
+                        type="date" 
+                        value={format(editableOrder.orderDate, 'yyyy-MM-dd')} 
+                        onChange={e => {
+                            const newDate = new Date(e.target.value);
+                            handleFieldChange('orderDate', newDate);
+                        }} 
+                        className="h-9 w-full min-w-[120px] max-w-[150px] border-2 text-center" 
                         disabled={isSaving}
                     />
                 ) : (
-                    <span className="font-medium">{workingOrder.customerName}</span>
+                    <span className="font-medium text-sm">{format(workingOrder.orderDate, 'MMM dd, yyyy')}</span>
                 )}
+            </TableCell>
+            <TableCell>
+                <div className="space-y-1">
+                    {isEditing ? (
+                        <Input 
+                            type="text" 
+                            value={editableOrder.customerName} 
+                            onChange={e => handleFieldChange('customerName', e.target.value)} 
+                            className="h-9 w-full min-w-[120px] max-w-[200px] border-2" 
+                            disabled={isSaving}
+                        />
+                    ) : (
+                        <span className="font-medium">{workingOrder.customerName}</span>
+                    )}
+                    {isEditing ? (
+                        <Input 
+                            type="text" 
+                            placeholder="Contact Number"
+                            value={editableOrder.contactNumber || ''} 
+                            onChange={e => handleFieldChange('contactNumber', e.target.value)} 
+                            className="h-8 w-full min-w-[120px] max-w-[200px] border-2 text-xs" 
+                            disabled={isSaving}
+                        />
+                    ) : (
+                        workingOrder.contactNumber && workingOrder.contactNumber !== 'N/A' && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Phone className="h-3 w-3" />
+                                <span>{workingOrder.contactNumber}</span>
+                            </div>
+                        )
+                    )}
+                </div>
             </TableCell>
             <TableCell>
                 {isEditing ? (
@@ -320,19 +362,6 @@ function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Order
                         }
                         return <span className="text-muted-foreground">Unassigned</span>;
                     })()
-                )}
-            </TableCell>
-            <TableCell className="text-center">
-                {isEditing ? (
-                    <Input 
-                        type="number" 
-                        value={editableOrder.weight} 
-                        onChange={e => handleFieldChange('weight', e.target.value)} 
-                        className="h-9 w-full min-w-[80px] max-w-[120px] border-2 text-center" 
-                        disabled={isSaving}
-                    />
-                ) : (
-                    <span className="font-medium">{workingOrder.weight}</span>
                 )}
             </TableCell>
             <TableCell className="text-center">
@@ -564,7 +593,7 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
 
     // Employees are now fetched via useEmployees hook with caching
 
-    const handleFieldChange = (field: keyof Order, value: string | number | boolean | null | string[]) => {
+    const handleFieldChange = (field: keyof Order, value: string | number | boolean | null | string[] | Date) => {
         let newOrderState = { ...editableOrder };
 
         if (field === 'status' && typeof value === 'string' && value !== editableOrder.status) {
@@ -580,6 +609,12 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                 assignedEmployeeIds: value.length > 0 ? value : undefined,
                 // For backward compatibility, set assignedEmployeeId to first employee or null
                 assignedEmployeeId: value.length > 0 ? value[0] : null
+            };
+        } else if (field === 'orderDate' && value instanceof Date) {
+            // Handle date field
+            newOrderState = {
+                ...newOrderState,
+                orderDate: value
             };
         } else {
             const numericFields = ['weight', 'load', 'total'];
@@ -671,9 +706,17 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                 </Badge>
                             </div>
                             <div className="flex flex-wrap items-center justify-between w-full gap-x-3 text-foreground/90">
-                                <div className="flex items-center gap-2">
-                                    <User className="h-4 w-4 text-muted-foreground" />
-                                    <span className="text-base font-semibold">{workingOrder.customerName}</span>
+                                <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-2">
+                                        <User className="h-4 w-4 text-muted-foreground" />
+                                        <span className="text-base font-semibold">{workingOrder.customerName}</span>
+                                    </div>
+                                    {workingOrder.contactNumber && workingOrder.contactNumber !== 'N/A' && (
+                                        <div className="flex items-center gap-1 text-xs text-muted-foreground ml-6">
+                                            <Phone className="h-3 w-3" />
+                                            <span>{workingOrder.contactNumber}</span>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex items-center gap-2">
                                     {(() => {
@@ -730,6 +773,37 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                         type="text" 
                                         value={editableOrder.customerName} 
                                         onChange={e => handleFieldChange('customerName', e.target.value)} 
+                                        className="h-9 border-2" 
+                                        disabled={!isEditing || isSaving} 
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor={`contact-mob-${order.id}`} className="flex items-center gap-2">
+                                        <Phone className="h-3 w-3 text-muted-foreground" />
+                                        Contact Number
+                                    </Label>
+                                    <Input 
+                                        id={`contact-mob-${order.id}`} 
+                                        type="text" 
+                                        value={editableOrder.contactNumber || ''} 
+                                        onChange={e => handleFieldChange('contactNumber', e.target.value)} 
+                                        className="h-9 border-2" 
+                                        disabled={!isEditing || isSaving} 
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor={`date-mob-${order.id}`} className="flex items-center gap-2">
+                                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                                        Date
+                                    </Label>
+                                    <Input 
+                                        id={`date-mob-${order.id}`} 
+                                        type="date" 
+                                        value={format(editableOrder.orderDate, 'yyyy-MM-dd')} 
+                                        onChange={e => {
+                                            const newDate = new Date(e.target.value);
+                                            handleFieldChange('orderDate', newDate);
+                                        }} 
                                         className="h-9 border-2" 
                                         disabled={!isEditing || isSaving} 
                                     />
@@ -803,20 +877,13 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
                                     )}
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 gap-3">
                                 <div className="space-y-1.5">
                                     <Label htmlFor={`load-mob-${order.id}`} className="flex items-center gap-2">
                                         <Layers className="h-3 w-3 text-muted-foreground" />
                                         Load
                                     </Label>
                                     <Input id={`load-mob-${order.id}`} type="number" value={editableOrder.load} onChange={e => handleFieldChange('load', e.target.value)} className="h-9 border-2" disabled={!isEditing || isSaving} />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <Label htmlFor={`weight-mob-${order.id}`} className="flex items-center gap-2">
-                                        <Weight className="h-3 w-3 text-muted-foreground" />
-                                        Weight (kg)
-                                    </Label>
-                                    <Input id={`weight-mob-${order.id}`} type="number" value={editableOrder.weight} onChange={e => handleFieldChange('weight', e.target.value)} className="h-9 border-2" disabled={!isEditing || isSaving} />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-3 items-end">
@@ -1146,6 +1213,12 @@ export function OrderList({ orders, onUpdateOrder }: OrderListProps) {
                   ORDER #
                 </div>
               </TableHead>
+              <TableHead className="min-w-[120px] font-semibold text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  Date
+                </div>
+              </TableHead>
               <TableHead className="min-w-[140px] font-semibold">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-primary" />
@@ -1156,12 +1229,6 @@ export function OrderList({ orders, onUpdateOrder }: OrderListProps) {
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-primary" />
                   Employee
-                </div>
-              </TableHead>
-              <TableHead className="min-w-[110px] font-semibold text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <Weight className="h-4 w-4 text-primary" />
-                  Weight (kg)
                 </div>
               </TableHead>
               <TableHead className="min-w-[90px] font-semibold text-center">

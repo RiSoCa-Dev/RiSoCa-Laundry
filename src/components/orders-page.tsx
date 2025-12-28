@@ -425,6 +425,7 @@ export function OrdersPage() {
         distance: updatedOrder.distance,
         service_package: updatedOrder.servicePackage,
         status: updatedOrder.status,
+        created_at: updatedOrder.orderDate.toISOString(), // Update the order date
       };
       
       // Include order_type and assigned_employee_id if they exist
@@ -530,6 +531,7 @@ export function OrdersPage() {
       assigned_employee_id: (newOrder.assignedEmployeeIds && newOrder.assignedEmployeeIds.length > 0)
         ? newOrder.assignedEmployeeIds[0] // First employee for backward compatibility
         : (newOrder.assignedEmployeeId || null), // Fallback to single assignment
+      created_at: newOrder.orderDate.toISOString(), // Use the custom order date
     });
 
     if (error) {
@@ -567,7 +569,8 @@ export function OrdersPage() {
         assigned_employee_id: (newOrder.assignedEmployeeIds && newOrder.assignedEmployeeIds.length > 0)
           ? newOrder.assignedEmployeeIds[0] // First employee for backward compatibility
           : (newOrder.assignedEmployeeId || null), // Fallback to single assignment
-        });
+        created_at: newOrder.orderDate.toISOString(), // Use the custom order date
+      });
         if (retryCreateError) {
           toast({ 
             variant: 'default', 
