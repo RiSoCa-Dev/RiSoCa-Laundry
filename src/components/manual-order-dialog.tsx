@@ -133,179 +133,131 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) form.reset(); onClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="pb-4 border-b">
-          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-            <Layers className="h-6 w-6 text-primary" />
-            Create Manual Order
-          </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground mt-2">
-            Fill in the order details below. All fields marked with <span className="text-destructive">*</span> are required.
+      <DialogContent className="max-w-lg">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-xl font-bold">Create Manual Order</DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            All fields marked with <span className="text-destructive">*</span> are required.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
-          {/* Customer Information Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b">
-              <User className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground">Customer Information</h3>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="customerName" className="text-xs font-medium mb-1 block">
+                Customer Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="customerName"
+                placeholder="Name"
+                {...form.register('customerName')}
+                disabled={isSaving}
+                className="h-9 text-sm"
+              />
+              {form.formState.errors.customerName && (
+                <p className="text-xs text-destructive mt-0.5">{form.formState.errors.customerName.message}</p>
+              )}
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="form-group">
-                <Label htmlFor="customerName" className="text-sm font-medium mb-2 block">
-                  Customer Name <span className="text-destructive">*</span>
-                </Label>
+            <div>
+              <Label htmlFor="orderDate" className="text-xs font-medium mb-1 block">
+                Date <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                 <Input
-                  id="customerName"
-                  placeholder="Enter customer name"
-                  {...form.register('customerName')}
+                  id="orderDate"
+                  type="date"
+                  {...form.register('orderDate')}
                   disabled={isSaving}
-                  className="h-11"
+                  className="h-9 pl-8 text-sm"
                 />
-                {form.formState.errors.customerName && (
-                  <p className="text-xs text-destructive mt-1">{form.formState.errors.customerName.message}</p>
-                )}
               </div>
-              
-              <div className="form-group">
-                <Label htmlFor="orderDate" className="text-sm font-medium mb-2 block">
-                  Date <span className="text-destructive">*</span>
-                </Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  <Input
-                    id="orderDate"
-                    type="date"
-                    {...form.register('orderDate')}
-                    disabled={isSaving}
-                    className="h-11 pl-10"
-                  />
-                </div>
-                {form.formState.errors.orderDate && (
-                  <p className="text-xs text-destructive mt-1">{form.formState.errors.orderDate.message}</p>
-                )}
-              </div>
+              {form.formState.errors.orderDate && (
+                <p className="text-xs text-destructive mt-0.5">{form.formState.errors.orderDate.message}</p>
+              )}
             </div>
           </div>
 
-          {/* Order Details Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b">
-              <Layers className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground">Order Details</h3>
-            </div>
-            
-            <div className="form-group">
-              <Label className="text-sm font-medium mb-3 block">
-                Number of Loads <span className="text-destructive">*</span>
-              </Label>
-              <Controller
-                name="loads"
-                control={form.control}
-                render={({ field }) => (
-                  <div className="grid grid-cols-5 gap-2">
-                    {Array.from({ length: 10 }, (_, i) => i + 1).map((loadNum) => {
-                      const isSelected = field.value === loadNum;
-                      return (
-                        <Button
-                          key={loadNum}
-                          type="button"
-                          variant={isSelected ? "default" : "outline"}
-                          onClick={() => {
-                            field.onChange(loadNum);
-                          }}
-                          disabled={isSaving}
-                          className={cn(
-                            "h-12 font-semibold transition-all text-base",
-                            isSelected 
-                              ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-md scale-105" 
-                              : "hover:border-primary hover:text-primary hover:scale-105"
-                          )}
-                        >
-                          {loadNum}
-                        </Button>
-                      );
-                    })}
-                  </div>
-                )}
-              />
-              {form.formState.errors.loads && (
-                <p className="text-xs text-destructive mt-1">{form.formState.errors.loads.message}</p>
+          <div>
+            <Label className="text-xs font-medium mb-1.5 block">
+              Number of Loads <span className="text-destructive">*</span>
+            </Label>
+            <Controller
+              name="loads"
+              control={form.control}
+              render={({ field }) => (
+                <div className="grid grid-cols-5 gap-1.5">
+                  {Array.from({ length: 10 }, (_, i) => i + 1).map((loadNum) => {
+                    const isSelected = field.value === loadNum;
+                    return (
+                      <Button
+                        key={loadNum}
+                        type="button"
+                        variant={isSelected ? "default" : "outline"}
+                        onClick={() => field.onChange(loadNum)}
+                        disabled={isSaving}
+                        className={cn(
+                          "h-8 p-0 font-semibold text-sm transition-all",
+                          isSelected 
+                            ? "bg-primary hover:bg-primary/90 text-primary-foreground" 
+                            : "hover:border-primary hover:text-primary"
+                        )}
+                      >
+                        {loadNum}
+                      </Button>
+                    );
+                  })}
+                </div>
               )}
-            </div>
-
-            {/* Order Summary Card */}
-            {watchedLoads && watchedLoads > 0 && (
-              <div className="rounded-lg border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-4 space-y-3">
-                <div className="flex justify-between items-center">
-                  <h4 className="text-sm font-semibold flex items-center gap-2">
-                    <Layers className="h-4 w-4 text-primary" />
-                    Order Summary
-                  </h4>
-                  <span className="text-xl font-bold text-primary">{watchedLoads} Load{watchedLoads > 1 ? 's' : ''}</span>
-                </div>
-                <Separator className="bg-primary/20" />
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Total Weight</p>
-                    <p className="text-base font-semibold text-foreground">{weight.toFixed(1)} kg</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Price per Load</p>
-                    <p className="text-base font-semibold text-foreground">₱180</p>
-                  </div>
-                </div>
-                <div className="pt-2 border-t border-primary/20">
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm font-medium text-foreground">Total Amount</p>
-                    <p className="text-xl font-bold text-primary">₱{watchedLoads * 180}</p>
-                  </div>
-                </div>
-              </div>
+            />
+            {form.formState.errors.loads && (
+              <p className="text-xs text-destructive mt-0.5">{form.formState.errors.loads.message}</p>
             )}
-
-            <div className="form-group">
-              <Label htmlFor="total" className="text-sm font-medium mb-2 block flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-primary" />
-                Total Price
-              </Label>
-              <Controller
-                name="total"
-                control={form.control}
-                render={({ field }) => (
-                  <Input
-                    id="total"
-                    type="number"
-                    step="0.01"
-                    placeholder="Auto-calculated"
-                    {...field}
-                    value={field.value ?? ''}
-                    disabled={isSaving}
-                    className="h-11 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                )}
-              />
-              {form.formState.errors.total && (
-                <p className="text-xs text-destructive mt-1">{form.formState.errors.total.message}</p>
-              )}
-            </div>
           </div>
 
-          {/* Employee Assignment Section */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 pb-2 border-b">
-              <Users className="h-4 w-4 text-primary" />
-              <Label className="text-sm font-semibold text-foreground">
-                Assign Employee <span className="text-xs font-normal text-muted-foreground">(Optional)</span>
-              </Label>
+          {watchedLoads && watchedLoads > 0 && (
+            <div className="rounded-md border border-primary/20 bg-primary/5 p-2.5">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted-foreground">Total:</span>
+                <span className="font-bold text-primary">₱{watchedLoads * 180} ({watchedLoads} load{watchedLoads > 1 ? 's' : ''}, {weight.toFixed(1)}kg)</span>
+              </div>
             </div>
+          )}
+
+          <div>
+            <Label htmlFor="total" className="text-xs font-medium mb-1 block">
+              Total Price
+            </Label>
+            <Controller
+              name="total"
+              control={form.control}
+              render={({ field }) => (
+                <Input
+                  id="total"
+                  type="number"
+                  step="0.01"
+                  placeholder="Auto-calculated"
+                  {...field}
+                  value={field.value ?? ''}
+                  disabled={isSaving}
+                  className="h-9 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              )}
+            />
+            {form.formState.errors.total && (
+              <p className="text-xs text-destructive mt-0.5">{form.formState.errors.total.message}</p>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-xs font-medium mb-1.5 block">
+              Assign Employee <span className="text-xs font-normal text-muted-foreground">(Optional)</span>
+            </Label>
             <Controller
               name="assigned_employee_ids"
               control={form.control}
               render={({ field }) => {
                 const selectedIds = field.value || [];
-                
                 const toggleEmployee = (employeeId: string) => {
                   const currentIds = selectedIds;
                   if (currentIds.includes(employeeId)) {
@@ -316,14 +268,14 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
                 };
                 
                 return (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-1.5">
                     {loadingEmployees ? (
-                      <div className="col-span-full text-center py-4 text-sm text-muted-foreground">
-                        Loading employees...
+                      <div className="col-span-full text-center py-2 text-xs text-muted-foreground">
+                        Loading...
                       </div>
                     ) : employees.length === 0 ? (
-                      <div className="col-span-full text-center py-4 text-sm text-muted-foreground">
-                        No employees available
+                      <div className="col-span-full text-center py-2 text-xs text-muted-foreground">
+                        No employees
                       </div>
                     ) : (
                       employees.map((employee) => {
@@ -336,9 +288,9 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
                             onClick={() => toggleEmployee(employee.id)}
                             disabled={isSaving || loadingEmployees}
                             className={cn(
-                              "h-11 font-medium transition-all",
+                              "h-8 text-xs font-medium transition-all",
                               isSelected 
-                                ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-md" 
+                                ? "bg-primary hover:bg-primary/90 text-primary-foreground" 
                                 : "hover:border-primary hover:text-primary"
                             )}
                           >
@@ -353,63 +305,56 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
             />
           </div>
 
-          {/* Payment Status Section */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 pb-2 border-b">
-              <CreditCard className="h-4 w-4 text-primary" />
-              <Label className="text-sm font-semibold text-foreground">
-                Payment Status <span className="text-destructive">*</span>
-              </Label>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs font-medium mb-1.5 block">
+              Payment Status <span className="text-destructive">*</span>
+            </Label>
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
                 onClick={() => form.setValue('isPaid', true)}
                 className={cn(
-                  "h-12 font-semibold transition-all",
+                  "h-9 text-sm font-medium transition-all",
                   isPaid === true
-                    ? 'bg-green-600 hover:bg-green-700 text-white shadow-md'
-                    : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:border-green-600'
+                    ? 'bg-green-600 hover:bg-green-700 text-white'
+                    : 'bg-muted hover:bg-muted/80 text-muted-foreground'
                 )}
                 disabled={isSaving}
               >
-                <CreditCard className="h-4 w-4 mr-2" />
                 Paid
               </Button>
               <Button
                 type="button"
                 onClick={() => form.setValue('isPaid', false)}
                 className={cn(
-                  "h-12 font-semibold transition-all",
+                  "h-9 text-sm font-medium transition-all",
                   isPaid === false
-                    ? 'bg-red-600 hover:bg-red-700 text-white shadow-md'
-                    : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:border-red-600'
+                    ? 'bg-red-600 hover:bg-red-700 text-white'
+                    : 'bg-muted hover:bg-muted/80 text-muted-foreground'
                 )}
                 disabled={isSaving}
               >
-                <CreditCard className="h-4 w-4 mr-2" />
                 Unpaid
               </Button>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <DialogFooter className="gap-3 pt-4 border-t">
+          <DialogFooter className="gap-2 pt-2">
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => { form.reset(); onClose(); }} 
               disabled={isSaving}
-              className="w-full sm:w-auto min-w-[100px]"
+              className="h-9 text-sm"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={isSaving || isPaid === undefined || !!form.formState.errors.loads || !!form.formState.errors.assigned_employee_ids}
-              className="w-full sm:w-auto min-w-[120px] bg-primary hover:bg-primary/90 shadow-md"
+              className="h-9 text-sm bg-primary hover:bg-primary/90"
             >
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSaving && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
               {isSaving ? 'Creating...' : 'Add Order'}
             </Button>
           </DialogFooter>
