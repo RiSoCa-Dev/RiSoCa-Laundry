@@ -37,8 +37,8 @@ import { supabase } from '@/lib/supabase-client';
 import { useAuthSession } from '@/hooks/use-auth-session';
 import { format, startOfDay, endOfDay, subDays, isSameDay } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { StaticDateRangePicker } from '@/components/static-date-range-picker';
 import type { DateRange } from 'react-day-picker';
 
 export function OrdersPage() {
@@ -807,57 +807,25 @@ export function OrdersPage() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent 
-                      className="!w-auto !p-0 max-w-[calc(100vw-2rem)] sm:max-w-none border shadow-xl bg-background rounded-lg" 
+                      className="!w-auto !p-0 max-w-[calc(100vw-2rem)] sm:max-w-none border-0 shadow-xl bg-transparent" 
                       align="center"
                       side="bottom"
                       sideOffset={8}
                     >
-                      <div className="p-0 rounded-lg overflow-hidden">
-                        <Calendar
-                          mode="range"
-                          selected={dateRange}
-                          onSelect={(range) => {
-                            if (!range) {
-                              setDateRange(undefined);
-                              return;
-                            }
-                            
-                            // If user clicks the same date twice (from and to are the same), treat as single date
-                            if (range.from && range.to && isSameDay(range.from, range.to)) {
-                              setDateRange({ from: range.from, to: undefined });
-                            } else {
-                              setDateRange(range);
-                            }
-                          }}
-                          numberOfMonths={1}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between px-4 py-3 border-t gap-2 bg-background">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setDateRange(undefined);
-                            setIsDatePickerOpen(false);
-                          }}
-                          className="h-8 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex-1 sm:flex-initial transition-colors"
-                        >
-                          Clear
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            const today = new Date();
-                            setDateRange({ from: today, to: undefined });
-                          }}
-                          className="h-8 text-xs hover:bg-primary/10 hover:text-primary flex-1 sm:flex-initial transition-colors"
-                        >
-                          Today
-                        </Button>
-                      </div>
+                      <StaticDateRangePicker
+                        value={dateRange}
+                        onChange={(range) => {
+                          setDateRange(range);
+                        }}
+                        onCancel={() => {
+                          setDateRange(undefined);
+                          setIsDatePickerOpen(false);
+                        }}
+                        onConfirm={(range) => {
+                          setDateRange(range);
+                          setIsDatePickerOpen(false);
+                        }}
+                      />
                     </PopoverContent>
                   </Popover>
                 </div>
