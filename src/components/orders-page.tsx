@@ -25,8 +25,7 @@ import {
   Filter,
   Plus,
   RefreshCw,
-  BarChart3,
-  Calendar
+  BarChart3
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useMemo } from 'react';
@@ -36,7 +35,11 @@ import { InternalOrderDialog } from '@/components/internal-order-dialog';
 import { createOrderWithHistory, fetchLatestOrderId, generateNextOrderId, updateOrderFields, updateOrderStatus } from '@/lib/api/orders';
 import { supabase } from '@/lib/supabase-client';
 import { useAuthSession } from '@/hooks/use-auth-session';
-import { format, startOfDay, endOfDay, subDays } from 'date-fns';
+import { format, startOfDay, endOfDay, subDays, isSameDay } from 'date-fns';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import type { DateRange } from 'react-day-picker';
 
 export function OrdersPage() {
   const { toast } = useToast();
@@ -49,8 +52,8 @@ export function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
   const [datePreset, setDatePreset] = useState<string>('all'); // 'all', 'today', 'custom'
-  const [fromDate, setFromDate] = useState<string>('');
-  const [toDate, setToDate] = useState<string>('');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const mapOrder = (o: any): Order => {
     const totalNum = typeof o.total === 'string' ? parseFloat(o.total) : Number(o.total);
@@ -318,16 +321,16 @@ export function OrdersPage() {
     } else if (datePreset === 'today') {
       const today = startOfDay(new Date());
       filtered = filtered.filter(o => startOfDay(o.orderDate).getTime() === today.getTime());
-    } else if (datePreset === 'custom') {
+    } else if (datePreset === 'custom' && dateRange) {
       // Date picker - can be single date or range
-      if (fromDate && !toDate) {
+      if (dateRange.from && !dateRange.to) {
         // Single date selected
-        const selectedDate = startOfDay(new Date(fromDate));
-        filtered = filtered.filter(o => startOfDay(o.orderDate).getTime() === selectedDate.getTime());
-      } else if (fromDate && toDate) {
+        const selectedDate = startOfDay(dateRange.from);
+        filtered = filtered.filter(o => isSameDay(startOfDay(o.orderDate), selectedDate));
+      } else if (dateRange.from && dateRange.to) {
         // Date range selected
-        const from = startOfDay(new Date(fromDate));
-        const to = endOfDay(new Date(toDate));
+        const from = startOfDay(dateRange.from);
+        const to = endOfDay(dateRange.to);
         filtered = filtered.filter(o => o.orderDate >= from && o.orderDate <= to);
       }
     }
@@ -348,7 +351,7 @@ export function OrdersPage() {
     });
 
     return filtered;
-  }, [allOrders, searchQuery, statusFilter, paymentFilter, datePreset, fromDate, toDate]);
+  }, [allOrders, searchQuery, statusFilter, paymentFilter, datePreset, dateRange]);
 
   useEffect(() => {
     fetchOrders();
@@ -757,7 +760,7 @@ export function OrdersPage() {
               {/* Date Filter */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
+                  <CalendarIcon className="h-4 w-4" />
                   <span>Date Filter</span>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -767,8 +770,8 @@ export function OrdersPage() {
                     size="sm"
                     onClick={() => {
                       setDatePreset('all');
-                      setFromDate('');
-                      setToDate('');
+                      setDateRange(undefined);
+                      setIsDatePickerOpen(false);
                     }}
                     className="h-8 text-xs"
                   >
@@ -780,74 +783,117 @@ export function OrdersPage() {
                     size="sm"
                     onClick={() => {
                       setDatePreset('today');
-                      setFromDate('');
-                      setToDate('');
+                      setDateRange(undefined);
+                      setIsDatePickerOpen(false);
                     }}
                     className="h-8 text-xs"
                   >
                     Today
                   </Button>
-                  <Button
-                    type="button"
-                    variant={datePreset === 'custom' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => {
+                  <Popover open={isDatePickerOpen} onOpenChange={(open) => {
+                    setIsDatePickerOpen(open);
+                    if (open) {
                       setDatePreset('custom');
-                      // Don't auto-populate dates, let user select
-                    }}
-                    className="h-8 text-xs"
-                  >
-                    Date Picker
-                  </Button>
-                </div>
-                
-                {/* Date Picker - Single Date or Range */}
-                {datePreset === 'custom' && (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="relative flex-1 min-w-[140px]">
-                      <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input
-                        type="date"
-                        value={fromDate}
-                        onChange={(e) => {
-                          setFromDate(e.target.value);
-                          // If toDate is set and new fromDate is after toDate, clear toDate
-                          if (toDate && e.target.value && new Date(e.target.value) > new Date(toDate)) {
-                            setToDate('');
+                    }
+                  }}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant={datePreset === 'custom' ? 'default' : 'outline'}
+                        size="sm"
+                        className="h-8 text-xs"
+                      >
+                        Date Picker
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="range"
+                        selected={dateRange}
+                        onSelect={(range) => {
+                          if (!range) {
+                            setDateRange(undefined);
+                            return;
+                          }
+                          
+                          // If user clicks the same date twice (from and to are the same), treat as single date
+                          if (range.from && range.to && isSameDay(range.from, range.to)) {
+                            setDateRange({ from: range.from, to: undefined });
+                          } else {
+                            setDateRange(range);
                           }
                         }}
-                        placeholder="Select Date"
-                        className="pl-9 h-8 text-sm"
+                        numberOfMonths={1}
+                        className="rounded-md border"
                       />
-                    </div>
-                    {fromDate && (
-                      <>
-                        <span className="text-muted-foreground text-sm">to</span>
-                        <div className="relative flex-1 min-w-[140px]">
-                          <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                          <Input
-                            type="date"
-                            value={toDate}
-                            onChange={(e) => setToDate(e.target.value)}
-                            min={fromDate} // Prevent selecting date before fromDate
-                            placeholder="End Date (Optional)"
-                            className="pl-9 h-8 text-sm"
-                          />
-                        </div>
-                        {toDate && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setToDate('');
-                            }}
-                            className="h-8 text-xs text-muted-foreground hover:text-destructive"
-                          >
-                            Clear Range
-                          </Button>
+                      <div className="flex items-center justify-between p-3 border-t">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setDateRange(undefined);
+                            setIsDatePickerOpen(false);
+                          }}
+                          className="h-8 text-xs text-muted-foreground hover:text-destructive"
+                        >
+                          Clear
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const today = new Date();
+                            setDateRange({ from: today, to: undefined });
+                          }}
+                          className="h-8 text-xs"
+                        >
+                          Today
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                
+                {/* Date Selection Display */}
+                {datePreset === 'custom' && dateRange && (
+                  <div className="flex items-center gap-2 text-sm">
+                    {dateRange.from && (
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20">
+                        <CalendarIcon className="h-3.5 w-3.5 text-primary" />
+                        <span className="font-medium text-primary">
+                          {format(dateRange.from, 'MMM dd, yyyy')}
+                        </span>
+                        {dateRange.to && !isSameDay(dateRange.from, dateRange.to) ? (
+                          <>
+                            <span className="text-muted-foreground">to</span>
+                            <span className="font-medium text-primary">
+                              {format(dateRange.to, 'MMM dd, yyyy')}
+                            </span>
+                            <Badge variant="outline" className="ml-1 text-xs bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-300">
+                              Range
+                            </Badge>
+                          </>
+                        ) : (
+                          <Badge variant="outline" className="ml-1 text-xs bg-green-500/10 text-green-700 dark:text-green-400 border-green-300">
+                            Single Date
+                          </Badge>
                         )}
-                      </>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setDateRange(undefined);
+                            setDatePreset('all');
+                            setIsDatePickerOpen(false);
+                          }}
+                          className="h-5 w-5 p-0 ml-1 hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
                     )}
                   </div>
                 )}
@@ -876,7 +922,7 @@ export function OrdersPage() {
             <OrderList 
               orders={filteredOrders} 
               onUpdateOrder={handleUpdateOrder}
-              enablePagination={datePreset === 'all' || (datePreset === 'custom' && fromDate && toDate)}
+              enablePagination={datePreset === 'all' || (datePreset === 'custom' && dateRange?.from && dateRange?.to)}
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-64 text-center text-muted-foreground py-12">
