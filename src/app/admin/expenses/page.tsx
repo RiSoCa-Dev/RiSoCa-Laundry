@@ -1,7 +1,6 @@
 'use client';
 
 import { ExpensesTracker } from '@/components/expenses-tracker';
-import { EmailUsageMonitor } from '@/components/email-usage-monitor';
 
 export default function AdminExpensesPage() {
   return (
@@ -12,11 +11,6 @@ export default function AdminExpensesPage() {
       </div>
       
       <div className="w-full max-w-4xl space-y-6">
-        <div className="flex justify-end">
-          <div className="w-full max-w-sm">
-            <EmailUsageMonitor />
-          </div>
-        </div>
         <ExpensesTracker />
       </div>
     </div>
