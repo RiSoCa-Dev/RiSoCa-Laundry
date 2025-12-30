@@ -417,10 +417,23 @@ body {
   vertical-align: middle !important;
 }
 
+.rdp-day button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
 .rdp-day_number,
 .rdp-day > span,
-.rdp-day > button > span {
-  display: flex !important;
+.rdp-day > button > span,
+.rdp-day button > span,
+.rdp-day button {
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   width: 100% !important;
@@ -429,4 +442,21 @@ body {
   margin: 0 !important;
   padding: 0 !important;
   vertical-align: middle !important;
+  text-align: center !important;
+}
+
+/* Ensure all text content in day cells is centered */
+.rdp-cell,
+.rdp-cell * {
+  vertical-align: middle !important;
+  text-align: center !important;
+}
+
+/* Fix for react-day-picker v9+ structure */
+.rdp-day button,
+button[role="gridcell"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
 }
