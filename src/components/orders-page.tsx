@@ -819,11 +819,23 @@ export function OrdersPage() {
                         }}
                         onCancel={() => {
                           setDateRange(undefined);
+                          setDatePreset('all');
                           setIsDatePickerOpen(false);
                         }}
                         onConfirm={(range) => {
-                          setDateRange(range);
-                          setIsDatePickerOpen(false);
+                          try {
+                            if (range?.from) {
+                              setDateRange(range);
+                              setDatePreset('custom');
+                            } else {
+                              setDateRange(undefined);
+                              setDatePreset('all');
+                            }
+                            setIsDatePickerOpen(false);
+                          } catch (error) {
+                            console.error('Error confirming date selection:', error);
+                            setIsDatePickerOpen(false);
+                          }
                         }}
                       />
                     </PopoverContent>
