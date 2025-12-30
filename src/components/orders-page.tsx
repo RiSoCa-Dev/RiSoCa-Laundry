@@ -25,7 +25,8 @@ import {
   Filter,
   Plus,
   RefreshCw,
-  BarChart3
+  BarChart3,
+  Calendar
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useMemo } from 'react';
@@ -47,7 +48,9 @@ export function OrdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
-  const [dateFilter, setDateFilter] = useState<string>('all');
+  const [datePreset, setDatePreset] = useState<string>('all'); // 'all', '7days', '30days', '90days', 'custom'
+  const [fromDate, setFromDate] = useState<string>('');
+  const [toDate, setToDate] = useState<string>('');
 
   const mapOrder = (o: any): Order => {
     const totalNum = typeof o.total === 'string' ? parseFloat(o.total) : Number(o.total);
@@ -310,15 +313,27 @@ export function OrdersPage() {
     }
 
     // Date filter
-    if (dateFilter === 'today') {
-      const today = startOfDay(new Date());
-      filtered = filtered.filter(o => startOfDay(o.orderDate).getTime() === today.getTime());
-    } else if (dateFilter === 'week') {
+    if (datePreset === 'all') {
+      // Show all orders - no filtering
+    } else if (datePreset === '7days') {
       const weekStart = startOfDay(subDays(new Date(), 7));
       filtered = filtered.filter(o => o.orderDate >= weekStart);
-    } else if (dateFilter === 'month') {
+    } else if (datePreset === '30days') {
       const monthStart = startOfDay(subDays(new Date(), 30));
       filtered = filtered.filter(o => o.orderDate >= monthStart);
+    } else if (datePreset === '90days') {
+      const quarterStart = startOfDay(subDays(new Date(), 90));
+      filtered = filtered.filter(o => o.orderDate >= quarterStart);
+    } else if (datePreset === 'custom') {
+      // Custom date range
+      if (fromDate) {
+        const from = startOfDay(new Date(fromDate));
+        filtered = filtered.filter(o => o.orderDate >= from);
+      }
+      if (toDate) {
+        const to = endOfDay(new Date(toDate));
+        filtered = filtered.filter(o => o.orderDate <= to);
+      }
     }
 
     // Sort by order number (extract numeric part from order ID) - latest first
@@ -337,7 +352,7 @@ export function OrdersPage() {
     });
 
     return filtered;
-  }, [allOrders, searchQuery, statusFilter, paymentFilter, dateFilter]);
+  }, [allOrders, searchQuery, statusFilter, paymentFilter, datePreset, fromDate, toDate]);
 
   useEffect(() => {
     fetchOrders();
@@ -701,55 +716,154 @@ export function OrdersPage() {
             <Separator />
 
             {/* Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search orders..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search orders..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-3 py-2 rounded-md border bg-background text-sm"
+                >
+                  <option value="all">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="completed">Completed</option>
+                  <option value="Order Created">Order Created</option>
+                  <option value="Order Placed">Order Placed</option>
+                  <option value="Washing">Washing</option>
+                  <option value="Drying">Drying</option>
+                  <option value="Folding">Folding</option>
+                  <option value="Ready for Pick Up">Ready for Pick Up</option>
+                  <option value="Out for Delivery">Out for Delivery</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Success">Success</option>
+                  <option value="Canceled">Canceled</option>
+                </select>
+                <select
+                  value={paymentFilter}
+                  onChange={(e) => setPaymentFilter(e.target.value)}
+                  className="px-3 py-2 rounded-md border bg-background text-sm"
+                >
+                  <option value="all">All Payments</option>
+                  <option value="paid">Paid</option>
+                  <option value="unpaid">Unpaid</option>
+                  <option value="partial">Partially Paid</option>
+                </select>
               </div>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 rounded-md border bg-background text-sm"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-                <option value="Order Created">Order Created</option>
-                <option value="Order Placed">Order Placed</option>
-                <option value="Washing">Washing</option>
-                <option value="Drying">Drying</option>
-                <option value="Folding">Folding</option>
-                <option value="Ready for Pick Up">Ready for Pick Up</option>
-                <option value="Out for Delivery">Out for Delivery</option>
-                <option value="Delivered">Delivered</option>
-                <option value="Success">Success</option>
-                <option value="Canceled">Canceled</option>
-              </select>
-              <select
-                value={paymentFilter}
-                onChange={(e) => setPaymentFilter(e.target.value)}
-                className="px-3 py-2 rounded-md border bg-background text-sm"
-              >
-                <option value="all">All Payments</option>
-                <option value="paid">Paid</option>
-                <option value="unpaid">Unpaid</option>
-                <option value="partial">Partially Paid</option>
-              </select>
-              <select
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="px-3 py-2 rounded-md border bg-background text-sm"
-              >
-                <option value="all">All Time</option>
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-              </select>
+              
+              {/* Date Filter */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>Date Range</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant={datePreset === 'all' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setDatePreset('all');
+                      setFromDate('');
+                      setToDate('');
+                    }}
+                    className="h-8 text-xs"
+                  >
+                    All Time
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={datePreset === '7days' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setDatePreset('7days');
+                      setFromDate('');
+                      setToDate('');
+                    }}
+                    className="h-8 text-xs"
+                  >
+                    Last 7 Days
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={datePreset === '30days' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setDatePreset('30days');
+                      setFromDate('');
+                      setToDate('');
+                    }}
+                    className="h-8 text-xs"
+                  >
+                    Last 30 Days
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={datePreset === '90days' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setDatePreset('90days');
+                      setFromDate('');
+                      setToDate('');
+                    }}
+                    className="h-8 text-xs"
+                  >
+                    Last 90 Days
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={datePreset === 'custom' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setDatePreset('custom');
+                      if (!fromDate && !toDate) {
+                        // Set default to last 30 days if no dates selected
+                        const today = new Date();
+                        const thirtyDaysAgo = subDays(today, 30);
+                        setFromDate(format(thirtyDaysAgo, 'yyyy-MM-dd'));
+                        setToDate(format(today, 'yyyy-MM-dd'));
+                      }
+                    }}
+                    className="h-8 text-xs"
+                  >
+                    Custom Range
+                  </Button>
+                </div>
+                
+                {/* Custom Date Range Pickers */}
+                {datePreset === 'custom' && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="relative flex-1 min-w-[140px]">
+                      <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Input
+                        type="date"
+                        value={fromDate}
+                        onChange={(e) => setFromDate(e.target.value)}
+                        placeholder="From Date"
+                        className="pl-9 h-8 text-sm"
+                      />
+                    </div>
+                    <span className="text-muted-foreground text-sm">to</span>
+                    <div className="relative flex-1 min-w-[140px]">
+                      <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Input
+                        type="date"
+                        value={toDate}
+                        onChange={(e) => setToDate(e.target.value)}
+                        placeholder="To Date"
+                        className="pl-9 h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Results Summary */}
