@@ -5,7 +5,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { format, isSameDay } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
-import { X } from 'lucide-react';
 
 type StaticDateRangePickerProps = {
   value?: DateRange;
@@ -57,7 +56,7 @@ export function StaticDateRangePicker({
   };
 
   const formatDateRange = () => {
-    if (!dateRange?.from) return 'Select date range';
+    if (!dateRange?.from) return '';
     
     if (dateRange.to && !isSameDay(dateRange.from, dateRange.to)) {
       return `${format(dateRange.from, 'MMM d')} - ${format(dateRange.to, 'MMM d, yyyy')}`;
@@ -67,19 +66,19 @@ export function StaticDateRangePicker({
   };
 
   return (
-    <div className={`flex flex-col bg-background border rounded-lg shadow-xl overflow-hidden ${className || ''}`}>
-      {/* Header Section */}
-      <div className="px-5 py-4 border-b bg-muted/20">
-        <div className="text-[10px] sm:text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide">
-          SELECT DATE RANGE
+    <div className={`flex flex-col bg-background rounded-xl shadow-lg border ${className || ''}`}>
+      {/* Simple Selected Date Display */}
+      {dateRange?.from && (
+        <div className="px-5 py-3.5 border-b">
+          <div className="text-sm text-muted-foreground">Selected</div>
+          <div className="text-lg font-semibold text-foreground mt-0.5">
+            {formatDateRange()}
+          </div>
         </div>
-        <div className="text-base sm:text-lg font-semibold text-foreground">
-          {formatDateRange()}
-        </div>
-      </div>
+      )}
 
-      {/* Calendar Section */}
-      <div className="p-4 sm:p-5">
+      {/* Calendar */}
+      <div className="p-5">
         <Calendar
           mode="range"
           selected={dateRange}
@@ -88,20 +87,20 @@ export function StaticDateRangePicker({
         />
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-t bg-background gap-3">
+      {/* Simple Buttons */}
+      <div className="flex gap-2 px-5 py-3.5 border-t">
         <Button
           type="button"
-          variant="ghost"
+          variant="outline"
           onClick={handleCancel}
-          className="flex-1 h-9 text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+          className="flex-1 h-9"
         >
           Cancel
         </Button>
         <Button
           type="button"
           onClick={handleConfirm}
-          className="flex-1 h-9 text-sm font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 h-9"
           disabled={!dateRange?.from}
         >
           OK
