@@ -83,7 +83,10 @@ export async function saveBankSavingsDeposit(
 
     let totalAmount = depositAmount;
     if (!sumError && periodDeposits) {
-      totalAmount = periodDeposits.reduce((sum, record) => sum + (record.amount || 0), 0);
+      totalAmount = periodDeposits.reduce((sum, record) => {
+        const amount = typeof record.amount === 'string' ? parseFloat(record.amount) : (record.amount || 0);
+        return sum + amount;
+      }, 0);
     }
 
     toast({

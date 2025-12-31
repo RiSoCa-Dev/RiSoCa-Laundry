@@ -69,7 +69,15 @@ export function NetIncomeDistribution() {
   const [salaryPayments, setSalaryPayments] = useState<SalaryPaymentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [distributionPeriod, setDistributionPeriod] = useState<'monthly' | 'yearly' | 'all'>('all');
-  const [bankSavingsHistory, setBankSavingsHistory] = useState<Array<{period_start: string, period_end: string, period_type: string, amount: number, created_at: string}>>([]);
+  const [bankSavingsHistory, setBankSavingsHistory] = useState<Array<{
+    id: string;
+    period_start: string;
+    period_end: string;
+    period_type: string;
+    amount: number;
+    notes: string | null;
+    created_at: string;
+  }>>([]);
   const [selectedOwners, setSelectedOwners] = useState<Set<string>>(new Set(['Karaya', 'Richard'])); // Racky disabled
   const [existingDistributions, setExistingDistributions] = useState<DistributionRecord[]>([]);
   const [claimingDistribution, setClaimingDistribution] = useState(false);
@@ -705,7 +713,7 @@ export function NetIncomeDistribution() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {bankSavingsHistory.map((record, index) => {
+                  {bankSavingsHistory.map((record) => {
                     const startDate = new Date(record.period_start);
                     const endDate = new Date(record.period_end);
                     const periodLabel = record.period_type === 'monthly'
@@ -715,7 +723,7 @@ export function NetIncomeDistribution() {
                       : `${format(startDate, 'MMM dd')} - ${format(endDate, 'MMM dd, yyyy')}`;
                     
                     return (
-                      <TableRow key={index}>
+                      <TableRow key={record.id}>
                         <TableCell className="font-medium">{periodLabel}</TableCell>
                         <TableCell>
                           <Badge variant="outline">
@@ -723,7 +731,7 @@ export function NetIncomeDistribution() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right font-semibold text-blue-600">
-                          ₱{record.amount.toFixed(2)}
+                          ₱{typeof record.amount === 'number' ? record.amount.toFixed(2) : parseFloat(record.amount || '0').toFixed(2)}
                         </TableCell>
                         <TableCell className="text-right text-muted-foreground text-sm">
                           {format(new Date(record.created_at), 'MMM dd, yyyy')}
@@ -736,7 +744,10 @@ export function NetIncomeDistribution() {
                   <TableRow>
                     <TableCell colSpan={2} className="font-bold">Total Bank Savings</TableCell>
                     <TableCell className="text-right font-bold text-blue-600">
-                      ₱{bankSavingsHistory.reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
+                      ₱{bankSavingsHistory.reduce((sum, r) => {
+                        const amount = typeof r.amount === 'number' ? r.amount : parseFloat(r.amount || '0');
+                        return sum + amount;
+                      }, 0).toFixed(2)}
                     </TableCell>
                     <TableCell></TableCell>
                   </TableRow>

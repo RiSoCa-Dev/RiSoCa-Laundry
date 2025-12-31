@@ -118,7 +118,10 @@ export async function fetchBankSavings(distributionPeriod: DistributionPeriod): 
     .eq('period_end', format(endDate, 'yyyy-MM-dd'));
 
   if (!error && data && data.length > 0) {
-    const totalAmount = data.reduce((sum, record) => sum + (record.amount || 0), 0);
+    const totalAmount = data.reduce((sum, record) => {
+      const amount = typeof record.amount === 'string' ? parseFloat(record.amount) : (record.amount || 0);
+      return sum + amount;
+    }, 0);
     return totalAmount;
   }
   return 0;
@@ -128,12 +131,20 @@ export async function fetchBankSavingsHistory() {
   try {
     const { data, error } = await supabase
       .from('bank_savings')
-      .select('period_start, period_end, period_type, amount, created_at')
-      .order('period_start', { ascending: false })
-      .limit(50);
+      .select('id, period_start, period_end, period_type, amount, notes, created_at')
+      .order('created_at', { ascending: false })
+      .limit(100);
 
     if (!error && data) {
-      return data;
+      return data.map(record => ({
+        id: record.id,
+        period_start: record.period_start,
+        period_end: record.period_end,
+        period_type: record.period_type,
+        amount: typeof record.amount === 'string' ? parseFloat(record.amount) : (record.amount || 0),
+        notes: record.notes || null,
+        created_at: record.created_at,
+      }));
     }
     return [];
   } catch (error) {
