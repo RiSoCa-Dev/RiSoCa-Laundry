@@ -220,14 +220,18 @@ export function OrdersPage() {
     
     const totalOrders = customerOrders.length;
     
-    // Total Revenue: Only paid customer orders (exclude internal, exclude unpaid)
+    // Separate paid and unpaid customer orders
     const paidCustomerOrders = customerOrders.filter(o => o.isPaid === true);
-    const totalRevenue = paidCustomerOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-    
-    // Paid and pending revenue (for other cards)
-    const paidRevenue = paidCustomerOrders.reduce((sum, o) => sum + (o.total || 0), 0);
     const unpaidCustomerOrders = customerOrders.filter(o => !o.isPaid);
+    
+    // Paid Revenue: Sum of all paid orders' total
+    const paidRevenue = paidCustomerOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    
+    // Pending Revenue: Sum of unpaid orders' balance (or total if balance doesn't exist)
     const pendingRevenue = unpaidCustomerOrders.reduce((sum, o) => sum + ((o.balance || o.total) || 0), 0);
+    
+    // Total Revenue: Sum of all revenue (paid + pending)
+    const totalRevenue = paidRevenue + pendingRevenue;
     
     const completedOrders = customerOrders.filter(o => o.status === 'Success' || o.status === 'Completed' || o.status === 'Delivered').length;
     const pendingOrders = customerOrders.filter(o => 
