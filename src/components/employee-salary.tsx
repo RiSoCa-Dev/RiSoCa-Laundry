@@ -27,42 +27,17 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Inbox, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { Order } from '@/components/order-list';
 import { format, startOfDay } from 'date-fns';
 import { supabase } from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/use-employees';
-
-const SALARY_PER_LOAD = 30;
-
-// Filter orders by status - only count orders that are ready for salary calculation
-// Employees must be paid for: "Ready for Pick Up", "Delivered", "Success"
-// Orders that are not in these statuses will be moved to the next day
-const ELIGIBLE_STATUSES = [
-  'Ready for Pick Up',
-  'Delivered',
-  'Success',
-];
-
-type DailySalary = {
-    date: Date;
-    orders: Order[];
-    totalLoads: number;
-    totalSalary: number;
-};
-
-type Employee = {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-};
-
-type DailyPaymentStatus = {
-  [employeeId: string]: {
-    is_paid: boolean;
-    amount: number;
-  };
-};
+import type { Order } from '@/components/order-list';
+import type { DailySalary, Employee, DailyPaymentStatus } from './employee-salary/types';
+import { SALARY_PER_LOAD } from './employee-salary/types';
+import { fetchOrders, fetchAllDailyPayments, fetchDailyPayments } from './employee-salary/fetch-data';
+import { groupOrdersByDate, calculateActualTotalSalary, calculateEmployeeLoads, calculateEmployeeSalary } from './employee-salary/calculate-salary';
+import { autoSaveDailySalaries } from './employee-salary/auto-save-salaries';
+import { savePaymentAmount, togglePaymentStatus } from './employee-salary/payment-handlers';
 
 export function EmployeeSalary() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -77,74 +52,26 @@ export function EmployeeSalary() {
   const [editingPaymentValue, setEditingPaymentValue] = useState<string>('');
   const { toast } = useToast();
 
-  const fetchOrders = async () => {
+  const loadOrders = async () => {
     setLoading(true);
-    // Fetch all orders, we'll filter by status and is_paid in the component
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*, order_type, assigned_employee_id, assigned_employee_ids');
-    if (error) {
+    try {
+      const mapped = await fetchOrders();
+      setOrders(mapped);
+    } catch (error) {
       console.error("Failed to load orders", error);
+    } finally {
       setLoading(false);
-      return;
     }
-    const mapped: Order[] = (data ?? []).map(o => ({
-      id: o.id,
-      userId: o.customer_id,
-      customerName: o.customer_name,
-      contactNumber: o.contact_number,
-      load: o.loads,
-      weight: o.weight,
-      status: o.status,
-      total: o.total,
-      orderDate: new Date(o.created_at),
-      isPaid: o.is_paid,
-      deliveryOption: o.delivery_option ?? undefined,
-      servicePackage: o.service_package,
-      distance: o.distance ?? 0,
-      statusHistory: [],
-      orderType: o.order_type || 'customer',
-      assignedEmployeeId: o.assigned_employee_id ?? null, // For backward compatibility
-      assignedEmployeeIds: Array.isArray(o.assigned_employee_ids) ? o.assigned_employee_ids : (o.assigned_employee_ids ? [o.assigned_employee_ids] : undefined),
-    }));
-    setOrders(mapped);
-    setLoading(false);
   };
 
   useEffect(() => {
-    fetchOrders();
-    // Fetch all existing daily salary payments from database on initial load
-    fetchAllDailyPayments();
-    // Employees are now fetched via useEmployees hook with caching
+    loadOrders();
+    loadAllDailyPayments();
   }, []);
 
-  // Fetch all daily salary payments to ensure existing records are loaded from database
-  const fetchAllDailyPayments = async () => {
+  const loadAllDailyPayments = async () => {
     try {
-      const { data, error } = await supabase
-        .from('daily_salary_payments')
-        .select('*')
-        .order('date', { ascending: false })
-        .limit(1000); // Limit to recent records
-
-      if (error) {
-        console.error("Failed to load all daily payments", error);
-        return;
-      }
-
-      // Group payments by date
-      const paymentsByDate: Record<string, DailyPaymentStatus> = {};
-      (data || []).forEach((payment: any) => {
-        const dateStr = payment.date;
-        if (!paymentsByDate[dateStr]) {
-          paymentsByDate[dateStr] = {};
-        }
-        paymentsByDate[dateStr][payment.employee_id] = {
-          is_paid: payment.is_paid,
-          amount: payment.amount,
-        };
-      });
-
+      const paymentsByDate = await fetchAllDailyPayments();
       setDailyPayments(prev => ({
         ...prev,
         ...paymentsByDate,
@@ -166,170 +93,16 @@ export function EmployeeSalary() {
       uniqueDates.add(dateKey);
     });
     
-    // Auto-save calculated salaries for dates with orders
-    // This will only create new records if they don't exist (existing records are preserved)
-    autoSaveDailySalaries(Array.from(uniqueDates), orders, employees);
-  }, [orders, employees]);
-
-  // Auto-save calculated daily salaries to database
-  const autoSaveDailySalaries = async (dateStrings: string[], currentOrders: Order[], currentEmployees: Employee[]) => {
-    if (currentEmployees.length === 0 || currentOrders.length === 0) return;
-
-    const myraEmployee = currentEmployees.find(e => 
-      e.first_name?.toUpperCase() === 'MYRA' || 
-      e.first_name?.toUpperCase() === 'MYRA GAMMAL'
-    );
-
-    const savePromises: Promise<void>[] = [];
-
-    dateStrings.forEach(dateStr => {
-      // Filter orders by status - only count eligible orders
-      const dayOrders = currentOrders.filter(order => {
-        const orderDateKey = format(startOfDay(new Date(order.orderDate)), 'yyyy-MM-dd');
-        return orderDateKey === dateStr && ELIGIBLE_STATUSES.includes(order.status);
-      });
-
-      currentEmployees.forEach(emp => {
-        const isMyra = myraEmployee?.id === emp.id;
-        
-        // Calculate employee-specific salary, handling both single and multiple employee assignments
-        let customerLoadsForEmployee = 0;
-        
-        dayOrders.forEach(order => {
-          if (order.orderType === 'internal') return; // Skip internal orders here
-          
-          // Check if order has multiple employees assigned
-          if (order.assignedEmployeeIds && Array.isArray(order.assignedEmployeeIds) && order.assignedEmployeeIds.length > 0) {
-            // Order has multiple employees - divide load equally
-            if (order.assignedEmployeeIds.includes(emp.id)) {
-              const dividedLoad = order.load / order.assignedEmployeeIds.length;
-              customerLoadsForEmployee += dividedLoad;
-            }
-          } else if (order.assignedEmployeeId === emp.id) {
-            // Single employee assignment (backward compatibility)
-            customerLoadsForEmployee += order.load;
-          } else if (!order.assignedEmployeeId && (!order.assignedEmployeeIds || (Array.isArray(order.assignedEmployeeIds) && order.assignedEmployeeIds.length === 0))) {
-            // Unassigned order - assign to MYRA if she's the only employee (old records)
-            if (isMyra && currentEmployees.length === 1) {
-              customerLoadsForEmployee += order.load;
-            }
-          }
-        });
-        
-        // Round to 2 decimal places to avoid floating point errors
-        customerLoadsForEmployee = Math.round(customerLoadsForEmployee * 100) / 100;
-        
-        const customerSalary = customerLoadsForEmployee * SALARY_PER_LOAD;
-        
-        const internalOrdersForEmployee = dayOrders.filter(
-          o => o.orderType === 'internal' && o.assignedEmployeeId === emp.id
-        );
-        const internalBonus = internalOrdersForEmployee.length * 30;
-        
-        const calculatedSalary = customerSalary + internalBonus;
-
-        // Always ensure payment record exists and matches calculated salary
-        // Payment should equal calculated by default, but can be manually edited
-        // This runs for all employees, even if calculatedSalary is 0
-        savePromises.push(
-          (async () => {
-            try {
-              // Check if record exists first
-              const { data: existing, error: checkError } = await supabase
-                .from('daily_salary_payments')
-                .select('id, amount')
-                .eq('employee_id', emp.id)
-                .eq('date', dateStr)
-                .maybeSingle();
-
-              // If no record exists (maybeSingle returns null when not found)
-              if (!existing && !checkError) {
-                // Insert new record with calculated salary
-                const { error } = await supabase
-                  .from('daily_salary_payments')
-                  .insert({
-                    employee_id: emp.id,
-                    date: dateStr,
-                    amount: calculatedSalary,
-                    is_paid: false,
-                    updated_at: new Date().toISOString(),
-                  });
-
-                if (error) {
-                  console.error(`Failed to auto-save salary for ${emp.id} on ${dateStr}:`, error);
-                }
-              } else if (existing && !checkError) {
-                // Record exists - only update if amount matches calculated (meaning it hasn't been manually edited)
-                // If amount differs from calculated, it means it was manually edited, so don't overwrite it
-                const existingAmount = existing.amount || 0;
-                const calculatedRounded = Math.round(calculatedSalary * 100) / 100;
-                const existingRounded = Math.round(existingAmount * 100) / 100;
-                
-                // Only auto-update if the amount matches calculated (within 0.01 tolerance)
-                // This preserves manual edits
-                if (Math.abs(existingRounded - calculatedRounded) < 0.01) {
-                  const { error } = await supabase
-                    .from('daily_salary_payments')
-                    .update({
-                      amount: calculatedSalary,
-                      updated_at: new Date().toISOString(),
-                    })
-                    .eq('employee_id', emp.id)
-                    .eq('date', dateStr);
-
-                  if (error) {
-                    console.error(`Failed to auto-save salary for ${emp.id} on ${dateStr}:`, error);
-                  }
-                }
-                // If amounts don't match, it's a manual edit - don't overwrite it
-              }
-            } catch (error: any) {
-              console.error(`Error checking/inserting salary for ${emp.id} on ${dateStr}:`, error);
-            }
-          })()
-        );
+    autoSaveDailySalaries(Array.from(uniqueDates), orders, employees).then(() => {
+      Array.from(uniqueDates).forEach(dateStr => {
+        loadDailyPayments(dateStr);
       });
     });
+  }, [orders, employees]);
 
-    // Wait for all saves to complete, then refresh payments
-    if (savePromises.length > 0) {
-      Promise.all(savePromises).then(() => {
-        // Refresh payments for all dates
-        dateStrings.forEach(dateStr => fetchDailyPayments(dateStr));
-      }).catch(error => {
-        console.error('Error auto-saving daily salaries:', error);
-      });
-    }
-  };
-
-  // Employees are now fetched via useEmployees hook with caching
-
-  const fetchDailyPayments = async (dateStr: string) => {
+  const loadDailyPayments = async (dateStr: string) => {
     try {
-      const { data, error } = await supabase
-        .from('daily_salary_payments')
-        .select('*')
-        .eq('date', dateStr);
-
-      if (error) {
-        console.error("Failed to load daily payments", error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: `Failed to load payments: ${error.message}`,
-        });
-        return;
-      }
-
-      const payments: DailyPaymentStatus = {};
-      (data || []).forEach((payment: any) => {
-        payments[payment.employee_id] = {
-          is_paid: payment.is_paid,
-          amount: payment.amount,
-        };
-      });
-
-      // Use functional update to ensure state is properly merged
+      const payments = await fetchDailyPayments(dateStr);
       setDailyPayments(prev => {
         const updated = { ...prev };
         updated[dateStr] = payments;
@@ -389,7 +162,7 @@ export function EmployeeSalary() {
       });
 
       // Refresh orders to reflect the new grouping
-      await fetchOrders();
+      await loadOrders();
       setEditingDateOrderId(null);
       setEditingDateValue('');
     } catch (error: any) {
@@ -404,16 +177,7 @@ export function EmployeeSalary() {
     }
   };
 
-  const completedOrdersByDate = orders
-    .filter(order => ELIGIBLE_STATUSES.includes(order.status))
-    .reduce((acc, order) => {
-        const dateStr = startOfDay(new Date(order.orderDate)).toISOString();
-        if (!acc[dateStr]) {
-            acc[dateStr] = [];
-        }
-        acc[dateStr].push(order);
-        return acc;
-    }, {} as Record<string, Order[]>);
+  const completedOrdersByDate = groupOrdersByDate(orders);
 
   const dailySalaries: DailySalary[] = Object.entries(completedOrdersByDate)
     .map(([dateStr, orders]) => {
@@ -460,91 +224,23 @@ export function EmployeeSalary() {
     const paymentKey = `${employeeId}-${dateStr}`;
     const amount = parseFloat(editingPaymentValue);
 
-    if (isNaN(amount) || amount < 0) {
-      toast({
-        variant: 'destructive',
-        title: 'Invalid Amount',
-        description: 'Please enter a valid positive number.',
-      });
-      return;
-    }
-
     setUpdatingPayment(paymentKey);
 
     try {
-      // First, try to get existing record to check if it exists
-      const { data: existingData, error: fetchError } = await supabase
-        .from('daily_salary_payments')
-        .select('id')
-        .eq('employee_id', employeeId)
-        .eq('date', dateStr)
-        .maybeSingle();
-
-      let result;
-      if (existingData && !fetchError) {
-        // Update existing record
-        result = await supabase
-          .from('daily_salary_payments')
-          .update({
-            amount: amount,
-            is_paid: currentStatus,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('employee_id', employeeId)
-          .eq('date', dateStr)
-          .select();
-      } else {
-        // Insert new record
-        result = await supabase
-          .from('daily_salary_payments')
-          .insert({
-            employee_id: employeeId,
-            date: dateStr,
-            amount: amount,
-            is_paid: currentStatus,
-            updated_at: new Date().toISOString(),
-          })
-          .select();
-      }
-
-      if (result.error) {
-        console.error('Database error:', result.error);
-        console.error('Error details:', {
-          employeeId,
-          dateStr,
-          amount,
-          existingData,
-          fetchError
-        });
-        throw result.error;
-      }
-
-      // Verify the update/insert was successful
-      if (!result.data || (Array.isArray(result.data) && result.data.length === 0)) {
-        console.error('Update/insert returned no data');
-        throw new Error('Failed to save payment amount. No data returned from database.');
-      }
-
-      toast({
-        title: 'Amount Updated',
-        description: `Payment amount has been updated to ₱${amount.toFixed(2)}.`,
-      });
-
-      // Refresh payments for this date and update local state immediately
-      await fetchDailyPayments(dateStr);
-      
-      // Also update local state immediately for better UX
-      setDailyPayments(prev => {
-        const updated = { ...prev };
-        if (!updated[dateStr]) {
-          updated[dateStr] = {};
+      await savePaymentAmount(
+        employeeId,
+        date,
+        amount,
+        currentStatus,
+        toast,
+        (dateStr, payments) => {
+          setDailyPayments(prev => {
+            const updated = { ...prev };
+            updated[dateStr] = payments;
+            return updated;
+          });
         }
-        updated[dateStr][employeeId] = {
-          is_paid: currentStatus,
-          amount: amount,
-        };
-        return updated;
-      });
+      );
       
       setEditingPaymentAmount(null);
       setEditingPaymentValue('');
@@ -566,66 +262,20 @@ export function EmployeeSalary() {
     setUpdatingPayment(paymentKey);
 
     try {
-      const newStatus = !currentStatus;
-      
-      // First, try to get existing record
-      const { data: existingData, error: fetchError } = await supabase
-        .from('daily_salary_payments')
-        .select('id')
-        .eq('employee_id', employeeId)
-        .eq('date', dateStr)
-        .maybeSingle();
-
-      let result;
-      if (existingData && !fetchError) {
-        // Update existing record
-        result = await supabase
-          .from('daily_salary_payments')
-          .update({
-            is_paid: newStatus,
-            amount: amount,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('employee_id', employeeId)
-          .eq('date', dateStr);
-      } else {
-        // Insert new record
-        result = await supabase
-          .from('daily_salary_payments')
-          .insert({
-            employee_id: employeeId,
-            date: dateStr,
-            amount: amount,
-            is_paid: newStatus,
-            updated_at: new Date().toISOString(),
+      await togglePaymentStatus(
+        employeeId,
+        date,
+        currentStatus,
+        amount,
+        toast,
+        (dateStr, payments) => {
+          setDailyPayments(prev => {
+            const updated = { ...prev };
+            updated[dateStr] = payments;
+            return updated;
           });
-      }
-
-      if (result.error) {
-        console.error('Database error:', result.error);
-        throw result.error;
-      }
-
-      toast({
-        title: newStatus ? 'Marked as Paid' : 'Marked as Unpaid',
-        description: `Employee salary for ${format(date, 'MMM dd, yyyy')} has been updated.`,
-      });
-
-      // Refresh payments for this date and update local state immediately
-      await fetchDailyPayments(dateStr);
-      
-      // Also update local state immediately for better UX
-      setDailyPayments(prev => {
-        const updated = { ...prev };
-        if (!updated[dateStr]) {
-          updated[dateStr] = {};
         }
-        updated[dateStr][employeeId] = {
-          is_paid: newStatus,
-          amount: amount,
-        };
-        return updated;
-      });
+      );
     } catch (error: any) {
       console.error('Failed to update payment status:', error);
       toast({
@@ -638,67 +288,6 @@ export function EmployeeSalary() {
     }
   };
 
-  // Helper function to calculate actual total salary from payment records or calculated amounts
-  const calculateActualTotalSalary = (date: Date, dayOrders: Order[]) => {
-    const dateKey = format(date, 'yyyy-MM-dd');
-    let actualTotal = 0;
-    
-    employees.forEach(emp => {
-      const payment = dailyPayments[dateKey]?.[emp.id];
-      
-      // Calculate the employee's salary based on their assigned orders
-      const myraEmployee = employees.find(e => 
-        e.first_name?.toUpperCase() === 'MYRA' || 
-        e.first_name?.toUpperCase() === 'MYRA GAMMAL'
-      );
-      const isMyra = myraEmployee?.id === emp.id;
-      
-      // Calculate loads for this employee, handling both single and multiple employee assignments
-      let customerLoadsForEmployee = 0;
-      
-      dayOrders.forEach(order => {
-        if (order.orderType === 'internal') return; // Skip internal orders here
-        
-        // Check if order has multiple employees assigned
-        if (order.assignedEmployeeIds && Array.isArray(order.assignedEmployeeIds) && order.assignedEmployeeIds.length > 0) {
-          // Order has multiple employees - divide load equally
-          if (order.assignedEmployeeIds.includes(emp.id)) {
-            const dividedLoad = order.load / order.assignedEmployeeIds.length;
-            customerLoadsForEmployee += dividedLoad;
-          }
-        } else if (order.assignedEmployeeId === emp.id) {
-          // Single employee assignment (backward compatibility)
-          customerLoadsForEmployee += order.load;
-        } else if (!order.assignedEmployeeId && (!order.assignedEmployeeIds || (Array.isArray(order.assignedEmployeeIds) && order.assignedEmployeeIds.length === 0))) {
-          // Unassigned order - assign to MYRA if she's the only employee (old records)
-          if (isMyra && employees.length === 1) {
-            customerLoadsForEmployee += order.load;
-          }
-        }
-      });
-      
-      // Round to 2 decimal places to avoid floating point errors
-      customerLoadsForEmployee = Math.round(customerLoadsForEmployee * 100) / 100;
-      
-      const customerSalary = customerLoadsForEmployee * SALARY_PER_LOAD;
-      
-      const internalOrdersForEmployee = dayOrders.filter(
-        o => o.orderType === 'internal' && o.assignedEmployeeId === emp.id
-      );
-      const internalBonus = internalOrdersForEmployee.length * 30;
-      
-      const calculatedSalary = customerSalary + internalBonus;
-      
-      // Use payment amount if it exists (manual override), otherwise use calculated
-      if (payment) {
-        actualTotal += payment.amount;
-      } else {
-        actualTotal += calculatedSalary;
-      }
-    });
-    
-    return actualTotal;
-  };
 
   return (
     <Card className="w-full">
@@ -797,7 +386,7 @@ export function EmployeeSalary() {
                         </div>
                         <div className="flex gap-4 text-sm text-right">
                            <span>Loads: <span className="font-bold">{totalLoads}</span></span>
-                           <span className="text-primary">Salary: <span className="font-bold">₱{calculateActualTotalSalary(date, orders).toFixed(2)}</span></span>
+                           <span className="text-primary">Salary: <span className="font-bold">₱{calculateActualTotalSalary(date, orders, employees, dailyPayments).toFixed(2)}</span></span>
                         </div>
                     </div>
                 </AccordionTrigger>
@@ -819,51 +408,21 @@ export function EmployeeSalary() {
                            );
                            const isMyra = myraEmployee?.id === emp.id;
                            
-                           // Calculate employee-specific salary based on assigned loads only
-                           // Handle both single employee assignment (assignedEmployeeId) and multiple employees (assignedEmployeeIds)
-                           let customerLoadsForEmployee = 0;
-                           
-                           // Track unassigned orders for MYRA display
-                           const unassignedCustomerOrders = isMyra && employees.length === 1
-                             ? orders.filter(
-                                 o => o.orderType !== 'internal' && !o.assignedEmployeeId && !o.assignedEmployeeIds
-                               )
-                             : [];
-                           
-                           orders.forEach(order => {
-                             if (order.orderType === 'internal') return; // Skip internal orders here
-                             
-                             // Check if order has multiple employees assigned
-                             if (order.assignedEmployeeIds && Array.isArray(order.assignedEmployeeIds) && order.assignedEmployeeIds.length > 0) {
-                               // Order has multiple employees - divide load equally
-                               if (order.assignedEmployeeIds.includes(emp.id)) {
-                                 const dividedLoad = order.load / order.assignedEmployeeIds.length;
-                                 customerLoadsForEmployee += dividedLoad;
-                               }
-                             } else if (order.assignedEmployeeId === emp.id) {
-                               // Single employee assignment (backward compatibility)
-                               customerLoadsForEmployee += order.load;
-                             } else if (!order.assignedEmployeeId && (!order.assignedEmployeeIds || (Array.isArray(order.assignedEmployeeIds) && order.assignedEmployeeIds.length === 0))) {
-                               // Unassigned order - assign to MYRA if she's the only employee (old records)
-                               if (isMyra && employees.length === 1) {
-                                 customerLoadsForEmployee += order.load;
-                               }
-                             }
-                           });
-                           
-                           // Round to 2 decimal places to avoid floating point errors
-                           customerLoadsForEmployee = Math.round(customerLoadsForEmployee * 100) / 100;
-                           
+                           const customerLoadsForEmployee = calculateEmployeeLoads(orders, emp, employees);
                            const customerSalary = customerLoadsForEmployee * SALARY_PER_LOAD;
                            
-                           // Bonus: +30 for each internal order assigned to this employee
                            const internalOrdersForEmployee = orders.filter(
                              o => o.orderType === 'internal' && o.assignedEmployeeId === emp.id
                            );
                            const internalBonus = internalOrdersForEmployee.length * 30;
                            
-                           // Total salary = only loads assigned to this employee + internal bonuses
-                           const employeeSalary = customerSalary + internalBonus;
+                           const employeeSalary = calculateEmployeeSalary(orders, emp, employees);
+                           
+                           const unassignedCustomerOrders = isMyra && employees.length === 1
+                             ? orders.filter(
+                                 o => o.orderType !== 'internal' && !o.assignedEmployeeId && !o.assignedEmployeeIds
+                               )
+                             : [];
                            const paymentKey = `${emp.id}-${dateKey}`;
                            const isEditingAmount = editingPaymentAmount === paymentKey;
                            // Default to calculated salary, but use payment amount if it exists (for manual edits)
@@ -1204,7 +763,7 @@ export function EmployeeSalary() {
                             <TableRow>
                                 <TableCell colSpan={4} className="font-bold text-xs">Total</TableCell>
                                 <TableCell className="text-center font-bold text-xs">{totalLoads}</TableCell>
-                                <TableCell className="text-right font-bold text-xs">₱{calculateActualTotalSalary(date, orders).toFixed(2)}</TableCell>
+                                <TableCell className="text-right font-bold text-xs">₱{calculateActualTotalSalary(date, orders, employees, dailyPayments).toFixed(2)}</TableCell>
                             </TableRow>
                         </TableFooter>
                     </Table>
