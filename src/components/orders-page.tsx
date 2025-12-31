@@ -28,9 +28,7 @@ import {
   BarChart3,
   ShoppingCart,
   Wallet,
-  CreditCard,
-  ArrowUp,
-  ArrowDown
+  CreditCard
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, useMemo } from 'react';
@@ -664,153 +662,99 @@ export function OrdersPage() {
             </div>
 
             {/* Statistics Cards - Neumorphic Design */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 items-stretch">
               {/* Total Orders Card */}
-              <div className="p-4 rounded-[20px] bg-gray-200 dark:bg-gray-800 [box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.5),inset_10px_10px_20px_rgba(153,161,175,0.3),-10px_-10px_20px_rgba(255,255,255,0.5),10px_10px_20px_rgba(153,161,175,0.3)] dark:[box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.05),inset_10px_10px_20px_rgba(0,0,0,0.3),-10px_-10px_20px_rgba(255,255,255,0.05),10px_10px_20px_rgba(0,0,0,0.3)]">
+              <div className="p-4 rounded-[20px] bg-gray-200 dark:bg-gray-800 [box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.5),inset_10px_10px_20px_rgba(153,161,175,0.3),-10px_-10px_20px_rgba(255,255,255,0.5),10px_10px_20px_rgba(153,161,175,0.3)] dark:[box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.05),inset_10px_10px_20px_rgba(0,0,0,0.3),-10px_-10px_20px_rgba(255,255,255,0.05),10px_10px_20px_rgba(0,0,0,0.3)] flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative p-2 bg-emerald-500 rounded-full [box-shadow:-2px_-2px_4px_rgba(255,255,255,0.5),2px_2px_4px_rgba(153,161,175,0.3)]">
                     <Package className="h-4 w-4 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                   </div>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">Total Orders</p>
-                  {statistics.todayOrders > 0 && statistics.totalOrders > 0 && (
-                    <div className="flex items-center text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
-                      <ArrowUp className="h-3 w-3" />
-                      <span>{Math.round((statistics.todayOrders / statistics.totalOrders) * 100)}%</span>
-                    </div>
-                  )}
                 </div>
-                <div className="space-y-2">
-                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{statistics.totalOrders}</p>
-                  <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-md [box-shadow:inset_-2px_-2px_4px_rgba(255,255,255,0.5),inset_2px_2px_4px_rgba(153,161,175,0.3)] overflow-hidden">
-                    <div 
-                      className="absolute top-0 left-0 h-full bg-emerald-500 rounded-md transition-all duration-300"
-                      style={{ width: `${Math.min((statistics.totalOrders / 500) * 100, 100)}%` }}
-                    />
-                  </div>
+                <div className="flex flex-col justify-end flex-1">
+                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 leading-none mb-2">{statistics.totalOrders}</p>
                   <p className="text-xs text-gray-600 dark:text-gray-400">{statistics.todayOrders} today</p>
                 </div>
               </div>
 
               {/* Total Revenue Card */}
-              <div className="p-4 rounded-[20px] bg-gray-200 dark:bg-gray-800 [box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.5),inset_10px_10px_20px_rgba(153,161,175,0.3),-10px_-10px_20px_rgba(255,255,255,0.5),10px_10px_20px_rgba(153,161,175,0.3)] dark:[box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.05),inset_10px_10px_20px_rgba(0,0,0,0.3),-10px_-10px_20px_rgba(255,255,255,0.05),10px_10px_20px_rgba(0,0,0,0.3)]">
+              <div className="p-4 rounded-[20px] bg-gray-200 dark:bg-gray-800 [box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.5),inset_10px_10px_20px_rgba(153,161,175,0.3),-10px_-10px_20px_rgba(255,255,255,0.5),10px_10px_20px_rgba(153,161,175,0.3)] dark:[box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.05),inset_10px_10px_20px_rgba(0,0,0,0.3),-10px_-10px_20px_rgba(255,255,255,0.05),10px_10px_20px_rgba(0,0,0,0.3)] flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative p-2 bg-blue-500 rounded-full [box-shadow:-2px_-2px_4px_rgba(255,255,255,0.5),2px_2px_4px_rgba(153,161,175,0.3)]">
                     <DollarSign className="h-4 w-4 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                   </div>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">Total Revenue</p>
-                  {statistics.todayRevenue > 0 && statistics.totalRevenue > 0 && (
-                    <div className="flex items-center text-blue-600 dark:text-blue-400 text-xs font-semibold">
-                      <ArrowUp className="h-3 w-3" />
-                      <span>{Math.round((statistics.todayRevenue / statistics.totalRevenue) * 100)}%</span>
-                    </div>
-                  )}
                 </div>
-                <div className="space-y-2">
-                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">₱{Math.ceil(statistics.totalRevenue).toLocaleString()}</p>
-                  <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-md [box-shadow:inset_-2px_-2px_4px_rgba(255,255,255,0.5),inset_2px_2px_4px_rgba(153,161,175,0.3)] overflow-hidden">
-                    <div 
-                      className="absolute top-0 left-0 h-full bg-blue-500 rounded-md transition-all duration-300"
-                      style={{ width: `${Math.min((statistics.totalRevenue / 200000) * 100, 100)}%` }}
-                    />
-                  </div>
+                <div className="flex flex-col justify-end flex-1">
+                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 leading-none mb-2">₱{Math.ceil(statistics.totalRevenue).toLocaleString()}</p>
                   <p className="text-xs text-gray-600 dark:text-gray-400">Today: ₱{Math.ceil(statistics.todayRevenue).toLocaleString()}</p>
                 </div>
               </div>
 
               {/* Pending Orders Card */}
-              <div className="p-4 rounded-[20px] bg-gray-200 dark:bg-gray-800 [box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.5),inset_10px_10px_20px_rgba(153,161,175,0.3),-10px_-10px_20px_rgba(255,255,255,0.5),10px_10px_20px_rgba(153,161,175,0.3)] dark:[box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.05),inset_10px_10px_20px_rgba(0,0,0,0.3),-10px_-10px_20px_rgba(255,255,255,0.05),10px_10px_20px_rgba(0,0,0,0.3)]">
+              <div className="p-4 rounded-[20px] bg-gray-200 dark:bg-gray-800 [box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.5),inset_10px_10px_20px_rgba(153,161,175,0.3),-10px_-10px_20px_rgba(255,255,255,0.5),10px_10px_20px_rgba(153,161,175,0.3)] dark:[box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.05),inset_10px_10px_20px_rgba(0,0,0,0.3),-10px_-10px_20px_rgba(255,255,255,0.05),10px_10px_20px_rgba(0,0,0,0.3)] flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative p-2 bg-orange-500 rounded-full [box-shadow:-2px_-2px_4px_rgba(255,255,255,0.5),2px_2px_4px_rgba(153,161,175,0.3)]">
                     <Clock className="h-4 w-4 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                   </div>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">Pending</p>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{statistics.pendingOrders}</p>
-                  <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-md [box-shadow:inset_-2px_-2px_4px_rgba(255,255,255,0.5),inset_2px_2px_4px_rgba(153,161,175,0.3)] overflow-hidden">
-                    <div 
-                      className="absolute top-0 left-0 h-full bg-orange-500 rounded-md transition-all duration-300"
-                      style={{ width: `${statistics.totalOrders > 0 ? Math.min((statistics.pendingOrders / statistics.totalOrders) * 100, 100) : 0}%` }}
-                    />
-                  </div>
+                <div className="flex flex-col justify-end flex-1">
+                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 leading-none mb-2">{statistics.pendingOrders}</p>
                   <p className="text-xs text-gray-600 dark:text-gray-400">{statistics.completedOrders} completed</p>
                 </div>
               </div>
 
               {/* Payment Status Card */}
-              <div className="p-4 rounded-[20px] bg-gray-200 dark:bg-gray-800 [box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.5),inset_10px_10px_20px_rgba(153,161,175,0.3),-10px_-10px_20px_rgba(255,255,255,0.5),10px_10px_20px_rgba(153,161,175,0.3)] dark:[box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.05),inset_10px_10px_20px_rgba(0,0,0,0.3),-10px_-10px_20px_rgba(255,255,255,0.05),10px_10px_20px_rgba(0,0,0,0.3)]">
+              <div className="p-4 rounded-[20px] bg-gray-200 dark:bg-gray-800 [box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.5),inset_10px_10px_20px_rgba(153,161,175,0.3),-10px_-10px_20px_rgba(255,255,255,0.5),10px_10px_20px_rgba(153,161,175,0.3)] dark:[box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.05),inset_10px_10px_20px_rgba(0,0,0,0.3),-10px_-10px_20px_rgba(255,255,255,0.05),10px_10px_20px_rgba(0,0,0,0.3)] flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative p-2 bg-purple-500 rounded-full [box-shadow:-2px_-2px_4px_rgba(255,255,255,0.5),2px_2px_4px_rgba(153,161,175,0.3)]">
                     <CreditCard className="h-4 w-4 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                   </div>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">Paid</p>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{statistics.paidOrders}</p>
-                  <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-md [box-shadow:inset_-2px_-2px_4px_rgba(255,255,255,0.5),inset_2px_2px_4px_rgba(153,161,175,0.3)] overflow-hidden">
-                    <div 
-                      className="absolute top-0 left-0 h-full bg-purple-500 rounded-md transition-all duration-300"
-                      style={{ width: `${statistics.totalOrders > 0 ? Math.min((statistics.paidOrders / statistics.totalOrders) * 100, 100) : 0}%` }}
-                    />
-                  </div>
+                <div className="flex flex-col justify-end flex-1">
+                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 leading-none mb-2">{statistics.paidOrders}</p>
                   <p className="text-xs text-gray-600 dark:text-gray-400">{statistics.unpaidOrders} unpaid</p>
                 </div>
               </div>
 
               {/* Paid Revenue Card */}
-              <div className="p-4 rounded-[20px] bg-gray-200 dark:bg-gray-800 [box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.5),inset_10px_10px_20px_rgba(153,161,175,0.3),-10px_-10px_20px_rgba(255,255,255,0.5),10px_10px_20px_rgba(153,161,175,0.3)] dark:[box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.05),inset_10px_10px_20px_rgba(0,0,0,0.3),-10px_-10px_20px_rgba(255,255,255,0.05),10px_10px_20px_rgba(0,0,0,0.3)]">
+              <div className="p-4 rounded-[20px] bg-gray-200 dark:bg-gray-800 [box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.5),inset_10px_10px_20px_rgba(153,161,175,0.3),-10px_-10px_20px_rgba(255,255,255,0.5),10px_10px_20px_rgba(153,161,175,0.3)] dark:[box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.05),inset_10px_10px_20px_rgba(0,0,0,0.3),-10px_-10px_20px_rgba(255,255,255,0.05),10px_10px_20px_rgba(0,0,0,0.3)] flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative p-2 bg-green-500 rounded-full [box-shadow:-2px_-2px_4px_rgba(255,255,255,0.5),2px_2px_4px_rgba(153,161,175,0.3)]">
                     <CheckCircle2 className="h-4 w-4 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                   </div>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">Paid Revenue</p>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-3xl font-bold text-green-600 dark:text-green-400">₱{Math.ceil(statistics.paidRevenue).toLocaleString()}</p>
-                  <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-md [box-shadow:inset_-2px_-2px_4px_rgba(255,255,255,0.5),inset_2px_2px_4px_rgba(153,161,175,0.3)] overflow-hidden">
-                    <div 
-                      className="absolute top-0 left-0 h-full bg-green-500 rounded-md transition-all duration-300"
-                      style={{ width: `${(statistics.paidRevenue + statistics.pendingRevenue) > 0 ? Math.min((statistics.paidRevenue / (statistics.paidRevenue + statistics.pendingRevenue)) * 100, 100) : 0}%` }}
-                    />
-                  </div>
+                <div className="flex flex-col justify-end flex-1">
+                  <p className="text-3xl font-bold text-green-600 dark:text-green-400 leading-none mb-2">₱{Math.ceil(statistics.paidRevenue).toLocaleString()}</p>
                 </div>
               </div>
 
               {/* Pending Revenue Card */}
-              <div className="p-4 rounded-[20px] bg-gray-200 dark:bg-gray-800 [box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.5),inset_10px_10px_20px_rgba(153,161,175,0.3),-10px_-10px_20px_rgba(255,255,255,0.5),10px_10px_20px_rgba(153,161,175,0.3)] dark:[box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.05),inset_10px_10px_20px_rgba(0,0,0,0.3),-10px_-10px_20px_rgba(255,255,255,0.05),10px_10px_20px_rgba(0,0,0,0.3)]">
+              <div className="p-4 rounded-[20px] bg-gray-200 dark:bg-gray-800 [box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.5),inset_10px_10px_20px_rgba(153,161,175,0.3),-10px_-10px_20px_rgba(255,255,255,0.5),10px_10px_20px_rgba(153,161,175,0.3)] dark:[box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.05),inset_10px_10px_20px_rgba(0,0,0,0.3),-10px_-10px_20px_rgba(255,255,255,0.05),10px_10px_20px_rgba(0,0,0,0.3)] flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative p-2 bg-orange-500 rounded-full [box-shadow:-2px_-2px_4px_rgba(255,255,255,0.5),2px_2px_4px_rgba(153,161,175,0.3)]">
                     <Wallet className="h-4 w-4 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                   </div>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">Pending Revenue</p>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">₱{Math.ceil(statistics.pendingRevenue).toLocaleString()}</p>
-                  <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-md [box-shadow:inset_-2px_-2px_4px_rgba(255,255,255,0.5),inset_2px_2px_4px_rgba(153,161,175,0.3)] overflow-hidden">
-                    <div 
-                      className="absolute top-0 left-0 h-full bg-orange-500 rounded-md transition-all duration-300"
-                      style={{ width: `${(statistics.paidRevenue + statistics.pendingRevenue) > 0 ? Math.min((statistics.pendingRevenue / (statistics.paidRevenue + statistics.pendingRevenue)) * 100, 100) : 0}%` }}
-                    />
-                  </div>
+                <div className="flex flex-col justify-end flex-1">
+                  <p className="text-3xl font-bold text-orange-600 dark:text-orange-400 leading-none mb-2">₱{Math.ceil(statistics.pendingRevenue).toLocaleString()}</p>
                 </div>
               </div>
 
               {/* This Week Card */}
-              <div className="p-4 rounded-[20px] bg-gray-200 dark:bg-gray-800 [box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.5),inset_10px_10px_20px_rgba(153,161,175,0.3),-10px_-10px_20px_rgba(255,255,255,0.5),10px_10px_20px_rgba(153,161,175,0.3)] dark:[box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.05),inset_10px_10px_20px_rgba(0,0,0,0.3),-10px_-10px_20px_rgba(255,255,255,0.05),10px_10px_20px_rgba(0,0,0,0.3)]">
+              <div className="p-4 rounded-[20px] bg-gray-200 dark:bg-gray-800 [box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.5),inset_10px_10px_20px_rgba(153,161,175,0.3),-10px_-10px_20px_rgba(255,255,255,0.5),10px_10px_20px_rgba(153,161,175,0.3)] dark:[box-shadow:inset_-10px_-10px_20px_rgba(255,255,255,0.05),inset_10px_10px_20px_rgba(0,0,0,0.3),-10px_-10px_20px_rgba(255,255,255,0.05),10px_10px_20px_rgba(0,0,0,0.3)] flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative p-2 bg-indigo-500 rounded-full [box-shadow:-2px_-2px_4px_rgba(255,255,255,0.5),2px_2px_4px_rgba(153,161,175,0.3)]">
                     <BarChart3 className="h-4 w-4 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                   </div>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">This Week</p>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{statistics.weekOrders}</p>
-                  <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-md [box-shadow:inset_-2px_-2px_4px_rgba(255,255,255,0.5),inset_2px_2px_4px_rgba(153,161,175,0.3)] overflow-hidden">
-                    <div 
-                      className="absolute top-0 left-0 h-full bg-indigo-500 rounded-md transition-all duration-300"
-                      style={{ width: `${statistics.totalOrders > 0 ? Math.min((statistics.weekOrders / statistics.totalOrders) * 100, 100) : 0}%` }}
-                    />
-                  </div>
+                <div className="flex flex-col justify-end flex-1">
+                  <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 leading-none mb-2">{statistics.weekOrders}</p>
                   <p className="text-xs text-gray-600 dark:text-gray-400">₱{Math.ceil(statistics.weekRevenue).toLocaleString()}</p>
                 </div>
               </div>
