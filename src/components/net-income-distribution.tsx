@@ -150,6 +150,20 @@ export function NetIncomeDistribution() {
     }
   };
 
+  // Calculate total bank savings from history for the current period
+  const totalBankSavingsForPeriod = useMemo(() => {
+    if (distributionPeriod === 'all') {
+      // For "all time", sum all bank savings from history
+      return bankSavingsHistory.reduce((sum, record) => {
+        const amount = typeof record.amount === 'number' ? record.amount : parseFloat(record.amount || '0');
+        return sum + amount;
+      }, 0);
+    } else {
+      // For monthly/yearly, use the filtered bank savings
+      return bankSavings;
+    }
+  }, [bankSavings, bankSavingsHistory, distributionPeriod]);
+
   // Calculate net income distribution
   const distributionData = useMemo(() => {
     return calculateDistributionData(
@@ -159,9 +173,9 @@ export function NetIncomeDistribution() {
       distributionPeriod,
       selectedOwners,
       existingDistributions,
-      bankSavings
+      totalBankSavingsForPeriod
     );
-  }, [orders, expenses, salaryPayments, distributionPeriod, selectedOwners, existingDistributions, bankSavings]);
+  }, [orders, expenses, salaryPayments, distributionPeriod, selectedOwners, existingDistributions, totalBankSavingsForPeriod]);
 
   // Prepare chart data for distribution over time
   const timeSeriesData = useMemo(() => {
@@ -387,7 +401,7 @@ export function NetIncomeDistribution() {
 
       <SummaryCards
         distributionData={distributionData}
-        bankSavings={bankSavings}
+        bankSavings={totalBankSavingsForPeriod}
         showCustomTransfer={showCustomTransfer}
         customTransferAmount={customTransferAmount}
         savingBankSavings={savingBankSavings}
