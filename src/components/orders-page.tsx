@@ -252,6 +252,14 @@ export function OrdersPage() {
     const todayPaidCustomerOrders = todayCustomerOrders.filter(o => o.isPaid === true);
     const todayRevenue = todayPaidCustomerOrders.reduce((sum, o) => sum + (o.total || 0), 0);
     
+    // Yesterday's stats - all customer orders created yesterday
+    const yesterday = startOfDay(subDays(new Date(), 1));
+    const yesterdayCustomerOrders = customerOrders.filter(o => 
+      startOfDay(o.orderDate).getTime() === yesterday.getTime()
+    );
+    const yesterdayPaidCustomerOrders = yesterdayCustomerOrders.filter(o => o.isPaid === true);
+    const yesterdayRevenue = yesterdayPaidCustomerOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    
     // This week's stats
     const weekStart = startOfDay(subDays(new Date(), 7));
     const weekOrders = customerOrders.filter(o => o.orderDate >= weekStart);
@@ -269,6 +277,7 @@ export function OrdersPage() {
       unpaidOrders,
       todayOrders: todayCustomerOrders.length,
       todayRevenue,
+      yesterdayRevenue,
       weekOrders: weekOrders.length,
       weekRevenue,
     };
@@ -691,7 +700,7 @@ export function OrdersPage() {
                 </div>
                 <div className="flex flex-col justify-end flex-1">
                   <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 leading-none mb-2">₱{Math.ceil(statistics.totalRevenue).toLocaleString()}</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">Today: ₱{Math.ceil(statistics.todayRevenue).toLocaleString()}</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Yesterday: ₱{Math.ceil(statistics.yesterdayRevenue).toLocaleString()}</p>
                 </div>
               </div>
 
@@ -733,6 +742,7 @@ export function OrdersPage() {
                 </div>
                 <div className="flex flex-col justify-end flex-1">
                   <p className="text-3xl font-bold text-green-600 dark:text-green-400 leading-none mb-2">₱{Math.ceil(statistics.paidRevenue).toLocaleString()}</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Today: ₱{Math.ceil(statistics.todayRevenue).toLocaleString()}</p>
                 </div>
               </div>
 
@@ -746,6 +756,7 @@ export function OrdersPage() {
                 </div>
                 <div className="flex flex-col justify-end flex-1">
                   <p className="text-3xl font-bold text-orange-600 dark:text-orange-400 leading-none mb-2">₱{Math.ceil(statistics.pendingRevenue).toLocaleString()}</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">&nbsp;</p>
                 </div>
               </div>
 
