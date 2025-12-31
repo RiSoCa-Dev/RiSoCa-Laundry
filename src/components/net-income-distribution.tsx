@@ -68,7 +68,7 @@ export function NetIncomeDistribution() {
   const [expenses, setExpenses] = useState<ExpenseData[]>([]);
   const [salaryPayments, setSalaryPayments] = useState<SalaryPaymentData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [distributionPeriod, setDistributionPeriod] = useState<'monthly' | 'yearly' | 'all'>('monthly');
+  const [distributionPeriod, setDistributionPeriod] = useState<'monthly' | 'yearly' | 'all'>('all');
   const [bankSavingsHistory, setBankSavingsHistory] = useState<Array<{period_start: string, period_end: string, period_type: string, amount: number, created_at: string}>>([]);
   const [selectedOwners, setSelectedOwners] = useState<Set<string>>(new Set(['Karaya', 'Richard'])); // Racky disabled
   const [existingDistributions, setExistingDistributions] = useState<DistributionRecord[]>([]);
@@ -84,6 +84,8 @@ export function NetIncomeDistribution() {
 
   useEffect(() => {
     fetchData();
+    loadBankSavings();
+    loadBankSavingsHistory();
   }, []);
 
   const fetchData = async () => {
@@ -130,10 +132,10 @@ export function NetIncomeDistribution() {
       );
       
       if (result.success) {
-        if (result.newTotal !== undefined) {
-          setBankSavings(result.newTotal);
-        }
-        await loadBankSavingsHistory(); // Refresh history
+        // Reload bank savings for the current period to ensure it's in sync
+        await loadBankSavings();
+        // Refresh history to show the new deposit
+        await loadBankSavingsHistory();
       }
     } finally {
       setSavingBankSavings(false);
