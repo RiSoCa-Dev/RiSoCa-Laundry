@@ -35,11 +35,8 @@ import { InternalOrderDialog } from '@/components/internal-order-dialog';
 import { createOrderWithHistory, fetchLatestOrderId, generateNextOrderId, updateOrderFields, updateOrderStatus } from '@/lib/api/orders';
 import { supabase } from '@/lib/supabase-client';
 import { useAuthSession } from '@/hooks/use-auth-session';
-import { format, startOfDay, endOfDay, subDays, isSameDay } from 'date-fns';
+import { format, startOfDay } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { StaticDateRangePicker } from '@/components/static-date-range-picker';
-import type { DateRange } from 'react-day-picker';
 
 export function OrdersPage() {
   const { toast } = useToast();
@@ -51,9 +48,7 @@ export function OrdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
-  const [datePreset, setDatePreset] = useState<string>('all'); // 'all', 'today', 'custom'
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [datePreset, setDatePreset] = useState<string>('all'); // 'all', 'today'
 
   const mapOrder = (o: any): Order => {
     const totalNum = typeof o.total === 'string' ? parseFloat(o.total) : Number(o.total);
@@ -321,18 +316,6 @@ export function OrdersPage() {
     } else if (datePreset === 'today') {
       const today = startOfDay(new Date());
       filtered = filtered.filter(o => startOfDay(o.orderDate).getTime() === today.getTime());
-    } else if (datePreset === 'custom' && dateRange) {
-      // Date picker - can be single date or range
-      if (dateRange.from && !dateRange.to) {
-        // Single date selected
-        const selectedDate = startOfDay(dateRange.from);
-        filtered = filtered.filter(o => isSameDay(startOfDay(o.orderDate), selectedDate));
-      } else if (dateRange.from && dateRange.to) {
-        // Date range selected
-        const from = startOfDay(dateRange.from);
-        const to = endOfDay(dateRange.to);
-        filtered = filtered.filter(o => o.orderDate >= from && o.orderDate <= to);
-      }
     }
 
     // Sort by order number (extract numeric part from order ID) - latest first
@@ -351,7 +334,7 @@ export function OrdersPage() {
     });
 
     return filtered;
-  }, [allOrders, searchQuery, statusFilter, paymentFilter, datePreset, dateRange]);
+  }, [allOrders, searchQuery, statusFilter, paymentFilter, datePreset]);
 
   useEffect(() => {
     fetchOrders();
@@ -770,8 +753,6 @@ export function OrdersPage() {
                     size="sm"
                     onClick={() => {
                       setDatePreset('all');
-                      setDateRange(undefined);
-                      setIsDatePickerOpen(false);
                     }}
                     className="h-8 text-xs flex-shrink-0"
                   >
@@ -783,111 +764,12 @@ export function OrdersPage() {
                     size="sm"
                     onClick={() => {
                       setDatePreset('today');
-                      setDateRange(undefined);
-                      setIsDatePickerOpen(false);
                     }}
                     className="h-8 text-xs flex-shrink-0"
                   >
                     Today
                   </Button>
-                  <Popover open={isDatePickerOpen} onOpenChange={(open) => {
-                    setIsDatePickerOpen(open);
-                    if (open) {
-                      setDatePreset('custom');
-                    }
-                  }}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant={datePreset === 'custom' ? 'default' : 'outline'}
-                        size="sm"
-                        className="h-8 text-xs flex-shrink-0"
-                      >
-                        Date Picker
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent 
-                      className="!w-auto !p-0 max-w-[calc(100vw-2rem)] sm:max-w-none border-0 shadow-none bg-transparent" 
-                      align="center"
-                      side="bottom"
-                      sideOffset={8}
-                    >
-                      <StaticDateRangePicker
-                        value={dateRange}
-                        onChange={(range) => {
-                          setDateRange(range);
-                        }}
-                        onCancel={() => {
-                          setDateRange(undefined);
-                          setDatePreset('all');
-                          setIsDatePickerOpen(false);
-                        }}
-                        onConfirm={(range) => {
-                          try {
-                            if (range?.from) {
-                              setDateRange(range);
-                              setDatePreset('custom');
-                            } else {
-                              setDateRange(undefined);
-                              setDatePreset('all');
-                            }
-                            setIsDatePickerOpen(false);
-                          } catch (error) {
-                            console.error('Error confirming date selection:', error);
-                            setIsDatePickerOpen(false);
-                          }
-                        }}
-                      />
-                    </PopoverContent>
-                  </Popover>
                 </div>
-                
-                {/* Date Selection Display */}
-                {datePreset === 'custom' && dateRange && dateRange.from && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-md bg-primary/10 border border-primary/20 w-full sm:w-auto">
-                      <CalendarIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
-                      <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 flex-1 min-w-0">
-                        <span className="font-medium text-primary text-xs sm:text-sm whitespace-nowrap">
-                          {format(dateRange.from, 'MMM dd, yyyy')}
-                        </span>
-                        {dateRange.to && !isSameDay(dateRange.from, dateRange.to) ? (
-                          <>
-                            <span className="text-muted-foreground text-xs sm:text-sm">to</span>
-                            <span className="font-medium text-primary text-xs sm:text-sm whitespace-nowrap">
-                              {format(dateRange.to, 'MMM dd, yyyy')}
-                            </span>
-                          </>
-                        ) : null}
-                      </div>
-                      <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
-                        {dateRange.to && !isSameDay(dateRange.from, dateRange.to) ? (
-                          <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-300 flex-shrink-0">
-                            Range
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-xs bg-green-500/10 text-green-700 dark:text-green-400 border-green-300 flex-shrink-0">
-                            Single Date
-                          </Badge>
-                        )}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setDateRange(undefined);
-                            setDatePreset('all');
-                            setIsDatePickerOpen(false);
-                          }}
-                          className="h-6 w-6 sm:h-5 sm:w-5 p-0 hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
-                          aria-label="Clear date selection"
-                        >
-                          <X className="h-3.5 w-3.5 sm:h-3 sm:w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -913,7 +795,7 @@ export function OrdersPage() {
             <OrderList 
               orders={filteredOrders} 
               onUpdateOrder={handleUpdateOrder}
-              enablePagination={datePreset === 'all' || (datePreset === 'custom' && dateRange?.from && dateRange?.to)}
+              enablePagination={datePreset === 'all'}
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-64 text-center text-muted-foreground py-12">
