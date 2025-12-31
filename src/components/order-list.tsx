@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import {
@@ -17,114 +17,57 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Edit, Save, X, Loader2, Package, User, Phone, Weight, Layers, DollarSign, CreditCard, CheckCircle2, MoreVertical, ChevronLeft, ChevronRight, Users, Calendar } from 'lucide-react';
-import { supabase } from '@/lib/supabase-client';
+import {
+  Edit,
+  Save,
+  X,
+  Loader2,
+  Package,
+  User,
+  Phone,
+  Weight,
+  Layers,
+  DollarSign,
+  CreditCard,
+  CheckCircle2,
+  MoreVertical,
+  ChevronLeft,
+  ChevronRight,
+  Users,
+  Calendar,
+} from 'lucide-react';
 import { PaymentDialog } from '@/components/payment-dialog';
 import { StatusDialog } from '@/components/status-dialog';
 import { useEmployees } from '@/hooks/use-employees';
 import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/accordion";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-
-export type StatusHistory = {
-  status: string;
-  timestamp: Date;
-};
-
-export type Order = {
-  id: string;
-  userId: string;
-  customerName: string;
-  contactNumber: string;
-  load: number;
-  weight: number;
-  status: string;
-  total: number;
-  orderDate: Date;
-  isPaid: boolean;
-  balance?: number; // Remaining balance for unpaid/partially paid orders
-  deliveryOption?: string;
-  servicePackage: string;
-  distance: number;
-  statusHistory: StatusHistory[];
-  branchId?: string | null;
-  orderType?: 'customer' | 'internal';
-  assignedEmployeeId?: string | null; // For backward compatibility (single employee)
-  assignedEmployeeIds?: string[]; // Array of employee IDs (multiple employees)
-  loadPieces?: number[]; // Array of piece counts per load [30, 25] means Load 1: 30 pcs, Load 2: 25 pcs
-};
-
-type OrderListProps = {
-  orders: Order[];
-  onUpdateOrder: (order: Order) => Promise<void>;
-  enablePagination?: boolean; // If false, show all orders without pagination
-};
-
-const statusOptions = [
-  'Order Created',
-  'Order Placed',
-  'Pickup Scheduled',
-  'Washing',
-  'Drying',
-  'Folding',
-  'Ready for Pick Up',
-  'Out for Delivery',
-  'Delivered',
-  'Success',
-  'Canceled',
-];
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'Delivered':
-    case 'Success':
-      return 'bg-green-500';
-    case 'Out for Delivery':
-    case 'Ready for Pick Up':
-      return 'bg-blue-500';
-    case 'Washing':
-    case 'Drying':
-    case 'Folding':
-      return 'bg-yellow-500';
-    case 'Pickup Scheduled':
-    case 'Order Placed':
-      return 'bg-orange-500';
-    case 'Order Created':
-      return 'bg-gray-500';
-    case 'Canceled':
-      return 'bg-red-500';
-    default:
-      return 'bg-gray-500';
-  }
-};
-
-const getPaymentStatusColor = (isPaid: boolean) => {
-    return isPaid ? 'bg-green-500' : 'bg-red-500';
-}
-
-const getPaymentBadgeInfo = (isPaid: boolean, isPartiallyPaid: boolean) => {
-    if (isPaid) {
-        return { text: 'Paid', color: 'bg-green-500', clickable: false };
-    } else if (isPartiallyPaid) {
-        return { text: 'Balance', color: 'bg-orange-500', clickable: true };
-    } else {
-        return { text: 'Unpaid', color: 'bg-red-500', clickable: true };
-    }
-}
-
-type Employee = {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-};
+import type {
+  Order,
+  StatusHistory,
+  OrderListProps,
+  Employee,
+} from './order-list/types';
+import {
+  statusOptions,
+  getStatusColor,
+  getPaymentStatusColor,
+  getPaymentBadgeInfo,
+} from './order-list/utils';
 
 function OrderRow({ order, onUpdateOrder }: { order: Order, onUpdateOrder: OrderListProps['onUpdateOrder'] }) {
     const [isEditing, setIsEditing] = useState(false);
@@ -1263,7 +1206,14 @@ function OrderCard({ order, onUpdateOrder }: { order: Order, onUpdateOrder: Orde
     );
 }
 
-export function OrderList({ orders, onUpdateOrder, enablePagination = true }: OrderListProps) {
+// Re-export types for backward compatibility
+export type { Order, StatusHistory, OrderListProps } from './order-list/types';
+
+export function OrderList({
+  orders,
+  onUpdateOrder,
+  enablePagination = true,
+}: OrderListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 10;
 
