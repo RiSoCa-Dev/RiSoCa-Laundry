@@ -24,8 +24,9 @@ export async function saveBankSavingsDeposit(
     endDate = endOfYear(now);
     periodType = 'yearly';
   } else if (distributionPeriod === 'all') {
-    // For all-time deposits, use a very wide date range with 'custom' type
-    startDate = new Date(2000, 0, 1); // Start from year 2000
+    // For all-time deposits, use today's date for both start and end with 'custom' type
+    // This allows multiple deposits on the same day and maintains transaction history
+    startDate = now;
     endDate = now;
     periodType = 'custom';
   } else {
@@ -59,20 +60,28 @@ export async function saveBankSavingsDeposit(
       });
 
     if (insertError) {
+      console.error('Error inserting bank savings deposit:', {
+        error: insertError,
+        insertData: {
+          period_start: format(startDate, 'yyyy-MM-dd'),
+          period_end: format(endDate, 'yyyy-MM-dd'),
+          period_type: periodType,
+          amount: depositAmount,
+        },
+      });
+      
       // Check if error is due to unique constraint (if migration hasn't been run)
       if (insertError.code === '23505' || insertError.message?.includes('unique') || insertError.message?.includes('duplicate')) {
-        console.error('Unique constraint error - database migration may be needed:', insertError);
         toast({
           variant: 'destructive',
           title: 'Database Migration Required',
           description: 'Please run the migration script to remove the unique constraint on bank_savings table. See src/docs/remove-bank-savings-unique-constraint.sql',
         });
       } else {
-        console.error('Error inserting bank savings deposit:', insertError);
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: insertError.message || 'Failed to save bank savings deposit.',
+          description: insertError.message || 'Failed to save bank savings deposit. Please check the console for details.',
         });
       }
       return { success: false };
