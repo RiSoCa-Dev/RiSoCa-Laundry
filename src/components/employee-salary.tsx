@@ -425,8 +425,16 @@ export function EmployeeSalary() {
                              : [];
                            const paymentKey = `${emp.id}-${dateKey}`;
                            const isEditingAmount = editingPaymentAmount === paymentKey;
-                           // Default to calculated salary, but use payment amount if it exists (for manual edits)
-                           const currentAmount = payment?.amount ?? employeeSalary;
+                           // Use payment amount if it exists and matches calculated (synced), otherwise use calculated salary
+                           // This ensures payment amount defaults to calculated salary unless manually edited
+                           const paymentAmount = payment?.amount ?? null;
+                           const calculatedRounded = Math.round(employeeSalary * 100) / 100;
+                           const paymentRounded = paymentAmount ? Math.round(paymentAmount * 100) / 100 : null;
+                           // If payment amount exists but doesn't match calculated, use calculated (auto-save will sync it)
+                           // If payment amount matches calculated or is null, use calculated
+                           const currentAmount = (paymentRounded !== null && Math.abs(paymentRounded - calculatedRounded) < 0.01) 
+                             ? paymentAmount! 
+                             : employeeSalary;
                            
                            return (
                              <div key={emp.id} className="flex flex-col gap-2 p-3 border rounded-md bg-background">

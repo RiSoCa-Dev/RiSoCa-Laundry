@@ -54,23 +54,19 @@ export async function autoSaveDailySalaries(
                 console.error(`Failed to auto-save salary for ${emp.id} on ${dateStr}:`, error);
               }
             } else if (existing && !checkError) {
-              const existingAmount = existing.amount || 0;
-              const calculatedRounded = Math.round(calculatedSalary * 100) / 100;
-              const existingRounded = Math.round(existingAmount * 100) / 100;
-              
-              if (Math.abs(existingRounded - calculatedRounded) < 0.01) {
-                const { error } = await supabase
-                  .from('daily_salary_payments')
-                  .update({
-                    amount: calculatedSalary,
-                    updated_at: new Date().toISOString(),
-                  })
-                  .eq('employee_id', emp.id)
-                  .eq('date', dateStr);
+              // Always update the amount to match the calculated salary
+              // This ensures payment amount stays in sync with calculated salary
+              const { error } = await supabase
+                .from('daily_salary_payments')
+                .update({
+                  amount: calculatedSalary,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('employee_id', emp.id)
+                .eq('date', dateStr);
 
-                if (error) {
-                  console.error(`Failed to auto-save salary for ${emp.id} on ${dateStr}:`, error);
-                }
+              if (error) {
+                console.error(`Failed to auto-save salary for ${emp.id} on ${dateStr}:`, error);
               }
             }
           } catch (error: any) {
