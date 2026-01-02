@@ -1,0 +1,472 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  height: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  height: 100%;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  :root {
+    --background: 259 53% 96%;
+    --foreground: 260 10% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 260 10% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 260 10% 15%;
+    --primary: 262 52% 47%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 265 44% 88%;
+    --secondary-foreground: 260 10% 15%;
+    --muted: 265 44% 92%;
+    --muted-foreground: 260 8% 45%;
+    --accent: 42 100% 50%;
+    --accent-foreground: 42 90% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 265 25% 85%;
+    --input: 265 25% 88%;
+    --ring: 262 52% 47%;
+    --radius: 0.75rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 210 40% 98%;
+    --card: 224 71% 9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 224 71% 4%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 224 71% 4%;
+    --secondary: 215 28% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 210 40% 98%;
+    --accent-foreground: 224 71% 4%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 210 40% 98%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+body {
+  background-image: radial-gradient(hsl(var(--muted)) 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+
+/* Smooth transitions for responsive design - only for layout elements */
+@media (prefers-reduced-motion: no-preference) {
+  .transition-all,
+  [class*="flex"],
+  [class*="grid"],
+  [class*="w-"],
+  [class*="h-"],
+  [class*="max-w-"],
+  [class*="min-w-"],
+  [class*="gap-"],
+  [class*="p-"],
+  [class*="m-"] {
+    transition-property: width, height, padding, margin, font-size, transform, opacity, gap;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-in-out;
+  }
+}
+
+/* Promo banner animations */
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s infinite;
+}
+
+.delay-75 {
+  animation-delay: 0.75s;
+}
+
+.delay-150 {
+  animation-delay: 1.5s;
+}
+
+.delay-200 {
+  animation-delay: 2s;
+}
+
+.delay-300 {
+  animation-delay: 3s;
+}
+
+@layer utilities {
+  .form-group {
+    @apply relative;
+  }
+  .form-input {
+    @apply pt-4;
+  }
+
+  .form-label {
+    @apply absolute text-muted-foreground transition-all duration-200 ease-in-out pointer-events-none;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  
+  .form-input:focus + .form-label,
+  .form-input:not(:placeholder-shown) + .form-label {
+    @apply text-xs;
+    transform: translateY(-1.2rem) scale(0.8);
+    background-color: hsl(var(--card));
+    padding: 0 0.2em;
+    color: hsl(var(--primary));
+  }
+
+  .form-input:focus {
+     @apply border-primary;
+  }
+
+  /* Mobile touch scrolling */
+  .scrollable {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    /* Ensure scrolling is visible on mobile */
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground)) transparent;
+  }
+  
+  .scrollable::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollable::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollable::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground));
+    border-radius: 3px;
+  }
+  
+  .scrollable::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--foreground) / 0.5);
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Salary Calendar Styles */
+  .salary-calendar-container {
+    padding: 0;
+  }
+
+  .calendar {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border: 1px solid hsl(var(--border));
+  }
+
+  .calendar__opts {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    justify-content: center;
+  }
+
+  .calendar__select {
+    padding: 0.625rem 0.75rem;
+    border: 2px solid hsl(var(--border));
+    border-radius: 6px;
+    background: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .calendar__select:hover {
+    border-color: hsl(var(--primary) / 0.5);
+  }
+
+  .calendar__select:focus {
+    outline: none;
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+  }
+
+  .calendar__body {
+    margin-bottom: 1rem;
+  }
+
+  .calendar__days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .calendar__days > div {
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    padding: 0.5rem;
+  }
+
+  .calendar__dates {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+  }
+
+  .calendar__date {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+    position: relative;
+  }
+
+  .calendar__date:hover:not(.calendar__date--grey) {
+    background: hsl(var(--accent) / 0.1);
+  }
+
+  .calendar__date--grey {
+    color: hsl(var(--muted-foreground) / 0.5);
+    cursor: default;
+  }
+
+  .calendar__date--selected {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    font-weight: 600;
+  }
+
+  .calendar__date--range-start {
+    border-top-left-radius: 50%;
+    border-bottom-left-radius: 50%;
+  }
+
+  .calendar__date--range-end {
+    border-top-right-radius: 50%;
+    border-bottom-right-radius: 50%;
+  }
+
+  .calendar__date--selected:not(.calendar__date--range-start):not(.calendar__date--range-end) {
+    border-radius: 0;
+  }
+
+  .calendar__buttons {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    padding-top: 0.5rem;
+    border-top: 1px solid hsl(var(--border));
+    margin-top: 0.5rem;
+  }
+
+  .calendar__button {
+    padding: 0.625rem 1.25rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  .calendar__button--grey {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border: 1px solid hsl(var(--border));
+  }
+
+  .calendar__button--grey:hover {
+    background: hsl(var(--muted) / 0.8);
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .calendar__button--grey:active {
+    transform: translateY(0);
+  }
+
+  .calendar__button--primary {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .calendar__button--primary:hover {
+    background: hsl(var(--primary) / 0.9);
+    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+  }
+
+  .calendar__button--primary:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* React Day Picker Calendar Styles - Ensure perfect alignment */
+.rdp {
+  --rdp-cell-size: 2.5rem;
+  --rdp-accent-color: hsl(var(--primary));
+  --rdp-background-color: hsl(var(--background));
+  --rdp-accent-color-dark: hsl(var(--primary));
+  --rdp-background-color-dark: hsl(var(--background));
+  --rdp-outline: 2px solid hsl(var(--ring));
+  --rdp-outline-selected: 2px solid hsl(var(--primary));
+  margin: 0;
+}
+
+.rdp-table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  display: table !important;
+  table-layout: fixed !important;
+}
+
+.rdp-head_row,
+.rdp-row {
+  display: table-row !important;
+  width: 100% !important;
+}
+
+.rdp-head_cell {
+  width: calc(100% / 7) !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  display: table-cell !important;
+}
+
+.rdp-cell {
+  width: calc(100% / 7) !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 0 !important;
+  height: 2.5rem !important;
+  display: table-cell !important;
+}
+
+.rdp-day {
+  width: 100%;
+  height: 100%;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  vertical-align: middle !important;
+}
+
+.rdp-day button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.rdp-day_number,
+.rdp-day > span,
+.rdp-day > button > span,
+.rdp-day button > span,
+.rdp-day button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  vertical-align: middle !important;
+  text-align: center !important;
+}
+
+/* Ensure all text content in day cells is centered */
+.rdp-cell,
+.rdp-cell * {
+  vertical-align: middle !important;
+  text-align: center !important;
+}
+
+/* Fix for react-day-picker v9+ structure */
+.rdp-day button,
+button[role="gridcell"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+}
