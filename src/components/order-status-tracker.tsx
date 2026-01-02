@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Shirt, Truck, PackageCheck, CircleCheck, Wind, WashingMachine, Package, CheckCircle2, User, Weight as WeightIcon, Layers, Wallet, X, Info, RefreshCw, Clock, Sparkles, AlertCircle } from 'lucide-react';
+import { Shirt, Truck, PackageCheck, CircleCheck, Wind, WashingMachine, Package, CheckCircle2, User, Weight as WeightIcon, Layers, Wallet, X, Info, RefreshCw, Clock, Sparkles, AlertCircle, Search } from 'lucide-react';
 import type { Order, StatusHistory } from '@/components/order-list';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
@@ -367,16 +367,19 @@ export function OrderStatusTracker({ order: initialOrder }: { order: Order }) {
                 {order.foundItems && order.foundItems.length > 0 && (
                   <div className="flex flex-col gap-1.5 pt-2 border-t">
                     <div className="flex items-center gap-2">
-                      <Wallet className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                      <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-300">Items Found:</span>
+                      <Search className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                      <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-300">Items Found in Your Laundry:</span>
                     </div>
-                    <div className="flex flex-wrap gap-1 ml-6">
+                    <div className="flex flex-wrap gap-1.5 ml-6">
                       {order.foundItems.map((item, index) => (
-                        <Badge key={index} variant="outline" className="text-xs bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200">
+                        <Badge key={index} variant="outline" className="text-xs bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200 font-medium">
                           {item}
                         </Badge>
                       ))}
                     </div>
+                    <p className="text-[10px] text-muted-foreground ml-6 mt-1">
+                      Please collect these items when you pick up your laundry.
+                    </p>
                   </div>
                 )}
               </CardContent>

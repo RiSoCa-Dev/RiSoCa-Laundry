@@ -224,6 +224,7 @@ export async function fetchOrderForCustomer(orderId: string, name: string) {
               order_status_history: statusHistory,
               order_type: order.order_type || 'customer',
               assigned_employee_id: order.assigned_employee_id ?? null,
+              found_items: Array.isArray(order.found_items) ? order.found_items : null,
             },
             error: null,
           };
