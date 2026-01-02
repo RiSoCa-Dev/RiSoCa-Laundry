@@ -1463,8 +1463,8 @@ export function OrderList({
       </div>
 
       {/* Desktop View - Table */}
-      <div className="hidden md:block overflow-x-auto">
-        <Table className="w-full">
+      <div className="hidden md:block overflow-x-auto w-full">
+        <Table className="w-full min-w-full">
           <TableHeader>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
               <TableHead className="min-w-[120px] font-semibold px-2">
