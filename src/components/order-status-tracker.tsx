@@ -364,8 +364,8 @@ export function OrderStatusTracker({ order: initialOrder }: { order: Order }) {
           
           <Separator />
           
-          {/* Order Details & Billing */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Order Details, Billing & Items Found */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Card className="border-2 bg-gradient-to-br from-blue-50/50 to-blue-100/30 dark:from-blue-950/20 dark:to-blue-900/10">
               <CardHeader className="p-3 pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -392,24 +392,6 @@ export function OrderStatusTracker({ order: initialOrder }: { order: Order }) {
                     <Badge variant="outline" className="text-xs">
                       Package {order.servicePackage.replace('package', '').toUpperCase()}
                     </Badge>
-                  </div>
-                )}
-                {order.foundItems && Array.isArray(order.foundItems) && order.foundItems.length > 0 && (
-                  <div className="flex flex-col gap-1.5 pt-2 border-t">
-                    <div className="flex items-center gap-2">
-                      <Search className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                      <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-300">Items Found in Your Laundry:</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 ml-6">
-                      {order.foundItems.map((item, index) => (
-                        <Badge key={index} variant="outline" className="text-xs bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200 font-medium">
-                          {item}
-                        </Badge>
-                      ))}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground ml-6 mt-1">
-                      Please collect these items when you pick up your laundry.
-                    </p>
                   </div>
                 )}
               </CardContent>
@@ -449,6 +431,35 @@ export function OrderStatusTracker({ order: initialOrder }: { order: Order }) {
                 )}
               </CardContent>
             </Card>
+
+            {/* Items Found Card - Only show if there are found items */}
+            {order.foundItems && Array.isArray(order.foundItems) && order.foundItems.length > 0 && (
+              <Card className="border-2 bg-gradient-to-br from-yellow-50/50 to-yellow-100/30 dark:from-yellow-950/20 dark:to-yellow-900/10">
+                <CardHeader className="p-3 pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Search className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                    Items Found
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 space-y-2 text-sm">
+                  <div className="flex flex-col gap-2">
+                    <p className="text-xs text-muted-foreground">
+                      Items found in your laundry:
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {order.foundItems.map((item, index) => (
+                        <Badge key={index} variant="outline" className="text-xs bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200 font-medium">
+                          {item}
+                        </Badge>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Please collect these items when you pick up your laundry.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           <Separator />
