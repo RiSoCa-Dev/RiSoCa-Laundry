@@ -257,16 +257,18 @@ export async function fetchOrderForCustomer(orderId: string, name: string) {
     }
 
     // Fallback: Try direct query (requires RLS to allow SELECT)
+    // Explicitly select found_items to ensure it's included
     let { data: ordersData, error: ordersError } = await supabase
       .from('orders')
-      .select('*, order_status_history(*)')
+      .select('*, found_items, order_status_history(*)')
       .eq('id', trimmedOrderId);
     
     // If exact match fails, try case-insensitive search by fetching all and filtering
+    // Explicitly select found_items to ensure it's included
     if (ordersError || !ordersData || ordersData.length === 0) {
       const { data: allOrders, error: allError } = await supabase
         .from('orders')
-        .select('*, order_status_history(*)');
+        .select('*, found_items, order_status_history(*)');
       
       if (allError) {
         console.error('Failed to fetch orders:', allError);
