@@ -207,12 +207,20 @@ export async function fetchOrderForCustomer(orderId: string, name: string) {
           // If RPC didn't return found_items, fetch it separately
           let foundItems = order.found_items;
           if (foundItems === undefined || foundItems === null) {
-            const { data: orderData } = await supabase
-              .from('orders')
-              .select('found_items')
-              .eq('id', order.id)
-              .maybeSingle();
-            foundItems = orderData?.found_items;
+            try {
+              const { data: orderData, error: fetchError } = await supabase
+                .from('orders')
+                .select('found_items')
+                .eq('id', order.id)
+                .maybeSingle();
+              if (!fetchError && orderData) {
+                foundItems = orderData.found_items;
+              }
+            } catch (err) {
+              // If separate fetch fails (e.g., RLS blocking), foundItems remains undefined/null
+              // This is okay - we'll return null for found_items
+              console.warn('Could not fetch found_items separately:', err);
+            }
           }
           
           return {
@@ -235,7 +243,7 @@ export async function fetchOrderForCustomer(orderId: string, name: string) {
               order_status_history: statusHistory,
               order_type: order.order_type || 'customer',
               assigned_employee_id: order.assigned_employee_id ?? null,
-              found_items: Array.isArray(foundItems) && foundItems.length > 0 ? foundItems : (foundItems !== undefined ? foundItems : null),
+              found_items: Array.isArray(foundItems) && foundItems.length > 0 ? foundItems : null,
             },
             error: null,
           };
@@ -308,7 +316,7 @@ export async function fetchOrderForCustomer(orderId: string, name: string) {
         order_status_history: (matchedOrder.order_status_history as any[]) || [],
         order_type: matchedOrder.order_type || 'customer',
         assigned_employee_id: matchedOrder.assigned_employee_id ?? null,
-        found_items: Array.isArray(matchedOrder.found_items) ? matchedOrder.found_items : null,
+        found_items: Array.isArray(matchedOrder.found_items) && matchedOrder.found_items.length > 0 ? matchedOrder.found_items : null,
       },
       error: null,
     };
