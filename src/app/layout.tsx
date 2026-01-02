@@ -113,16 +113,11 @@ export default function RootLayout({
               (function() {
                 if (typeof window === 'undefined') return;
                 
-                // CRITICAL: Set flag IMMEDIATELY before any other operations
-                if (window.__adsbygoogle_page_level_initialized) {
-                  return;
-                }
-                window.__adsbygoogle_page_level_initialized = true;
-                
                 // Initialize adsbygoogle array if it doesn't exist
                 window.adsbygoogle = window.adsbygoogle || [];
                 
                 // Helper function to check if page level ads already exist
+                // This MUST be checked BEFORE any flags to prevent race conditions
                 function hasPageLevelAds() {
                   if (!window.adsbygoogle || !Array.isArray(window.adsbygoogle)) {
                     return false;
@@ -140,10 +135,16 @@ export default function RootLayout({
                   return false;
                 }
                 
-                // Check immediately if already pushed - if so, we're done
+                // CRITICAL: Check if already exists FIRST, before any other operations
                 if (hasPageLevelAds()) {
                   return;
                 }
+                
+                // CRITICAL: Set flag IMMEDIATELY after checking (prevents duplicate execution)
+                if (window.__adsbygoogle_page_level_initialized) {
+                  return;
+                }
+                window.__adsbygoogle_page_level_initialized = true;
                 
                 // Pages with minimal content that should not show ads
                 var minimalContentPages = [
@@ -184,12 +185,12 @@ export default function RootLayout({
                 
                 // Single function to push - will only execute once due to flag
                 function pushPageLevelAdsOnce() {
-                  // Double-check flag and state
+                  // Triple-check: flag, state, and actual array content
                   if (window.__adsbygoogle_push_executed) {
                     return;
                   }
                   
-                  // Check if already pushed
+                  // Check if already pushed (double-check)
                   if (hasPageLevelAds()) {
                     window.__adsbygoogle_push_executed = true;
                     return;
@@ -198,6 +199,11 @@ export default function RootLayout({
                   // Mark as executed BEFORE pushing
                   window.__adsbygoogle_push_executed = true;
                   
+                  // Final check before pushing
+                  if (hasPageLevelAds()) {
+                    return;
+                  }
+                  
                   try {
                     window.adsbygoogle.push({
                       google_ad_client: "ca-pub-1036864152624333",
@@ -205,6 +211,7 @@ export default function RootLayout({
                     });
                   } catch (e) {
                     // Error already logged by AdSense, just prevent further attempts
+                    console.warn('AdSense push error (expected if already initialized):', e);
                   }
                 }
                 
@@ -215,7 +222,7 @@ export default function RootLayout({
                   // Wait for script to load, but only try once
                   var triedOnce = false;
                   var checkInterval = setInterval(function() {
-                    if (triedOnce) {
+                    if (triedOnce || window.__adsbygoogle_push_executed) {
                       clearInterval(checkInterval);
                       return;
                     }
