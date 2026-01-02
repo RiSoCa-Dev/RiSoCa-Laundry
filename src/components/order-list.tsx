@@ -1463,7 +1463,7 @@ export function OrderList({
       </div>
 
       {/* Desktop View - Table */}
-      <div className="hidden md:block overflow-x-auto -mx-6">
+      <div className="hidden md:block overflow-x-auto">
         <Table className="w-full">
           <TableHeader>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -1538,7 +1538,7 @@ export function OrderList({
 
         {/* Desktop Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4 pt-4 border-t">
+          <div className="flex flex-col items-center gap-4 mt-4 pt-4 border-t">
             <div className="text-sm text-muted-foreground">
               Showing {startIndex + 1} to {Math.min(endIndex, orders.length)} of {orders.length} orders
             </div>
