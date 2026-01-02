@@ -176,20 +176,23 @@ export default function OrderStatusPage() {
     setLoading(true);
     setSearchAttempted(false);
 
-    // Normalize order ID: if it's just a number, prepend "RKR"
+    // Normalize order ID: user only enters numbers, we prepend "RKR"
     let normalizedOrderId = orderId.trim();
-    // Check if input is just digits (with optional leading zeros)
-    if (/^\d+$/.test(normalizedOrderId)) {
-      // It's just a number, prepend "RKR" and pad with zeros if needed
+    // Remove any non-numeric characters (in case user pasted something)
+    normalizedOrderId = normalizedOrderId.replace(/\D/g, '');
+    
+    if (normalizedOrderId) {
+      // It's a number, prepend "RKR" and pad with zeros if needed
       const num = parseInt(normalizedOrderId, 10);
       normalizedOrderId = `RKR${String(num).padStart(3, '0')}`;
-    } else if (!normalizedOrderId.toUpperCase().startsWith('RKR')) {
-      // If it doesn't start with RKR, try to extract number and prepend RKR
-      const numMatch = normalizedOrderId.match(/\d+/);
-      if (numMatch) {
-        const num = parseInt(numMatch[0], 10);
-        normalizedOrderId = `RKR${String(num).padStart(3, '0')}`;
-      }
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid Order ID',
+        description: 'Please enter a valid order number.',
+      });
+      setLoading(false);
+      return;
     }
 
     const { data, error } = await fetchOrderForCustomer(normalizedOrderId, name.trim());
@@ -487,18 +490,33 @@ export default function OrderStatusPage() {
                       <div className="space-y-2">
                       <Label htmlFor="orderId" className="text-sm font-medium">Order ID</Label>
                       <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10 pointer-events-none">
+                          <Search className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm font-semibold text-foreground">RKR</span>
+                        </div>
                         <Input
                           id="orderId"
-                          placeholder="e.g., 123 or RKR123"
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="123"
                           value={orderId}
-                          onChange={(e) => setOrderId(e.target.value)}
-                          className="pl-10 h-11"
+                          onChange={(e) => {
+                            // Only allow numeric input
+                            const value = e.target.value.replace(/\D/g, '');
+                            setOrderId(value);
+                          }}
+                          onKeyDown={(e) => {
+                            // Prevent deleting "RKR" prefix
+                            if (e.key === 'Backspace' && orderId === '') {
+                              e.preventDefault();
+                            }
+                          }}
+                          className="pl-16 h-11"
                           disabled={loading}
                         />
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Enter just the number (e.g., 123) or full ID (e.g., RKR123)
+                        Enter the order number (e.g., 123 for RKR123)
                       </p>
                     </div>
                     <div className="space-y-2">
@@ -865,7 +883,7 @@ export default function OrderStatusPage() {
                     <div className="flex-1">
                       <h3 className="font-bold text-base mb-2">Finding Your Order ID</h3>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Your Order ID is provided when you place an order. You can enter just the number (e.g., 123) or the full ID (e.g., RKR123). You can find it in your order confirmation email or on your account's order history.
+                        Your Order ID is provided when you place an order. Simply enter the number (e.g., 123) and the system will automatically format it as RKR123. You can find it in your order confirmation email or on your account's order history.
                       </p>
                     </div>
                   </div>
