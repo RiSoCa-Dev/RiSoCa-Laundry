@@ -124,22 +124,68 @@ export default function RootLayout({
               (function() {
                 if (typeof window === 'undefined') return;
                 
-                // Monitor and prevent aria-hidden from being set on body
+                // Handle aria-hidden on body intelligently
+                // Allow AdSense overlay ads to set it temporarily (this is correct for overlay ads)
+                // Only remove it when it's set by other components (like dialogs), not by AdSense
                 const body = document.body;
                 if (!body) return;
                 
-                // Remove aria-hidden if it exists
-                if (body.hasAttribute('aria-hidden')) {
-                  body.removeAttribute('aria-hidden');
+                // Track if aria-hidden was set by AdSense (for overlay ads)
+                let isAdSenseOverlay = false;
+                let overlayCheckInterval: ReturnType<typeof setInterval> | null = null;
+                
+                // Function to check if AdSense overlay ads are active
+                function checkAdSenseOverlay() {
+                  const hasVignette = document.querySelector('ins.adsbygoogle[data-vignette-status="filled"]');
+                  const hasAnchor = document.querySelector('ins.adsbygoogle[data-anchor-status="filled"]');
+                  return !!(hasVignette || hasAnchor);
                 }
                 
-                // Use MutationObserver to prevent aria-hidden from being set on body
+                // Use MutationObserver to handle aria-hidden on body
                 const observer = new MutationObserver(function(mutations) {
                   mutations.forEach(function(mutation) {
                     if (mutation.type === 'attributes' && mutation.attributeName === 'aria-hidden') {
-                      if (body.getAttribute('aria-hidden') === 'true') {
-                        body.removeAttribute('aria-hidden');
-                        console.warn('Removed aria-hidden from body element - this violates accessibility guidelines');
+                      const ariaHidden = body.getAttribute('aria-hidden');
+                      const hasOverlay = checkAdSenseOverlay();
+                      
+                      if (ariaHidden === 'true') {
+                        if (hasOverlay) {
+                          // Allow AdSense to set it for overlay ads - this is correct behavior
+                          // Don't remove it - let AdSense manage it
+                          isAdSenseOverlay = true;
+                          // Start monitoring for when overlay is gone
+                          if (!overlayCheckInterval) {
+                            overlayCheckInterval = setInterval(function() {
+                              if (!checkAdSenseOverlay() && isAdSenseOverlay) {
+                                // Overlay ad is gone, remove aria-hidden
+                                body.removeAttribute('aria-hidden');
+                                isAdSenseOverlay = false;
+                                if (overlayCheckInterval) {
+                                  clearInterval(overlayCheckInterval);
+                                  overlayCheckInterval = null;
+                                }
+                              }
+                            }, 500);
+                          }
+                        } else {
+                          // Not from AdSense overlay - might be from dialog or other component
+                          // Only remove if it wasn't just set by AdSense
+                          if (!isAdSenseOverlay) {
+                            // Small delay to avoid conflicts with AdSense
+                            setTimeout(function() {
+                              if (!checkAdSenseOverlay() && body.getAttribute('aria-hidden') === 'true') {
+                                body.removeAttribute('aria-hidden');
+                              }
+                            }, 100);
+                          }
+                        }
+                      } else if (ariaHidden === null || ariaHidden === 'false') {
+                        // aria-hidden was removed, reset tracking
+                        isAdSenseOverlay = false;
+                        if (overlayCheckInterval) {
+                          clearInterval(overlayCheckInterval);
+                          overlayCheckInterval = null;
+                        }
                       }
                     }
                   });
