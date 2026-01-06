@@ -216,7 +216,7 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
           "hover:bg-muted/30 transition-colors border-b",
           isEditing && "bg-primary/5 border-primary/20"
         )}>
-            <TableCell className="font-semibold px-2" style={{ width: '100px', minWidth: '100px' }}>
+            <TableCell className="font-semibold px-2" style={{ width: '90px', minWidth: '90px' }}>
               <div className="flex items-center gap-2">
                 <span className="text-primary font-bold">{workingOrder.id}</span>
                 {workingOrder.orderType === 'internal' && (
@@ -226,7 +226,7 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                 )}
               </div>
             </TableCell>
-            <TableCell className="text-center px-2" style={{ width: '120px', minWidth: '120px' }}>
+            <TableCell className="text-center px-2" style={{ width: '110px', minWidth: '110px' }}>
                 {isEditing ? (
                     <Input 
                         type="date" 
@@ -242,7 +242,7 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                     <span className="font-medium text-sm">{format(workingOrder.orderDate, 'MMM dd, yyyy')}</span>
                 )}
             </TableCell>
-            <TableCell className="px-2" style={{ width: '180px', minWidth: '180px' }}>
+            <TableCell className="px-2" style={{ width: '140px', minWidth: '140px' }}>
                 {isEditing ? (
                     <div className="space-y-1.5">
                         <Input 
@@ -274,7 +274,7 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                     </div>
                 )}
             </TableCell>
-            <TableCell className="px-2" style={{ width: '200px', minWidth: '200px' }}>
+            <TableCell className="px-2" style={{ width: '150px', minWidth: '150px' }}>
                 {isEditing ? (
                     <div className="flex flex-wrap gap-1.5">
                         {employees.map((emp) => {
@@ -343,7 +343,7 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                     })()
                 )}
             </TableCell>
-            <TableCell className="text-center px-2" style={{ width: '180px', minWidth: '180px' }}>
+            <TableCell className="text-center px-2" style={{ width: '140px', minWidth: '140px' }}>
                 {isEditing ? (
                     <div className="space-y-2">
                         <Input 
@@ -443,7 +443,7 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                     </div>
                 )}
             </TableCell>
-            <TableCell className="px-2" style={{ width: '150px', minWidth: '150px' }}>
+            <TableCell className="px-2" style={{ width: '120px', minWidth: '120px' }}>
                 {isEditing ? (
                     <div className="space-y-2">
                         <div className="text-xs font-medium text-muted-foreground mb-1">Found Items</div>
@@ -509,7 +509,7 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                     </div>
                 )}
             </TableCell>
-            <TableCell className="text-right px-2" style={{ width: '100px', minWidth: '100px' }}>
+            <TableCell className="text-right px-2" style={{ width: '90px', minWidth: '90px' }}>
                 {isEditing ? (
                     <Input 
                         type="number" 
@@ -533,12 +533,12 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                     </div>
                 )}
             </TableCell>
-             <TableCell className="text-center px-2" style={{ width: '100px', minWidth: '100px' }}>
+             <TableCell className="text-center px-2" style={{ width: '90px', minWidth: '90px' }}>
                 {isEditing ? (
                     <Button
                         size="sm"
                         className={cn(
-                            "h-9 w-24 font-semibold shadow-sm",
+                            "h-9 w-20 font-semibold shadow-sm text-xs",
                             editableOrder.isPaid 
                                 ? "bg-green-500 hover:bg-green-600 text-white" 
                                 : "bg-red-500 hover:bg-red-600 text-white"
@@ -582,7 +582,7 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                     })()
                 )}
             </TableCell>
-            <TableCell className="text-center px-2" style={{ width: '140px', minWidth: '140px' }}>
+            <TableCell className="text-center px-2" style={{ width: '120px', minWidth: '120px' }}>
                 {isEditing ? (
                      <div className="relative w-full mx-auto">
                         <Select
@@ -590,7 +590,7 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                             onValueChange={(value) => handleFieldChange('status', value)}
                             disabled={isSaving}
                         >
-                            <SelectTrigger className="w-full h-9 border-2 font-semibold">
+                            <SelectTrigger className="w-full h-9 border-2 font-semibold text-xs">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -620,19 +620,19 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                     </Badge>
                 )}
             </TableCell>
-            <TableCell className="text-center px-2" style={{ width: '140px', minWidth: '140px' }}>
+            <TableCell className="text-center px-2" style={{ width: '130px', minWidth: '130px' }}>
                  {isEditing ? (
-                    <div className="flex items-center justify-center gap-2">
+                    <div className="flex items-center justify-center gap-1.5">
                         {onDeleteOrder && (
                             <Button 
                                 size="icon" 
                                 variant="ghost" 
                                 onClick={() => setIsDeleteDialogOpen(true)} 
                                 disabled={isSaving}
-                                className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive"
+                                className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
                                 title="Delete order"
                             >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                         )}
                         <Button 
@@ -640,20 +640,20 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                             variant="ghost" 
                             onClick={handleCancel} 
                             disabled={isSaving}
-                            className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive"
+                            className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
                         >
-                            <X className="h-4 w-4" />
+                            <X className="h-3.5 w-3.5" />
                         </Button>
                         <Button 
                             size="icon" 
                             onClick={handleSave} 
                             disabled={isSaving}
-                            className="h-9 w-9 bg-primary hover:bg-primary/90 shadow-sm"
+                            className="h-8 w-8 bg-primary hover:bg-primary/90 shadow-sm"
                         >
                             {isSaving ? (
-                                <Loader2 className="animate-spin h-4 w-4"/>
+                                <Loader2 className="animate-spin h-3.5 w-3.5"/>
                             ) : (
-                                <Save className="h-4 w-4" />
+                                <Save className="h-3.5 w-3.5" />
                             )}
                         </Button>
                     </div>
@@ -1591,61 +1591,61 @@ export function OrderList({
         <Table className="w-full">
           <TableHeader>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
-              <TableHead className="font-semibold px-2" style={{ width: '100px', minWidth: '100px' }}>
+              <TableHead className="font-semibold px-2" style={{ width: '90px', minWidth: '90px' }}>
                 <div className="flex items-center gap-2">
                   <Package className="h-4 w-4 text-primary" />
                   ORDER #
                 </div>
               </TableHead>
-              <TableHead className="font-semibold text-center px-2" style={{ width: '120px', minWidth: '120px' }}>
+              <TableHead className="font-semibold text-center px-2" style={{ width: '110px', minWidth: '110px' }}>
                 <div className="flex items-center justify-center gap-2">
                   <Calendar className="h-4 w-4 text-primary" />
                   Date
                 </div>
               </TableHead>
-              <TableHead className="font-semibold px-2" style={{ width: '180px', minWidth: '180px' }}>
+              <TableHead className="font-semibold px-2" style={{ width: '140px', minWidth: '140px' }}>
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-primary" />
                   Name
                 </div>
               </TableHead>
-              <TableHead className="font-semibold px-2" style={{ width: '200px', minWidth: '200px' }}>
+              <TableHead className="font-semibold px-2" style={{ width: '150px', minWidth: '150px' }}>
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-primary" />
                   Employee
                 </div>
               </TableHead>
-              <TableHead className="font-semibold text-center px-2" style={{ width: '180px', minWidth: '180px' }}>
+              <TableHead className="font-semibold text-center px-2" style={{ width: '140px', minWidth: '140px' }}>
                 <div className="flex items-center justify-center gap-2">
                   <Layers className="h-4 w-4 text-primary" />
                   Load
                 </div>
               </TableHead>
-              <TableHead className="font-semibold px-2" style={{ width: '150px', minWidth: '150px' }}>
+              <TableHead className="font-semibold px-2" style={{ width: '120px', minWidth: '120px' }}>
                 <div className="flex items-center gap-2">
                   <Search className="h-4 w-4 text-primary" />
                   Found Items
                 </div>
               </TableHead>
-              <TableHead className="font-semibold text-right px-2" style={{ width: '100px', minWidth: '100px' }}>
+              <TableHead className="font-semibold text-right px-2" style={{ width: '90px', minWidth: '90px' }}>
                 <div className="flex items-center justify-end gap-2">
                   <DollarSign className="h-4 w-4 text-primary" />
                   Total (₱)
                 </div>
               </TableHead>
-              <TableHead className="font-semibold text-center px-2" style={{ width: '100px', minWidth: '100px' }}>
+              <TableHead className="font-semibold text-center px-2" style={{ width: '90px', minWidth: '90px' }}>
                 <div className="flex items-center justify-center gap-2">
                   <CreditCard className="h-4 w-4 text-primary" />
                   Payment
                 </div>
               </TableHead>
-              <TableHead className="font-semibold text-center px-2" style={{ width: '140px', minWidth: '140px' }}>
+              <TableHead className="font-semibold text-center px-2" style={{ width: '120px', minWidth: '120px' }}>
                 <div className="flex items-center justify-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-primary" />
                   Status
                 </div>
               </TableHead>
-              <TableHead className="font-semibold text-center px-2" style={{ width: '140px', minWidth: '140px' }}>
+              <TableHead className="font-semibold text-center px-2" style={{ width: '130px', minWidth: '130px' }}>
                 <div className="flex items-center justify-center gap-2">
                   <MoreVertical className="h-4 w-4 text-primary" />
                   Action
