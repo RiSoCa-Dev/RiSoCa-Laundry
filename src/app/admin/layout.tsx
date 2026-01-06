@@ -65,11 +65,11 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col h-screen w-full overflow-y-auto overflow-x-hidden">
       <AppHeader />
       <PromoBanner />
-      <main className="flex-1 pb-20">
-        <div className="container mx-auto px-4 py-4 sm:py-8">
+      <main className="flex-1 w-full pb-20">
+        <div className="container mx-auto px-4 py-4 sm:py-8 w-full">
           <div className="w-full max-w-7xl space-y-6">
             {children}
           </div>
