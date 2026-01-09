@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { getAdSlot } from '@/lib/ads-config';
@@ -48,6 +48,14 @@ export function PopupAd({ trigger }: { trigger: number }) {
         try {
           const popupAd = document.getElementById('popup-ad');
           if (popupAd) {
+            // Check if container has actual width before initializing
+            const rect = popupAd.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) {
+              // Container not ready yet, retry after a short delay
+              setTimeout(() => initAd(), 100);
+              return;
+            }
+            
             const status = popupAd.getAttribute('data-adsbygoogle-status');
             
             // Initialize if not already initialized
@@ -59,8 +67,13 @@ export function PopupAd({ trigger }: { trigger: number }) {
                 ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
                 setAdLoaded(true);
               } catch (e) {
-                // Ad already initialized or error - retry
+                // Ad already initialized or error - retry after delay
                 console.log('Ad initialization error, will retry:', e);
+                setTimeout(() => {
+                  if (!adFilled) {
+                    initAd();
+                  }
+                }, 500);
               }
             }
             
@@ -101,31 +114,45 @@ export function PopupAd({ trigger }: { trigger: number }) {
       }
     };
 
-    // Small delay to ensure dialog is fully rendered in DOM
+    // Small delay to ensure dialog is fully rendered in DOM with dimensions
     const timeoutId = setTimeout(() => {
       // Set up observer first
       setupObserver();
       
-      // Then initialize ad
-      if ((window as any).adsbygoogle) {
-        initAd();
-        checkAdStatus();
-      } else {
-        // Wait for AdSense to load
-        const checkInterval = setInterval(() => {
-          if ((window as any).adsbygoogle) {
-            initAd();
-            checkAdStatus();
-            clearInterval(checkInterval);
-          }
-        }, 100);
+      // Then initialize ad - but check dimensions first
+      const checkDimensionsAndInit = () => {
+        const popupAd = document.getElementById('popup-ad');
+        if (popupAd) {
+          const rect = popupAd.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            // Container has dimensions, safe to initialize
+            if ((window as any).adsbygoogle) {
+              initAd();
+              checkAdStatus();
+            } else {
+              // Wait for AdSense to load
+              const checkInterval = setInterval(() => {
+                if ((window as any).adsbygoogle) {
+                  initAd();
+                  checkAdStatus();
+                  clearInterval(checkInterval);
+                }
+              }, 100);
 
-        // Clear interval after 10 seconds
-        setTimeout(() => {
-          clearInterval(checkInterval);
-        }, 10000);
-      }
-    }, 300); // Small delay to ensure dialog DOM is ready
+              // Clear interval after 10 seconds
+              setTimeout(() => {
+                clearInterval(checkInterval);
+              }, 10000);
+            }
+          } else {
+            // Container not ready, retry
+            setTimeout(checkDimensionsAndInit, 100);
+          }
+        }
+      };
+      
+      checkDimensionsAndInit();
+    }, 500); // Increased delay to ensure dialog has dimensions
 
     // Periodic check for ad status (in case observer misses it)
     statusCheckIntervalRef.current = setInterval(() => {
@@ -171,6 +198,8 @@ export function PopupAd({ trigger }: { trigger: number }) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden">
+        <DialogTitle className="sr-only">Advertisement</DialogTitle>
+        <DialogDescription className="sr-only">Advertisement content</DialogDescription>
         <div className="relative">
           {/* Close button */}
           <Button
