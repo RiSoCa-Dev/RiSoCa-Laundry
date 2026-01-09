@@ -197,7 +197,7 @@ export function PopupAd({ trigger }: { trigger: number }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[90vw] max-w-[500px] p-0 overflow-hidden">
         <DialogTitle className="sr-only">Advertisement</DialogTitle>
         <DialogDescription className="sr-only">Advertisement content</DialogDescription>
         <div className="relative">
@@ -212,7 +212,7 @@ export function PopupAd({ trigger }: { trigger: number }) {
             <X className="h-4 w-4" />
           </Button>
           
-          {/* Ad container - always visible so ad can load immediately */}
+          {/* Ad container - always visible so ad can load immediately, flexible for any ad size */}
           <div 
             className="w-full min-h-[250px] flex items-center justify-center bg-muted/30 relative"
             style={{ minHeight: '250px' }}
@@ -222,12 +222,12 @@ export function PopupAd({ trigger }: { trigger: number }) {
               className="adsbygoogle"
               style={{ 
                 display: 'block', 
-                width: '100%', 
-                minHeight: '250px' 
+                width: '100%',
+                minHeight: '250px'
               }}
               data-ad-client="ca-pub-1482729173853463"
               data-ad-slot={getAdSlot('POPUP_AD')}
-              data-ad-format="rectangle"
+              data-ad-format="auto"
               data-full-width-responsive="true"
             />
             
