@@ -185,12 +185,13 @@ export function RatingsList({ showFilters = false }: RatingsListProps) {
                   </p>
 
                   {/* Like Count */}
-                  {rating.like_count > 0 && (
+                  {(rating.like_count ?? 0) > 0 && (
                     <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
                       <Heart className="h-3 w-3" />
-                      <span>{rating.like_count} {rating.like_count === 1 ? 'like' : 'likes'}</span>
+                      <span>{rating.like_count ?? 0} {(rating.like_count ?? 0) === 1 ? 'like' : 'likes'}</span>
                     </div>
                   )}
+
                 </div>
               </div>
             </CardContent>

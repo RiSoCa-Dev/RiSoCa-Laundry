@@ -55,11 +55,11 @@ export async function handleOrderCreation(
     assigned_employee_ids:
       newOrder.assignedEmployeeIds && newOrder.assignedEmployeeIds.length > 0
         ? newOrder.assignedEmployeeIds
-        : null,
+        : undefined,
     assigned_employee_id:
       newOrder.assignedEmployeeIds && newOrder.assignedEmployeeIds.length > 0
         ? newOrder.assignedEmployeeIds[0] // First employee for backward compatibility
-        : newOrder.assignedEmployeeId || null, // Fallback to single assignment
+        : newOrder.assignedEmployeeId || undefined, // Fallback to single assignment
     created_at: newOrder.orderDate.toISOString(), // Use the custom order date
   });
 
@@ -105,12 +105,12 @@ export async function handleOrderCreation(
           newOrder.assignedEmployeeIds &&
           newOrder.assignedEmployeeIds.length > 0
             ? newOrder.assignedEmployeeIds
-            : null,
+            : undefined,
         assigned_employee_id:
           newOrder.assignedEmployeeIds &&
           newOrder.assignedEmployeeIds.length > 0
             ? newOrder.assignedEmployeeIds[0] // First employee for backward compatibility
-            : newOrder.assignedEmployeeId || null, // Fallback to single assignment
+            : newOrder.assignedEmployeeId || undefined, // Fallback to single assignment
         created_at: newOrder.orderDate.toISOString(), // Use the custom order date
       });
 

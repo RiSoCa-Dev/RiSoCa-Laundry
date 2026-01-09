@@ -26,12 +26,14 @@ export type DistributionRecord = {
   owner_name: string;
   share_amount: number;
   net_share: number;
+  personal_expenses?: number; // optional
   is_claimed: boolean;
-  claimed_at: string | null;
+  claimed_at?: string | null;
   period_start: string;
   period_end: string;
-  period_type: string;
+  period_type: 'monthly' | 'yearly' | 'custom';
 };
+
 
 export type BankSavingsHistory = {
   period_start: string;

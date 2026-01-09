@@ -23,7 +23,11 @@ export async function autoSaveDailySalaries(
   dateStrings.forEach(dateStr => {
     const dayOrders = currentOrders.filter(order => {
       const orderDateKey = format(startOfDay(new Date(order.orderDate)), 'yyyy-MM-dd');
-      return orderDateKey === dateStr && ELIGIBLE_STATUSES.includes(order.status);
+      return (
+        orderDateKey === dateStr &&
+        ELIGIBLE_STATUSES.includes(order.status as (typeof ELIGIBLE_STATUSES)[number])
+      );
+      
     });
 
     currentEmployees.forEach(emp => {

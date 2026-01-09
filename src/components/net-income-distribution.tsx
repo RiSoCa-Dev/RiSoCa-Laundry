@@ -47,12 +47,15 @@ import { useAuthSession } from '@/hooks/use-auth-session';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, parse, isSameMonth, isSameYear } from 'date-fns';
-import {
+import { 
   type OrderData,
   type ExpenseData,
   type SalaryPaymentData,
-  type DistributionRecord,
+  type DistributionRecord,   
   type DistributionPeriod,
+  type DistributionData,
+  type OwnerDistribution,
+  type BankSavingsHistory,
 } from './net-income-distribution/types';
 import { fetchAllData, fetchDistributions, fetchBankSavings, fetchBankSavingsHistory } from './net-income-distribution/fetch-data';
 import { calculateDistributionData } from './net-income-distribution/calculate-distribution';
@@ -952,7 +955,10 @@ export function NetIncomeDistribution() {
                           ₱{dist.share_amount.toFixed(2)}
                         </td>
                         <td className="p-3 text-right text-sm text-orange-600">
-                          {dist.personal_expenses > 0 ? `-₱${dist.personal_expenses.toFixed(2)}` : '₱0.00'}
+                          {dist.personal_expenses && dist.personal_expenses > 0 
+                            ? `-₱${dist.personal_expenses.toFixed(2)}`
+                            : '₱0.00'}
+
                         </td>
                         <td className="p-3 text-right text-sm font-semibold">
                           <span className={dist.net_share >= 0 ? 'text-green-600' : 'text-red-600'}>

@@ -26,7 +26,6 @@ import { PricingSummary } from './order-form/pricing-summary';
 import { CustomerInfoDialog } from './order-form/customer-info-dialog';
 import { AccountPromptDialog } from './order-form/account-prompt-dialog';
 import { loadCustomerProfile } from './order-form/load-customer-profile';
-import { submitOrder } from './order-form/submit-order';
 
 export function OrderForm() {
   const router = useRouter();

@@ -2,7 +2,6 @@ import { supabase } from '@/lib/supabase-client';
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import type { DistributionPeriod } from './types';
 import type { User } from '@supabase/supabase-js';
-import type { Toast } from '@/hooks/use-toast';
 
 export async function saveBankSavingsDeposit(
   depositAmount: number,

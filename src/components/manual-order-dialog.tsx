@@ -55,8 +55,8 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
     defaultValues: {
       customerName: '',
       orderDate: format(new Date(), 'yyyy-MM-dd'), // Default to today's date
-      loads: undefined,
-      total: undefined,
+      loads: 1,
+      total:180,
       isPaid: undefined,
       assigned_employee_ids: [],
     },
@@ -87,7 +87,7 @@ export function ManualOrderDialog({ isOpen, onClose, onAddOrder }: ManualOrderDi
     if(calculatedPrice > 0){
         form.setValue('total', calculatedPrice);
     } else {
-        form.setValue('total', undefined);
+        form.setValue('total', calculatedPrice);
     }
   }, [watchedLoads, form]);
 

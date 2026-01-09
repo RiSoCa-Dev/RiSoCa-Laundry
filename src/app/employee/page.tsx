@@ -173,12 +173,15 @@ export default function EmployeePage() {
       is_paid: newOrder.isPaid,
       order_type: newOrder.orderType || 'customer',
       // Normalize employee assignments - use assigned_employee_ids as source of truth
-      assigned_employee_ids: newOrder.assignedEmployeeIds && newOrder.assignedEmployeeIds.length > 0 
-        ? newOrder.assignedEmployeeIds 
-        : null,
-      assigned_employee_id: (newOrder.assignedEmployeeIds && newOrder.assignedEmployeeIds.length > 0)
-        ? newOrder.assignedEmployeeIds[0] // First employee for backward compatibility
-        : (newOrder.assignedEmployeeId || null), // Fallback to single assignment
+        assigned_employee_ids:
+        newOrder.assignedEmployeeIds && newOrder.assignedEmployeeIds.length > 0
+          ? newOrder.assignedEmployeeIds
+          : undefined,
+
+        assigned_employee_id:
+        newOrder.assignedEmployeeIds && newOrder.assignedEmployeeIds.length > 0
+          ? newOrder.assignedEmployeeIds[0] // First employee for backward compatibility
+          : newOrder.assignedEmployeeId ?? null, // Single assignment fallback
     });
 
     if (error) {

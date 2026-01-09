@@ -17,9 +17,10 @@ export function calculateEmployeeLoads(
   let customerLoadsForEmployee = 0;
   
   // Only count orders with eligible statuses
-  const eligibleOrders = orders.filter(order => 
-    ELIGIBLE_STATUSES.includes(order.status)
+  const eligibleOrders = orders.filter(order =>
+    ELIGIBLE_STATUSES.includes(order.status as (typeof ELIGIBLE_STATUSES)[number])
   );
+  
   
   eligibleOrders.forEach(order => {
     if (order.orderType === 'internal') return;
@@ -82,13 +83,12 @@ export function calculateActualTotalSalary(
 
 export function groupOrdersByDate(orders: Order[]): Record<string, Order[]> {
   return orders
-    .filter(order => ELIGIBLE_STATUSES.includes(order.status))
-    .reduce((acc, order) => {
-      const dateStr = startOfDay(new Date(order.orderDate)).toISOString();
-      if (!acc[dateStr]) {
-        acc[dateStr] = [];
-      }
-      acc[dateStr].push(order);
-      return acc;
-    }, {} as Record<string, Order[]>);
+  .filter(order => ELIGIBLE_STATUSES.includes(order.status as (typeof ELIGIBLE_STATUSES)[number]))
+  .reduce((acc, order) => {
+    const dateStr = startOfDay(new Date(order.orderDate)).toISOString();
+    if (!acc[dateStr]) acc[dateStr] = [];
+    acc[dateStr].push(order);
+    return acc;
+  }, {} as Record<string, Order[]>);
+
 }

@@ -22,7 +22,7 @@ import {
   Star,
   Info,
   Chrome,
-  Safari,
+  Apple,
   Monitor
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -124,7 +124,7 @@ export default function DownloadAppPage() {
 
     if (isIOS) {
       return {
-        icon: Safari,
+        icon: Apple,
         title: 'Install on iOS',
         steps: [
           'Tap the Share button at the bottom of Safari',
