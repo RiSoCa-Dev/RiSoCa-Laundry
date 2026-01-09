@@ -111,24 +111,11 @@ export default function RootLayout({
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1482729173853463"
           crossOrigin="anonymous"
           data-ad-client="ca-pub-1482729173853463"
+          data-page-level-ads="false"
         />
-        {/* Explicitly disable Auto Ads / Page-Level Ads */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                // Only set enable_page_level_ads once per page
-                if (!window.__adsbygoogle_page_level_ads_set) {
-                  window.__adsbygoogle_page_level_ads_set = true;
-                  (window.adsbygoogle = window.adsbygoogle || []).push({
-                    google_ad_client: "ca-pub-1482729173853463",
-                    enable_page_level_ads: false
-                  });
-                }
-              })();
-            `,
-          }}
-        />
+        {/* Google AdSense Configuration - Using specific ad units only (no auto ads) */}
+        {/* Note: We don't set enable_page_level_ads since we're only using specific ad units */}
+        {/* The data-page-level-ads="false" attribute on the script tag is sufficient */}
       </head>
       <body className="font-body antialiased flex flex-col h-screen overflow-hidden">
         {/* Prevent aria-hidden on body element - accessibility fix */}
