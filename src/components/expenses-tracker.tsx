@@ -187,6 +187,17 @@ export function ExpensesTracker() {
       toast({ variant: 'destructive', title: 'Date required', description: 'Please enter a valid date.' });
       return;
     }
+    // Check if date changed
+    const expense = expenses.find(e => e.id === id);
+    if (expense) {
+      const originalDate = expense.incurred_on || new Date(expense.date).toISOString().slice(0, 10);
+      if (editingDateValue === originalDate) {
+        // No change, just cancel
+        setEditingDateId(null);
+        setEditingDateValue('');
+        return;
+      }
+    }
     setSavingDate(true);
     const { error } = await updateExpense(id, { incurred_on: editingDateValue });
     if (error) {

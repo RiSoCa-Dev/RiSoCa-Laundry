@@ -72,6 +72,15 @@ export function LoadDetailsDialog({
         return;
       }
 
+      // Check if value changed
+      const currentValue = loadPieces[loadIndex];
+      if (currentValue === numericValue) {
+        // No change, just cancel
+        handleEditCancel();
+        setIsSaving(false);
+        return;
+      }
+
       const newLoadPieces = [...loadPieces];
       newLoadPieces[loadIndex] = numericValue;
 
@@ -185,7 +194,11 @@ export function LoadDetailsDialog({
                           variant="ghost"
                           className="h-7 w-7"
                           onClick={() => handleSave(loadIndex)}
-                          disabled={isSaving}
+                          disabled={isSaving || (() => {
+                            const currentValue = loadPieces[loadIndex];
+                            const newValue = editingPieceValue.trim() === '' ? null : Number(editingPieceValue);
+                            return currentValue === newValue || (newValue !== null && isNaN(newValue));
+                          })()}
                         >
                           {isSaving ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />

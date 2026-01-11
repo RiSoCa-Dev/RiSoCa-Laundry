@@ -43,7 +43,18 @@ export function ServiceRatesEditor() {
     );
   };
 
+  const hasChanges = () => {
+    return rates.some(rate => {
+      const original = initialRates.find(r => r.id === rate.id);
+      return !original || original.price !== rate.price;
+    });
+  };
+
   const handleSave = async () => {
+    if (!hasChanges()) {
+      setIsEditing(false);
+      return;
+    }
     setSaving(true);
     for (const rate of rates) {
       const original = initialRates.find(r => r.id === rate.id);
@@ -138,7 +149,7 @@ export function ServiceRatesEditor() {
                     <Button variant="outline" onClick={handleCancel} disabled={saving}>
                         <X className="mr-2 h-4 w-4" /> Cancel
                     </Button>
-                    <Button onClick={handleSave} disabled={saving}>
+                    <Button onClick={handleSave} disabled={saving || !hasChanges()}>
                         {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                         Save Changes
                     </Button>

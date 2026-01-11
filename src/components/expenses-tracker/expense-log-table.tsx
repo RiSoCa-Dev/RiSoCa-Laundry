@@ -131,7 +131,10 @@ export function ExpenseLogTable({
                               size="icon"
                               className="h-8 w-8"
                               onClick={() => onSaveDate(expense.id)}
-                              disabled={savingDate}
+                              disabled={savingDate || (() => {
+                                const originalDate = expense.incurred_on || new Date(expense.date).toISOString().slice(0, 10);
+                                return editingDateValue === originalDate;
+                              })()}
                             >
                               {savingDate ? (
                                 <Loader2 className="h-3 w-3 animate-spin" />

@@ -157,6 +157,12 @@ export function ElectricityTracker() {
       });
       return;
     }
+    // Check if price changed
+    if (newPrice === pricePerKwh) {
+      setIsEditingPrice(false);
+      setPriceInputValue('');
+      return;
+    }
     setPricePerKwh(newPrice);
     if (typeof window !== 'undefined') {
       localStorage.setItem('electricity_price_per_kwh', newPrice.toString());
@@ -257,6 +263,10 @@ export function ElectricityTracker() {
                     variant="ghost"
                     className="h-8 w-8"
                     onClick={handlePriceSave}
+                    disabled={(() => {
+                      const newPrice = parseFloat(priceInputValue);
+                      return isNaN(newPrice) || newPrice < 0 || newPrice === pricePerKwh;
+                    })()}
                   >
                     <Check className="h-4 w-4 text-green-600" />
                   </Button>

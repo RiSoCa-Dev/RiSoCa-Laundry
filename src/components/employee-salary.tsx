@@ -243,6 +243,21 @@ export function EmployeeSalary() {
       return;
     }
 
+    // Check if amount changed
+    const dateKey = format(date, 'yyyy-MM-dd');
+    const payment = dailyPayments[dateKey]?.[employeeId];
+    const currentAmount = (payment?.amount && payment.amount > 0) ? payment.amount : calculateEmployeeSalary(
+      groupOrdersByDate(orders)[dateKey] || [],
+      employees.find(e => e.id === employeeId)!,
+      employees
+    );
+    if (Math.abs(amount - currentAmount) < 0.01) {
+      // No change, just cancel
+      setEditingPaymentAmount(null);
+      setEditingPaymentValue('');
+      return;
+    }
+
     setUpdatingPayment(paymentKey);
 
     try {
@@ -522,7 +537,11 @@ export function EmployeeSalary() {
                                          variant="ghost"
                                          className="h-8 w-8 p-0"
                                          onClick={() => handleSavePaymentAmount(emp.id, date, isPaid)}
-                                         disabled={updatingPayment === paymentKey}
+                                         disabled={updatingPayment === paymentKey || (() => {
+                                           const amount = parseFloat(editingPaymentValue);
+                                           if (isNaN(amount) || amount < 0) return true;
+                                           return Math.abs(amount - currentAmount) < 0.01;
+                                         })()}
                                        >
                                          {updatingPayment === paymentKey ? (
                                            <Loader2 className="h-3 w-3 animate-spin" />

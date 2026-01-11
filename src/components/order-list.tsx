@@ -74,6 +74,46 @@ import {
   getPaymentBadgeInfo,
 } from './order-list/utils';
 
+// Helper function to compare two orders and detect if any changes were made
+function ordersAreEqual(order1: Order, order2: Order): boolean {
+    // Compare all editable fields
+    if (order1.customerName !== order2.customerName) return false;
+    if (order1.contactNumber !== order2.contactNumber) return false;
+    if (order1.load !== order2.load) return false;
+    if (order1.weight !== order2.weight) return false;
+    if (order1.total !== order2.total) return false;
+    if (order1.status !== order2.status) return false;
+    if (order1.isPaid !== order2.isPaid) return false;
+    if (order1.balance !== order2.balance) return false;
+    if (order1.deliveryOption !== order2.deliveryOption) return false;
+    if (order1.servicePackage !== order2.servicePackage) return false;
+    if (order1.distance !== order2.distance) return false;
+    if (order1.orderType !== order2.orderType) return false;
+    if (order1.assignedEmployeeId !== order2.assignedEmployeeId) return false;
+    
+    // Compare dates (ignore time, only date)
+    const date1 = new Date(order1.orderDate).toDateString();
+    const date2 = new Date(order2.orderDate).toDateString();
+    if (date1 !== date2) return false;
+    
+    // Compare assignedEmployeeIds arrays
+    const ids1 = order1.assignedEmployeeIds?.slice().sort().join(',') || '';
+    const ids2 = order2.assignedEmployeeIds?.slice().sort().join(',') || '';
+    if (ids1 !== ids2) return false;
+    
+    // Compare loadPieces arrays
+    const pieces1 = order1.loadPieces?.slice().join(',') || '';
+    const pieces2 = order2.loadPieces?.slice().join(',') || '';
+    if (pieces1 !== pieces2) return false;
+    
+    // Compare foundItems arrays
+    const items1 = order1.foundItems?.slice().sort().join(',') || '';
+    const items2 = order2.foundItems?.slice().sort().join(',') || '';
+    if (items1 !== items2) return false;
+    
+    return true;
+}
+
 function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpdateOrder: OrderListProps['onUpdateOrder'], onDeleteOrder?: OrderListProps['onDeleteOrder'] }) {
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -661,8 +701,9 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                         <Button 
                             size="icon" 
                             onClick={handleSave} 
-                            disabled={isSaving}
+                            disabled={isSaving || ordersAreEqual(safeOrder, editableOrder)}
                             className="h-8 w-8 bg-primary hover:bg-primary/90 shadow-sm"
+                            title={ordersAreEqual(safeOrder, editableOrder) ? 'No changes made' : 'Save changes'}
                         >
                             {isSaving ? (
                                 <Loader2 className="animate-spin h-3.5 w-3.5"/>
@@ -1429,8 +1470,9 @@ function OrderCard({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUp
                                         </Button>
                                         <Button 
                                             onClick={handleSave} 
-                                            disabled={isSaving}
+                                            disabled={isSaving || ordersAreEqual(safeOrder, editableOrder)}
                                             className="gap-2 bg-primary hover:bg-primary/90 shadow-sm"
+                                            title={ordersAreEqual(safeOrder, editableOrder) ? 'No changes made' : 'Save changes'}
                                         >
                                             {isSaving ? (
                                                 <>
