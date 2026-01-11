@@ -51,7 +51,7 @@ export async function autoSaveDailySalaries(
                   date: dateStr,
                   amount: calculatedSalary,
                   is_paid: false,
-                  load_completion: '{}'::jsonb,
+                  load_completion: {},
                   updated_at: new Date().toISOString(),
                 });
 

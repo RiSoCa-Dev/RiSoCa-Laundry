@@ -24,7 +24,7 @@ export async function savePaymentAmount(
 
   const { data: existingData, error: fetchError } = await supabase
     .from('daily_salary_payments')
-    .select('id')
+    .select('id, load_completion')
     .eq('employee_id', employeeId)
     .eq('date', dateStr)
     .maybeSingle();
@@ -36,6 +36,7 @@ export async function savePaymentAmount(
       .update({
         amount: amount,
         is_paid: currentStatus,
+        load_completion: existingData.load_completion || {},
         updated_at: new Date().toISOString(),
       })
       .eq('employee_id', employeeId)
@@ -49,6 +50,7 @@ export async function savePaymentAmount(
         date: dateStr,
         amount: amount,
         is_paid: currentStatus,
+        load_completion: {},
         updated_at: new Date().toISOString(),
       })
       .select();
@@ -97,22 +99,22 @@ export async function togglePaymentStatus(
       .update({
         is_paid: newStatus,
         amount: amount,
-        load_completion: existingData.load_completion || '{}'::jsonb,
+        load_completion: existingData.load_completion || {},
         updated_at: new Date().toISOString(),
       })
       .eq('employee_id', employeeId)
       .eq('date', dateStr);
   } else {
-    result = await supabase
-      .from('daily_salary_payments')
-      .insert({
-        employee_id: employeeId,
-        date: dateStr,
-        amount: amount,
-        is_paid: newStatus,
-        load_completion: '{}'::jsonb,
-        updated_at: new Date().toISOString(),
-      });
+      result = await supabase
+        .from('daily_salary_payments')
+        .insert({
+          employee_id: employeeId,
+          date: dateStr,
+          amount: amount,
+          is_paid: newStatus,
+          load_completion: {},
+          updated_at: new Date().toISOString(),
+        });
   }
 
   if (result.error) {
