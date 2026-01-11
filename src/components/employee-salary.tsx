@@ -41,6 +41,8 @@ import { savePaymentAmount, togglePaymentStatus } from './employee-salary/paymen
 import { saveLoadCompletion } from './employee-salary/load-completion-handlers';
 import { LoadDetailsDialog } from '@/components/load-details-dialog';
 import type { LoadCompletionData } from './employee-salary/types';
+import { createOrderWithHistory, fetchLatestOrderId, generateNextOrderId } from '@/lib/api/orders';
+import { addDays, startOfDay } from 'date-fns';
 
 export function EmployeeSalary() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -362,6 +364,24 @@ export function EmployeeSalary() {
     setLoadDialogEmployeeId(null);
   };
 
+  const calculateTotalFromLoads = (loads: number, servicePackage: string, distance: number): number => {
+    const baseCost = loads * 180;
+    const needsLocation = servicePackage === 'package2' || servicePackage === 'package3';
+    const isFree = needsLocation && distance > 0 && distance <= 0.5;
+    
+    let transportFee = 0;
+    if (!isFree && needsLocation) {
+      const billableDistance = Math.max(0, distance - 1);
+      if (servicePackage === 'package2') {
+        transportFee = billableDistance * 20;
+      } else if (servicePackage === 'package3') {
+        transportFee = billableDistance * 20 * 2;
+      }
+    }
+    
+    return baseCost + transportFee;
+  };
+
   const handleSaveLoadCompletion = async (loadCompletion: LoadCompletionData) => {
     if (!loadDialogOrder || !loadDialogDate || !loadDialogEmployeeId) return;
 
@@ -380,11 +400,87 @@ export function EmployeeSalary() {
           });
         }
       );
+
+      // Check if there are incomplete loads for this order
+      const orderCompletion = loadCompletion[loadDialogOrder.id];
+      const incompleteLoads = orderCompletion?.incomplete_loads || [];
+      const nextDayEmployeeId = orderCompletion?.next_day_employee_id || null;
+
+      // If there are incomplete loads, create a new order for tomorrow
+      // NOTE: The original order is NOT modified - it remains unchanged in the main dashboard
+      // Only the load_completion data is used for salary calculations
+      if (incompleteLoads.length > 0) {
+        const tomorrow = startOfDay(addDays(loadDialogDate, 1));
+        const incompleteLoadCount = incompleteLoads.length;
+        
+        // Generate new order ID for tomorrow's order
+        const { latestId, error: idError } = await fetchLatestOrderId();
+        if (idError) {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Failed to generate order ID for tomorrow\'s order.',
+          });
+        } else {
+          const newOrderId = generateNextOrderId(latestId);
+          
+          // Calculate values for tomorrow's order
+          const incompleteWeight = incompleteLoadCount * 7.5;
+          const incompleteTotal = calculateTotalFromLoads(
+            incompleteLoadCount,
+            loadDialogOrder.servicePackage,
+            loadDialogOrder.distance || 0
+          );
+          
+          // Determine employee assignment for the new order
+          const assignedEmployeeId = nextDayEmployeeId || loadDialogEmployeeId;
+          
+          // Create the new order for tomorrow
+          const { error: createError } = await createOrderWithHistory({
+            id: newOrderId,
+            customer_id: loadDialogOrder.userId || 'admin-manual',
+            customer_name: loadDialogOrder.customerName,
+            contact_number: loadDialogOrder.contactNumber,
+            service_package: loadDialogOrder.servicePackage as 'package1' | 'package2' | 'package3',
+            weight: incompleteWeight,
+            loads: incompleteLoadCount,
+            distance: loadDialogOrder.distance ?? null,
+            delivery_option: loadDialogOrder.deliveryOption ?? null,
+            status: 'Partial Complete',
+            total: incompleteTotal,
+            is_paid: false,
+            order_type: loadDialogOrder.orderType || 'customer',
+            assigned_employee_id: assignedEmployeeId,
+            assigned_employee_ids: assignedEmployeeId ? [assignedEmployeeId] : undefined,
+            created_at: tomorrow.toISOString(),
+          });
+
+          if (createError) {
+            console.error('Failed to create order for tomorrow:', createError);
+            toast({
+              variant: 'destructive',
+              title: 'Error',
+              description: 'Failed to create order for tomorrow. Please try again.',
+            });
+          } else {
+            toast({
+              title: 'Order Created for Tomorrow',
+              description: `New order #${newOrderId} created for tomorrow with ${incompleteLoadCount} load${incompleteLoadCount > 1 ? 's' : ''}. The original order remains unchanged.`,
+            });
+          }
+        }
+      }
+
       // Refresh orders to recalculate salaries
       await loadOrders();
       handleCloseLoadDetails();
     } catch (error: any) {
       console.error('Failed to save load completion:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to save load completion. Please try again.',
+      });
     }
   };
 
