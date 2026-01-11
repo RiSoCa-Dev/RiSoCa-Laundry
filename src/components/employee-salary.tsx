@@ -27,7 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Inbox, Check, X, Layers, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { format, startOfDay } from 'date-fns';
+import { format, startOfDay, addDays } from 'date-fns';
 import { supabase } from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/use-employees';
@@ -42,7 +42,6 @@ import { saveLoadCompletion } from './employee-salary/load-completion-handlers';
 import { LoadDetailsDialog } from '@/components/load-details-dialog';
 import type { LoadCompletionData } from './employee-salary/types';
 import { createOrderWithHistory, fetchLatestOrderId, generateNextOrderId } from '@/lib/api/orders';
-import { addDays, startOfDay } from 'date-fns';
 
 export function EmployeeSalary() {
   const [orders, setOrders] = useState<Order[]>([]);
