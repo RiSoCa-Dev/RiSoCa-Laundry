@@ -10,9 +10,11 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Layers, Edit2, Check, X, Loader2 } from 'lucide-react';
+import { Layers, Edit2, Check, X, Loader2, Users } from 'lucide-react';
 import type { Order } from './order-list/types';
 import { cn } from '@/lib/utils';
+import { useEmployees } from '@/hooks/use-employees';
+import { format } from 'date-fns';
 
 type LoadDetailsDialogProps = {
   isOpen: boolean;
@@ -29,21 +31,34 @@ export function LoadDetailsDialog({
 }: LoadDetailsDialogProps) {
   const [editingLoadIndex, setEditingLoadIndex] = useState<number | null>(null);
   const [editingPieceValue, setEditingPieceValue] = useState<string>('');
+  const [editingEmployeeLoadIndex, setEditingEmployeeLoadIndex] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [loadPieces, setLoadPieces] = useState<(number | null)[]>([]);
+  const [loadEmployees, setLoadEmployees] = useState<(string[] | null)[]>([]);
+  const { employees, loading: loadingEmployees } = useEmployees();
 
-  // Initialize loadPieces array when dialog opens or order changes
+  // Initialize loadPieces and loadEmployees arrays when dialog opens or order changes
   useEffect(() => {
     if (isOpen && order) {
       const pieces: (number | null)[] = [];
+      const employees: (string[] | null)[] = [];
+      
+      // For now, we'll use the order's assigned employees for all loads
+      // Later we can add per-load employee storage
+      const defaultEmployees = order.assignedEmployeeIds || 
+        (order.assignedEmployeeId ? [order.assignedEmployeeId] : null);
+      
       for (let i = 0; i < order.load; i++) {
         pieces.push(order.loadPieces?.[i] ?? null);
+        employees.push(defaultEmployees);
       }
+      
       setLoadPieces(pieces);
+      setLoadEmployees(employees);
     }
   }, [isOpen, order]);
 
-  const handleEditStart = (loadIndex: number) => {
+  const handleEditPieceStart = (loadIndex: number) => {
     setEditingLoadIndex(loadIndex);
     setEditingPieceValue(
       loadPieces[loadIndex] !== null && loadPieces[loadIndex] !== undefined
@@ -52,12 +67,12 @@ export function LoadDetailsDialog({
     );
   };
 
-  const handleEditCancel = () => {
+  const handleEditPieceCancel = () => {
     setEditingLoadIndex(null);
     setEditingPieceValue('');
   };
 
-  const handleSave = async (loadIndex: number) => {
+  const handlePieceSave = async (loadIndex: number) => {
     setIsSaving(true);
     try {
       const numericValue =
@@ -66,17 +81,14 @@ export function LoadDetailsDialog({
           : Number(editingPieceValue);
       
       if (numericValue !== null && (isNaN(numericValue) || numericValue < 0)) {
-        // Invalid number, reset to current value
-        handleEditCancel();
+        handleEditPieceCancel();
         setIsSaving(false);
         return;
       }
 
-      // Check if value changed
       const currentValue = loadPieces[loadIndex];
       if (currentValue === numericValue) {
-        // No change, just cancel
-        handleEditCancel();
+        handleEditPieceCancel();
         setIsSaving(false);
         return;
       }
@@ -84,7 +96,6 @@ export function LoadDetailsDialog({
       const newLoadPieces = [...loadPieces];
       newLoadPieces[loadIndex] = numericValue;
 
-      // Clean up array: if all are null, set to undefined, otherwise keep array with nulls
       const hasAnyPieces = newLoadPieces.some(
         (p) => p !== null && p !== undefined
       );
@@ -105,95 +116,233 @@ export function LoadDetailsDialog({
     }
   };
 
-  // Get employee names for display
-  const employeeDisplayText = order.assignedEmployeeIds?.length
-    ? order.assignedEmployeeIds.length === 1
-      ? '1 employee'
-      : `${order.assignedEmployeeIds.length} employees`
-    : order.assignedEmployeeId
-    ? '1 employee'
-    : 'No employees assigned';
+  const handleEmployeeToggle = (loadIndex: number, employeeId: string) => {
+    const currentEmployees = loadEmployees[loadIndex] || [];
+    const newEmployees = currentEmployees.includes(employeeId)
+      ? currentEmployees.filter(id => id !== employeeId)
+      : [...currentEmployees, employeeId];
+    
+    const newLoadEmployees = [...loadEmployees];
+    newLoadEmployees[loadIndex] = newEmployees.length > 0 ? newEmployees : null;
+    setLoadEmployees(newLoadEmployees);
+  };
+
+  const handleEmployeeSave = async (loadIndex: number) => {
+    setIsSaving(true);
+    try {
+      // For now, we'll update the order's assignedEmployeeIds
+      // This is a temporary solution - ideally we'd store per-load employees separately
+      const newEmployees = loadEmployees[loadIndex];
+      
+      const updatedOrder: Order = {
+        ...order,
+        assignedEmployeeIds: newEmployees && newEmployees.length > 0 ? newEmployees : undefined,
+        assignedEmployeeId: newEmployees && newEmployees.length > 0 ? newEmployees[0] : null,
+      };
+
+      await onUpdateOrder(updatedOrder);
+      setEditingEmployeeLoadIndex(null);
+    } catch (error) {
+      console.error('Error saving load employees:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleEmployeeEditCancel = (loadIndex: number) => {
+    // Reset to original employees
+    const defaultEmployees = order.assignedEmployeeIds || 
+      (order.assignedEmployeeId ? [order.assignedEmployeeId] : null);
+    const newLoadEmployees = [...loadEmployees];
+    newLoadEmployees[loadIndex] = defaultEmployees;
+    setLoadEmployees(newLoadEmployees);
+    setEditingEmployeeLoadIndex(null);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[500px]">
+      <DialogContent className="w-[95vw] max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-2">
           <DialogTitle className="text-base sm:text-lg flex items-center gap-2">
             <Layers className="h-5 w-5 text-primary" />
             Load Details - {order.id}
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Total: {order.load} load{order.load > 1 ? 's' : ''} • {employeeDisplayText}
+            Total: {order.load} load{order.load > 1 ? 's' : ''}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3 py-4">
+        <div className="space-y-4 py-4">
           {Array.from({ length: order.load }, (_, i) => i + 1).map(
             (loadNum) => {
               const loadIndex = loadNum - 1;
               const pieceCount = loadPieces[loadIndex];
-              const isEditing = editingLoadIndex === loadIndex;
+              const isEditingPiece = editingLoadIndex === loadIndex;
+              const isEditingEmployee = editingEmployeeLoadIndex === loadIndex;
+              const loadEmployeeIds = loadEmployees[loadIndex] || [];
+              const loadEmployeeNames = employees
+                .filter(emp => loadEmployeeIds.includes(emp.id))
+                .map(emp => emp.first_name || 'Employee')
+                .join(', ') || 'No employees assigned';
 
               return (
                 <div
                   key={loadNum}
                   className={cn(
-                    'flex items-center justify-between p-3 border rounded-md transition-colors',
-                    isEditing
+                    'p-4 border rounded-lg transition-colors',
+                    (isEditingPiece || isEditingEmployee)
                       ? 'bg-primary/5 border-primary'
                       : 'bg-muted/30 hover:bg-muted/50'
                   )}
                 >
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary font-semibold text-sm flex-shrink-0">
-                      {loadNum}
-                    </div>
-                    <div className="flex flex-col flex-1 min-w-0">
-                      <span className="font-medium text-sm">Load {loadNum}</span>
-                      {isEditing ? (
-                        <div className="flex items-center gap-2 mt-1">
-                          <Input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={editingPieceValue}
-                            onChange={(e) => setEditingPieceValue(e.target.value)}
-                            placeholder="Enter pieces"
-                            className="h-8 text-xs w-24"
-                            disabled={isSaving}
-                            autoFocus
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleSave(loadIndex);
-                              } else if (e.key === 'Escape') {
-                                e.preventDefault();
-                                handleEditCancel();
-                              }
-                            }}
-                          />
-                          <span className="text-xs text-muted-foreground">
-                            pcs
-                          </span>
+                  {/* Order Information */}
+                  <div className="mb-3 pb-3 border-b space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary font-semibold text-sm flex-shrink-0">
+                          {loadNum}
                         </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">
-                          {pieceCount !== null && pieceCount !== undefined ? (
-                            `${pieceCount} ${pieceCount === 1 ? 'piece' : 'pieces'}`
-                          ) : (
-                            <span className="italic">No piece count recorded</span>
-                          )}
-                        </span>
-                      )}
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-sm">Load {loadNum}</span>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                            <span><span className="font-medium">ORDER #:</span> {order.id}</span>
+                            <span><span className="font-medium">Date:</span> {format(order.orderDate, 'MMM dd, yyyy')}</span>
+                            <span><span className="font-medium">Name:</span> {order.customerName}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {isEditing ? (
-                      <>
+
+                  {/* Employee Assignment */}
+                  <div className="mb-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground">Employee:</span>
+                      </div>
+                      {!isEditingEmployee && (
                         <Button
-                          size="icon"
+                          size="sm"
                           variant="ghost"
-                          className="h-7 w-7"
-                          onClick={() => handleSave(loadIndex)}
+                          className="h-6 px-2 text-xs"
+                          onClick={() => setEditingEmployeeLoadIndex(loadIndex)}
+                          disabled={isSaving || isEditingPiece}
+                        >
+                          <Edit2 className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                      )}
+                    </div>
+                    {isEditingEmployee ? (
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-1.5">
+                          {employees.map((emp) => {
+                            const isSelected = loadEmployeeIds.includes(emp.id);
+                            return (
+                              <Button
+                                key={emp.id}
+                                type="button"
+                                variant={isSelected ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => handleEmployeeToggle(loadIndex, emp.id)}
+                                disabled={isSaving || loadingEmployees}
+                                className={cn(
+                                  "h-7 text-xs",
+                                  isSelected 
+                                    ? "bg-primary hover:bg-primary/90" 
+                                    : "hover:border-primary hover:text-primary"
+                                )}
+                              >
+                                {emp.first_name || 'Employee'}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                        <div className="flex items-center gap-2 pt-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => handleEmployeeSave(loadIndex)}
+                            disabled={isSaving || (() => {
+                              const originalEmployees = order.assignedEmployeeIds || 
+                                (order.assignedEmployeeId ? [order.assignedEmployeeId] : null);
+                              const currentEmployees = loadEmployees[loadIndex];
+                              const originalIds = originalEmployees?.slice().sort().join(',') || '';
+                              const currentIds = currentEmployees?.slice().sort().join(',') || '';
+                              return originalIds === currentIds;
+                            })()}
+                          >
+                            {isSaving ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Check className="h-3 w-3 text-green-600" />
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => handleEmployeeEditCancel(loadIndex)}
+                            disabled={isSaving}
+                          >
+                            <X className="h-3 w-3 text-red-600" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-foreground">
+                        {loadEmployeeNames}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Piece Count */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">Piece Count:</span>
+                      {!isEditingPiece && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-2 text-xs"
+                          onClick={() => handleEditPieceStart(loadIndex)}
+                          disabled={isSaving || isEditingEmployee}
+                          title="Edit piece count"
+                        >
+                          <Edit2 className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                      )}
+                    </div>
+                    {isEditingPiece ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={editingPieceValue}
+                          onChange={(e) => setEditingPieceValue(e.target.value)}
+                          placeholder="Enter pieces"
+                          className="h-8 text-xs w-32"
+                          disabled={isSaving}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handlePieceSave(loadIndex);
+                            } else if (e.key === 'Escape') {
+                              e.preventDefault();
+                              handleEditPieceCancel();
+                            }
+                          }}
+                        />
+                        <span className="text-xs text-muted-foreground">pcs</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 px-2"
+                          onClick={() => handlePieceSave(loadIndex)}
                           disabled={isSaving || (() => {
                             const currentValue = loadPieces[loadIndex];
                             const newValue = editingPieceValue.trim() === '' ? null : Number(editingPieceValue);
@@ -201,31 +350,29 @@ export function LoadDetailsDialog({
                           })()}
                         >
                           {isSaving ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <Loader2 className="h-3 w-3 animate-spin" />
                           ) : (
-                            <Check className="h-3.5 w-3.5 text-green-600" />
+                            <Check className="h-3 w-3 text-green-600" />
                           )}
                         </Button>
                         <Button
-                          size="icon"
+                          size="sm"
                           variant="ghost"
-                          className="h-7 w-7"
-                          onClick={handleEditCancel}
+                          className="h-8 px-2"
+                          onClick={handleEditPieceCancel}
                           disabled={isSaving}
                         >
-                          <X className="h-3.5 w-3.5 text-red-600" />
+                          <X className="h-3 w-3 text-red-600" />
                         </Button>
-                      </>
+                      </div>
                     ) : (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7 hover:bg-primary/10 hover:text-primary"
-                        onClick={() => handleEditStart(loadIndex)}
-                        title="Edit piece count"
-                      >
-                        <Edit2 className="h-3.5 w-3.5" />
-                      </Button>
+                      <div className="text-sm text-foreground">
+                        {pieceCount !== null && pieceCount !== undefined ? (
+                          `${pieceCount} ${pieceCount === 1 ? 'piece' : 'pieces'}`
+                        ) : (
+                          <span className="italic text-muted-foreground">No piece count recorded</span>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
