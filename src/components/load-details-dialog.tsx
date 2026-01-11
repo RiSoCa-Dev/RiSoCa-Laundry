@@ -8,6 +8,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Layers, Edit2, Check, X, Loader2, Users } from 'lucide-react';
@@ -171,7 +177,7 @@ export function LoadDetailsDialog({
             Total: {order.load} load{order.load > 1 ? 's' : ''}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <Accordion type="single" collapsible className="w-full space-y-2">
           {Array.from({ length: order.load }, (_, i) => i + 1).map(
             (loadNum) => {
               const loadIndex = loadNum - 1;
@@ -185,33 +191,32 @@ export function LoadDetailsDialog({
                 .join(', ') || 'No employees assigned';
 
               return (
-                <div
+                <AccordionItem
                   key={loadNum}
+                  value={`load-${loadNum}`}
                   className={cn(
-                    'p-4 border rounded-lg transition-colors',
+                    'border rounded-lg overflow-hidden',
                     (isEditingPiece || isEditingEmployee)
                       ? 'bg-primary/5 border-primary'
-                      : 'bg-muted/30 hover:bg-muted/50'
+                      : 'bg-muted/30'
                   )}
                 >
-                  {/* Order Information */}
-                  <div className="mb-3 pb-3 border-b space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary font-semibold text-sm flex-shrink-0">
-                          {loadNum}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-sm">Load {loadNum}</span>
-                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                            <span><span className="font-medium">ORDER #:</span> {order.id}</span>
-                            <span><span className="font-medium">Date:</span> {format(order.orderDate, 'MMM dd, yyyy')}</span>
-                            <span><span className="font-medium">Name:</span> {order.customerName}</span>
-                          </div>
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary font-semibold text-sm flex-shrink-0">
+                        {loadNum}
+                      </div>
+                      <div className="flex flex-col items-start flex-1 min-w-0">
+                        <span className="font-semibold text-sm">Load {loadNum}</span>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                          <span><span className="font-medium">ORDER #:</span> {order.id}</span>
+                          <span><span className="font-medium">Date:</span> {format(order.orderDate, 'MMM dd, yyyy')}</span>
+                          <span><span className="font-medium">Name:</span> {order.customerName}</span>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4 pt-2">
 
                   {/* Employee Assignment */}
                   <div className="mb-3 space-y-2">
@@ -375,11 +380,12 @@ export function LoadDetailsDialog({
                       </div>
                     )}
                   </div>
-                </div>
+                  </AccordionContent>
+                </AccordionItem>
               );
             }
           )}
-        </div>
+        </Accordion>
       </DialogContent>
     </Dialog>
   );
