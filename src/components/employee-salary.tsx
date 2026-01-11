@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/accordion"
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Inbox, Check, X } from 'lucide-react';
+import { Loader2, Inbox, Check, X, Layers, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format, startOfDay } from 'date-fns';
 import { supabase } from '@/lib/supabase-client';
@@ -38,6 +38,9 @@ import { fetchOrders, fetchAllDailyPayments, fetchDailyPayments } from './employ
 import { groupOrdersByDate, calculateActualTotalSalary, calculateEmployeeLoads, calculateEmployeeSalary } from './employee-salary/calculate-salary';
 import { autoSaveDailySalaries } from './employee-salary/auto-save-salaries';
 import { savePaymentAmount, togglePaymentStatus } from './employee-salary/payment-handlers';
+import { saveLoadCompletion } from './employee-salary/load-completion-handlers';
+import { LoadDetailsDialog } from '@/components/load-details-dialog';
+import type { LoadCompletionData } from './employee-salary/types';
 
 export function EmployeeSalary() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -51,6 +54,9 @@ export function EmployeeSalary() {
   const [editingPaymentAmount, setEditingPaymentAmount] = useState<string | null>(null);
   const [editingPaymentValue, setEditingPaymentValue] = useState<string>('');
   const [lastManualSave, setLastManualSave] = useState<Record<string, number>>({}); // Track manual saves by payment key
+  const [loadDialogOrder, setLoadDialogOrder] = useState<Order | null>(null);
+  const [loadDialogEmployeeId, setLoadDialogEmployeeId] = useState<string | null>(null);
+  const [loadDialogDate, setLoadDialogDate] = useState<Date | null>(null);
   const { toast } = useToast();
 
   const loadOrders = async () => {
@@ -249,7 +255,8 @@ export function EmployeeSalary() {
     const currentAmount = (payment?.amount && payment.amount > 0) ? payment.amount : calculateEmployeeSalary(
       groupOrdersByDate(orders)[dateKey] || [],
       employees.find(e => e.id === employeeId)!,
-      employees
+      employees,
+      dailyPayments
     );
     if (Math.abs(amount - currentAmount) < 0.01) {
       // No change, just cancel
@@ -340,6 +347,44 @@ export function EmployeeSalary() {
       });
     } finally {
       setUpdatingPayment(null);
+    }
+  };
+
+  const handleOpenLoadDetails = (order: Order, date: Date, employeeId: string) => {
+    setLoadDialogOrder(order);
+    setLoadDialogDate(date);
+    setLoadDialogEmployeeId(employeeId);
+  };
+
+  const handleCloseLoadDetails = () => {
+    setLoadDialogOrder(null);
+    setLoadDialogDate(null);
+    setLoadDialogEmployeeId(null);
+  };
+
+  const handleSaveLoadCompletion = async (loadCompletion: LoadCompletionData) => {
+    if (!loadDialogOrder || !loadDialogDate || !loadDialogEmployeeId) return;
+
+    try {
+      const dateStr = format(loadDialogDate, 'yyyy-MM-dd');
+      await saveLoadCompletion(
+        loadDialogEmployeeId,
+        loadDialogDate,
+        loadCompletion,
+        toast,
+        (dateStr, payments) => {
+          setDailyPayments(prev => {
+            const updated = { ...prev };
+            updated[dateStr] = payments;
+            return updated;
+          });
+        }
+      );
+      // Refresh orders to recalculate salaries
+      await loadOrders();
+      handleCloseLoadDetails();
+    } catch (error: any) {
+      console.error('Failed to save load completion:', error);
     }
   };
 
@@ -468,7 +513,7 @@ export function EmployeeSalary() {
                            );
                            const isMyra = myraEmployee?.id === emp.id;
                            
-                           const customerLoadsForEmployee = calculateEmployeeLoads(orders, emp, employees);
+                           const customerLoadsForEmployee = calculateEmployeeLoads(orders, emp, employees, dailyPayments);
                            const customerSalary = customerLoadsForEmployee * SALARY_PER_LOAD;
                            
                            const internalOrdersForEmployee = orders.filter(
@@ -476,7 +521,7 @@ export function EmployeeSalary() {
                            );
                            const internalBonus = internalOrdersForEmployee.length * 30;
                            
-                           const employeeSalary = calculateEmployeeSalary(orders, emp, employees);
+                           const employeeSalary = calculateEmployeeSalary(orders, emp, employees, dailyPayments);
                            
                            const unassignedCustomerOrders = isMyra && employees.length === 1
                              ? orders.filter(
@@ -714,7 +759,27 @@ export function EmployeeSalary() {
                                 )}
                               </div>
                             </TableCell>
-                            <TableCell className="text-center text-xs">{order.load}</TableCell>
+                            <TableCell className="text-center text-xs">
+                              {order.orderType === 'internal' ? (
+                                order.load
+                              ) : (() => {
+                                // Find the first assigned employee for this order
+                                const assignedEmployeeId = order.assignedEmployeeIds?.[0] || order.assignedEmployeeId;
+                                if (!assignedEmployeeId) {
+                                  return order.load;
+                                }
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenLoadDetails(order, date, assignedEmployeeId)}
+                                    className="underline hover:no-underline text-primary font-medium cursor-pointer"
+                                    title="Edit load completion"
+                                  >
+                                    {order.load}
+                                  </button>
+                                );
+                              })()}
+                            </TableCell>
                             <TableCell className="text-center text-xs">
                               {order.orderType === 'internal' ? (
                                 <div className="flex flex-wrap items-center justify-center gap-1">
@@ -844,6 +909,20 @@ export function EmployeeSalary() {
           </div>
         )}
       </CardContent>
+      {loadDialogOrder && loadDialogDate && loadDialogEmployeeId && (
+        <LoadDetailsDialog
+          isOpen={!!loadDialogOrder}
+          onClose={handleCloseLoadDetails}
+          order={loadDialogOrder}
+          date={loadDialogDate}
+          employeeId={loadDialogEmployeeId}
+          loadCompletion={(() => {
+            const dateStr = format(loadDialogDate, 'yyyy-MM-dd');
+            return dailyPayments[dateStr]?.[loadDialogEmployeeId]?.load_completion;
+          })()}
+          onSave={handleSaveLoadCompletion}
+        />
+      )}
     </Card>
   );
 }

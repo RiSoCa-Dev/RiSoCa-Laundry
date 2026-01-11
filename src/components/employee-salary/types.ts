@@ -22,9 +22,18 @@ export type Employee = {
   last_name: string | null;
 };
 
+export type LoadCompletionData = {
+  [orderId: string]: {
+    completed_loads: number[];  // Array of load indices (1-based) that are completed
+    incomplete_loads: number[];  // Array of load indices (1-based) that are not done
+    next_day_employee_id?: string | null;  // Optional: employee assigned for next day
+  };
+};
+
 export type DailyPaymentStatus = {
   [employeeId: string]: {
     is_paid: boolean;
     amount: number;
+    load_completion?: LoadCompletionData;
   };
 };

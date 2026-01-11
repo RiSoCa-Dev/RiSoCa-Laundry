@@ -14,10 +14,18 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Layers, Edit2, Check, X, Loader2, Users } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Layers, Check, X, Loader2 } from 'lucide-react';
 import type { Order } from './order-list/types';
+import type { Employee, LoadCompletionData } from './employee-salary/types';
 import { cn } from '@/lib/utils';
 import { useEmployees } from '@/hooks/use-employees';
 import { format } from 'date-fns';
@@ -26,143 +34,109 @@ type LoadDetailsDialogProps = {
   isOpen: boolean;
   onClose: () => void;
   order: Order;
-  onUpdateOrder: (order: Order) => Promise<void>;
+  date: Date;
+  employeeId: string;
+  loadCompletion?: LoadCompletionData;
+  onSave: (loadCompletion: LoadCompletionData) => Promise<void>;
 };
 
 export function LoadDetailsDialog({
   isOpen,
   onClose,
   order,
-  onUpdateOrder,
+  date,
+  employeeId,
+  loadCompletion,
+  onSave,
 }: LoadDetailsDialogProps) {
-  const [editingLoadIndex, setEditingLoadIndex] = useState<number | null>(null);
-  const [editingPieceValue, setEditingPieceValue] = useState<string>('');
-  const [editingEmployeeLoadIndex, setEditingEmployeeLoadIndex] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [loadPieces, setLoadPieces] = useState<(number | null)[]>([]);
-  const [loadEmployees, setLoadEmployees] = useState<(string[] | null)[]>([]);
+  const [loadStatuses, setLoadStatuses] = useState<boolean[]>([]); // true = done, false = not done
+  const [nextDayEmployeeId, setNextDayEmployeeId] = useState<string | null>(null);
   const { employees, loading: loadingEmployees } = useEmployees();
 
-  // Initialize loadPieces and loadEmployees arrays when dialog opens or order changes
+  // Initialize load statuses when dialog opens
   useEffect(() => {
     if (isOpen && order) {
-      const pieces: (number | null)[] = [];
-      const employees: (string[] | null)[] = [];
+      const orderCompletion = loadCompletion?.[order.id];
+      const statuses: boolean[] = [];
       
-      // For now, we'll use the order's assigned employees for all loads
-      // Later we can add per-load employee storage
-      const defaultEmployees = order.assignedEmployeeIds || 
-        (order.assignedEmployeeId ? [order.assignedEmployeeId] : null);
-      
+      // Initialize all loads as done (true) by default
       for (let i = 0; i < order.load; i++) {
-        pieces.push(order.loadPieces?.[i] ?? null);
-        employees.push(defaultEmployees);
+        const loadNum = i + 1; // 1-based index
+        if (orderCompletion?.incomplete_loads?.includes(loadNum)) {
+          statuses.push(false); // Not done
+        } else {
+          statuses.push(true); // Done
+        }
       }
       
-      setLoadPieces(pieces);
-      setLoadEmployees(employees);
+      setLoadStatuses(statuses);
+      setNextDayEmployeeId(orderCompletion?.next_day_employee_id || null);
     }
-  }, [isOpen, order]);
+  }, [isOpen, order, loadCompletion]);
 
-  const handleEditPieceStart = (loadIndex: number) => {
-    setEditingLoadIndex(loadIndex);
-    setEditingPieceValue(
-      loadPieces[loadIndex] !== null && loadPieces[loadIndex] !== undefined
-        ? String(loadPieces[loadIndex])
-        : ''
-    );
+  const handleLoadToggle = (loadIndex: number) => {
+    const newStatuses = [...loadStatuses];
+    newStatuses[loadIndex] = !newStatuses[loadIndex];
+    setLoadStatuses(newStatuses);
   };
 
-  const handleEditPieceCancel = () => {
-    setEditingLoadIndex(null);
-    setEditingPieceValue('');
-  };
-
-  const handlePieceSave = async (loadIndex: number) => {
+  const handleSave = async () => {
     setIsSaving(true);
     try {
-      const numericValue =
-        editingPieceValue.trim() === ''
-          ? null
-          : Number(editingPieceValue);
+      const incompleteLoads: number[] = [];
+      const completedLoads: number[] = [];
       
-      if (numericValue !== null && (isNaN(numericValue) || numericValue < 0)) {
-        handleEditPieceCancel();
-        setIsSaving(false);
-        return;
-      }
+      loadStatuses.forEach((isDone, index) => {
+        const loadNum = index + 1; // 1-based index
+        if (isDone) {
+          completedLoads.push(loadNum);
+        } else {
+          incompleteLoads.push(loadNum);
+        }
+      });
 
-      const currentValue = loadPieces[loadIndex];
-      if (currentValue === numericValue) {
-        handleEditPieceCancel();
-        setIsSaving(false);
-        return;
-      }
-
-      const newLoadPieces = [...loadPieces];
-      newLoadPieces[loadIndex] = numericValue;
-
-      const hasAnyPieces = newLoadPieces.some(
-        (p) => p !== null && p !== undefined
-      );
-
-      const updatedOrder: Order = {
-        ...order,
-        loadPieces: hasAnyPieces ? newLoadPieces : undefined,
+      const completionData: LoadCompletionData = {
+        ...loadCompletion,
+        [order.id]: {
+          completed_loads: completedLoads,
+          incomplete_loads: incompleteLoads,
+          next_day_employee_id: incompleteLoads.length > 0 ? nextDayEmployeeId : null,
+        },
       };
 
-      await onUpdateOrder(updatedOrder);
-      setLoadPieces(newLoadPieces);
-      setEditingLoadIndex(null);
-      setEditingPieceValue('');
+      await onSave(completionData);
+      onClose();
     } catch (error) {
-      console.error('Error saving load pieces:', error);
+      console.error('Error saving load completion:', error);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleEmployeeToggle = (loadIndex: number, employeeId: string) => {
-    const currentEmployees = loadEmployees[loadIndex] || [];
-    const newEmployees = currentEmployees.includes(employeeId)
-      ? currentEmployees.filter(id => id !== employeeId)
-      : [...currentEmployees, employeeId];
+  const hasIncompleteLoads = loadStatuses.some(status => !status);
+  const hasChanges = () => {
+    const orderCompletion = loadCompletion?.[order.id];
+    if (!orderCompletion && loadStatuses.every(s => s)) {
+      // All done, no existing data = no changes
+      return false;
+    }
+    const currentIncomplete = loadStatuses
+      .map((status, index) => (!status ? index + 1 : null))
+      .filter((num): num is number => num !== null);
+    const currentCompleted = loadStatuses
+      .map((status, index) => (status ? index + 1 : null))
+      .filter((num): num is number => num !== null);
     
-    const newLoadEmployees = [...loadEmployees];
-    newLoadEmployees[loadIndex] = newEmployees.length > 0 ? newEmployees : null;
-    setLoadEmployees(newLoadEmployees);
-  };
-
-  const handleEmployeeSave = async (loadIndex: number) => {
-    setIsSaving(true);
-    try {
-      // For now, we'll update the order's assignedEmployeeIds
-      // This is a temporary solution - ideally we'd store per-load employees separately
-      const newEmployees = loadEmployees[loadIndex];
-      
-      const updatedOrder: Order = {
-        ...order,
-        assignedEmployeeIds: newEmployees && newEmployees.length > 0 ? newEmployees : undefined,
-        assignedEmployeeId: newEmployees && newEmployees.length > 0 ? newEmployees[0] : null,
-      };
-
-      await onUpdateOrder(updatedOrder);
-      setEditingEmployeeLoadIndex(null);
-    } catch (error) {
-      console.error('Error saving load employees:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleEmployeeEditCancel = (loadIndex: number) => {
-    // Reset to original employees
-    const defaultEmployees = order.assignedEmployeeIds || 
-      (order.assignedEmployeeId ? [order.assignedEmployeeId] : null);
-    const newLoadEmployees = [...loadEmployees];
-    newLoadEmployees[loadIndex] = defaultEmployees;
-    setLoadEmployees(newLoadEmployees);
-    setEditingEmployeeLoadIndex(null);
+    const existingIncomplete = orderCompletion?.incomplete_loads || [];
+    const existingCompleted = orderCompletion?.completed_loads || [];
+    const existingNextDay = orderCompletion?.next_day_employee_id || null;
+    
+    if (currentIncomplete.length !== existingIncomplete.length) return true;
+    if (currentIncomplete.some(load => !existingIncomplete.includes(load))) return true;
+    if (nextDayEmployeeId !== existingNextDay) return true;
+    
+    return false;
   };
 
   return (
@@ -171,24 +145,17 @@ export function LoadDetailsDialog({
         <DialogHeader className="pb-2">
           <DialogTitle className="text-base sm:text-lg flex items-center gap-2">
             <Layers className="h-5 w-5 text-primary" />
-            Load Details - {order.id}
+            Load Completion - {order.id}
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Total: {order.load} load{order.load > 1 ? 's' : ''}
+            Total: {order.load} load{order.load > 1 ? 's' : ''} • Date: {format(date, 'MMM dd, yyyy')}
           </DialogDescription>
         </DialogHeader>
         <Accordion type="single" collapsible className="w-full space-y-2">
           {Array.from({ length: order.load }, (_, i) => i + 1).map(
             (loadNum) => {
               const loadIndex = loadNum - 1;
-              const pieceCount = loadPieces[loadIndex];
-              const isEditingPiece = editingLoadIndex === loadIndex;
-              const isEditingEmployee = editingEmployeeLoadIndex === loadIndex;
-              const loadEmployeeIds = loadEmployees[loadIndex] || [];
-              const loadEmployeeNames = employees
-                .filter(emp => loadEmployeeIds.includes(emp.id))
-                .map(emp => emp.first_name || 'Employee')
-                .join(', ') || 'No employees assigned';
+              const isDone = loadStatuses[loadIndex] ?? true;
 
               return (
                 <AccordionItem
@@ -196,14 +163,19 @@ export function LoadDetailsDialog({
                   value={`load-${loadNum}`}
                   className={cn(
                     'border rounded-lg overflow-hidden',
-                    (isEditingPiece || isEditingEmployee)
-                      ? 'bg-primary/5 border-primary'
+                    !isDone
+                      ? 'bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800'
                       : 'bg-muted/30'
                   )}
                 >
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="flex items-center gap-3 w-full">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary font-semibold text-sm flex-shrink-0">
+                      <div className={cn(
+                        "flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm flex-shrink-0",
+                        isDone
+                          ? "bg-primary/10 text-primary"
+                          : "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
+                      )}>
                         {loadNum}
                       </div>
                       <div className="flex flex-col items-start flex-1 min-w-0">
@@ -217,175 +189,87 @@ export function LoadDetailsDialog({
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4 pt-2">
-
-                  {/* Employee Assignment */}
-                  <div className="mb-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs font-medium text-muted-foreground">Employee:</span>
-                      </div>
-                      {!isEditingEmployee && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 px-2 text-xs"
-                          onClick={() => setEditingEmployeeLoadIndex(loadIndex)}
-                          disabled={isSaving || isEditingPiece}
-                        >
-                          <Edit2 className="h-3 w-3 mr-1" />
-                          Edit
-                        </Button>
-                      )}
-                    </div>
-                    {isEditingEmployee ? (
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap gap-1.5">
-                          {employees.map((emp) => {
-                            const isSelected = loadEmployeeIds.includes(emp.id);
-                            return (
-                              <Button
-                                key={emp.id}
-                                type="button"
-                                variant={isSelected ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => handleEmployeeToggle(loadIndex, emp.id)}
-                                disabled={isSaving || loadingEmployees}
-                                className={cn(
-                                  "h-7 text-xs",
-                                  isSelected 
-                                    ? "bg-primary hover:bg-primary/90" 
-                                    : "hover:border-primary hover:text-primary"
-                                )}
-                              >
-                                {emp.first_name || 'Employee'}
-                              </Button>
-                            );
-                          })}
-                        </div>
-                        <div className="flex items-center gap-2 pt-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 px-2 text-xs"
-                            onClick={() => handleEmployeeSave(loadIndex)}
-                            disabled={isSaving || (() => {
-                              const originalEmployees = order.assignedEmployeeIds || 
-                                (order.assignedEmployeeId ? [order.assignedEmployeeId] : null);
-                              const currentEmployees = loadEmployees[loadIndex];
-                              const originalIds = originalEmployees?.slice().sort().join(',') || '';
-                              const currentIds = currentEmployees?.slice().sort().join(',') || '';
-                              return originalIds === currentIds;
-                            })()}
-                          >
-                            {isSaving ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <Check className="h-3 w-3 text-green-600" />
-                            )}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 px-2 text-xs"
-                            onClick={() => handleEmployeeEditCancel(loadIndex)}
-                            disabled={isSaving}
-                          >
-                            <X className="h-3 w-3 text-red-600" />
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-sm text-foreground">
-                        {loadEmployeeNames}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Piece Count */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground">Piece Count:</span>
-                      {!isEditingPiece && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 px-2 text-xs"
-                          onClick={() => handleEditPieceStart(loadIndex)}
-                          disabled={isSaving || isEditingEmployee}
-                          title="Edit piece count"
-                        >
-                          <Edit2 className="h-3 w-3 mr-1" />
-                          Edit
-                        </Button>
-                      )}
-                    </div>
-                    {isEditingPiece ? (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={editingPieceValue}
-                          onChange={(e) => setEditingPieceValue(e.target.value)}
-                          placeholder="Enter pieces"
-                          className="h-8 text-xs w-32"
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`load-${loadNum}-done`}
+                          checked={isDone}
+                          onCheckedChange={() => handleLoadToggle(loadIndex)}
                           disabled={isSaving}
-                          autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handlePieceSave(loadIndex);
-                            } else if (e.key === 'Escape') {
-                              e.preventDefault();
-                              handleEditPieceCancel();
-                            }
-                          }}
                         />
-                        <span className="text-xs text-muted-foreground">pcs</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 px-2"
-                          onClick={() => handlePieceSave(loadIndex)}
-                          disabled={isSaving || (() => {
-                            const currentValue = loadPieces[loadIndex];
-                            const newValue = editingPieceValue.trim() === '' ? null : Number(editingPieceValue);
-                            return currentValue === newValue || (newValue !== null && isNaN(newValue));
-                          })()}
+                        <label
+                          htmlFor={`load-${loadNum}-done`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
-                          {isSaving ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Check className="h-3 w-3 text-green-600" />
-                          )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 px-2"
-                          onClick={handleEditPieceCancel}
-                          disabled={isSaving}
-                        >
-                          <X className="h-3 w-3 text-red-600" />
-                        </Button>
+                          Load {loadNum} is completed
+                        </label>
                       </div>
-                    ) : (
-                      <div className="text-sm text-foreground">
-                        {pieceCount !== null && pieceCount !== undefined ? (
-                          `${pieceCount} ${pieceCount === 1 ? 'piece' : 'pieces'}`
-                        ) : (
-                          <span className="italic text-muted-foreground">No piece count recorded</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                      {!isDone && (
+                        <div className="pl-6 pt-2 space-y-2 border-t">
+                          <label className="text-xs font-medium text-muted-foreground">
+                            Assign incomplete load to (next day):
+                          </label>
+                          <Select
+                            value={nextDayEmployeeId || ''}
+                            onValueChange={(value) => setNextDayEmployeeId(value || null)}
+                            disabled={isSaving || loadingEmployees}
+                          >
+                            <SelectTrigger className="w-full h-8 text-xs">
+                              <SelectValue placeholder="Select employee" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">Unassigned</SelectItem>
+                              {employees.map((emp) => (
+                                <SelectItem key={emp.id} value={emp.id}>
+                                  {emp.first_name || 'Employee'}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
               );
             }
           )}
         </Accordion>
+        {hasIncompleteLoads && (
+          <div className="pt-4 border-t">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="font-medium">Note:</span>
+              <span>Incomplete loads will appear in the next day's salary calculation.</span>
+            </div>
+          </div>
+        )}
+        <div className="flex items-center justify-end gap-2 pt-4 border-t">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClose}
+            disabled={isSaving}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={isSaving || !hasChanges()}
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Check className="mr-2 h-4 w-4" />
+                Save
+              </>
+            )}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

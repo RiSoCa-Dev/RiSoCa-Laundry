@@ -31,17 +31,17 @@ export async function autoSaveDailySalaries(
     });
 
     currentEmployees.forEach(emp => {
-      const calculatedSalary = calculateEmployeeSalary(dayOrders, emp, currentEmployees);
+      const calculatedSalary = calculateEmployeeSalary(dayOrders, emp, currentEmployees, {});
 
       savePromises.push(
         (async () => {
           try {
-            const { data: existing, error: checkError } = await supabase
-              .from('daily_salary_payments')
-              .select('id, amount')
-              .eq('employee_id', emp.id)
-              .eq('date', dateStr)
-              .maybeSingle();
+              const { data: existing, error: checkError } = await supabase
+                .from('daily_salary_payments')
+                .select('id, amount, load_completion')
+                .eq('employee_id', emp.id)
+                .eq('date', dateStr)
+                .maybeSingle();
 
             if (!existing && !checkError) {
               const { error } = await supabase
@@ -51,6 +51,7 @@ export async function autoSaveDailySalaries(
                   date: dateStr,
                   amount: calculatedSalary,
                   is_paid: false,
+                  load_completion: '{}'::jsonb,
                   updated_at: new Date().toISOString(),
                 });
 

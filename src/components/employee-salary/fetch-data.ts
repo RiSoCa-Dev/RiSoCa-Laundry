@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase-client';
 import type { Order } from '@/components/order-list';
-import type { DailyPaymentStatus } from './types';
+import type { DailyPaymentStatus, LoadCompletionData } from './types';
 
 export async function fetchOrders(): Promise<Order[]> {
   const { data, error } = await supabase
@@ -58,6 +58,7 @@ export async function fetchAllDailyPayments(): Promise<Record<string, DailyPayme
     paymentsByDate[dateStr][payment.employee_id] = {
       is_paid: payment.is_paid,
       amount: payment.amount,
+      load_completion: payment.load_completion || undefined,
     };
   });
 
@@ -80,6 +81,7 @@ export async function fetchDailyPayments(dateStr: string): Promise<DailyPaymentS
     payments[payment.employee_id] = {
       is_paid: payment.is_paid,
       amount: payment.amount,
+      load_completion: payment.load_completion || undefined,
     };
   });
 

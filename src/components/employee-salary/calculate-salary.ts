@@ -6,7 +6,8 @@ import { SALARY_PER_LOAD, ELIGIBLE_STATUSES } from './types';
 export function calculateEmployeeLoads(
   orders: Order[],
   employee: Employee,
-  allEmployees: Employee[]
+  allEmployees: Employee[],
+  dailyPayments?: Record<string, DailyPaymentStatus>
 ): number {
   const myraEmployee = allEmployees.find(e => 
     e.first_name?.toUpperCase() === 'MYRA' || 
@@ -25,16 +26,26 @@ export function calculateEmployeeLoads(
   eligibleOrders.forEach(order => {
     if (order.orderType === 'internal') return;
     
+    // Check for load completion data
+    const orderDateKey = format(startOfDay(new Date(order.orderDate)), 'yyyy-MM-dd');
+    const loadCompletion = dailyPayments?.[orderDateKey]?.[employee.id]?.load_completion?.[order.id];
+    
+    let loadCount = order.load;
+    if (loadCompletion && loadCompletion.incomplete_loads && loadCompletion.incomplete_loads.length > 0) {
+      // Subtract incomplete loads from count
+      loadCount = order.load - loadCompletion.incomplete_loads.length;
+    }
+    
     if (order.assignedEmployeeIds && Array.isArray(order.assignedEmployeeIds) && order.assignedEmployeeIds.length > 0) {
       if (order.assignedEmployeeIds.includes(employee.id)) {
-        const dividedLoad = order.load / order.assignedEmployeeIds.length;
+        const dividedLoad = loadCount / order.assignedEmployeeIds.length;
         customerLoadsForEmployee += dividedLoad;
       }
     } else if (order.assignedEmployeeId === employee.id) {
-      customerLoadsForEmployee += order.load;
+      customerLoadsForEmployee += loadCount;
     } else if (!order.assignedEmployeeId && (!order.assignedEmployeeIds || (Array.isArray(order.assignedEmployeeIds) && order.assignedEmployeeIds.length === 0))) {
       if (isMyra && allEmployees.length === 1) {
-        customerLoadsForEmployee += order.load;
+        customerLoadsForEmployee += loadCount;
       }
     }
   });
@@ -45,9 +56,10 @@ export function calculateEmployeeLoads(
 export function calculateEmployeeSalary(
   orders: Order[],
   employee: Employee,
-  allEmployees: Employee[]
+  allEmployees: Employee[],
+  dailyPayments?: Record<string, DailyPaymentStatus>
 ): number {
-  const customerLoadsForEmployee = calculateEmployeeLoads(orders, employee, allEmployees);
+  const customerLoadsForEmployee = calculateEmployeeLoads(orders, employee, allEmployees, dailyPayments);
   const customerSalary = customerLoadsForEmployee * SALARY_PER_LOAD;
   
   const internalOrdersForEmployee = orders.filter(
@@ -69,7 +81,7 @@ export function calculateActualTotalSalary(
   
   employees.forEach(emp => {
     const payment = dailyPayments[dateKey]?.[emp.id];
-    const calculatedSalary = calculateEmployeeSalary(orders, emp, employees);
+    const calculatedSalary = calculateEmployeeSalary(orders, emp, employees, dailyPayments);
     
     if (payment) {
       actualTotal += payment.amount;

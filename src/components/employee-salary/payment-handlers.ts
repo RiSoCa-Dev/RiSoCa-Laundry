@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase-client';
 import { fetchDailyPayments } from './fetch-data';
+import type { LoadCompletionData } from './types';
 
 export async function savePaymentAmount(
   employeeId: string,
@@ -84,7 +85,7 @@ export async function togglePaymentStatus(
   
   const { data: existingData, error: fetchError } = await supabase
     .from('daily_salary_payments')
-    .select('id')
+    .select('id, load_completion')
     .eq('employee_id', employeeId)
     .eq('date', dateStr)
     .maybeSingle();
@@ -96,6 +97,7 @@ export async function togglePaymentStatus(
       .update({
         is_paid: newStatus,
         amount: amount,
+        load_completion: existingData.load_completion || '{}'::jsonb,
         updated_at: new Date().toISOString(),
       })
       .eq('employee_id', employeeId)
@@ -108,6 +110,7 @@ export async function togglePaymentStatus(
         date: dateStr,
         amount: amount,
         is_paid: newStatus,
+        load_completion: '{}'::jsonb,
         updated_at: new Date().toISOString(),
       });
   }
