@@ -27,7 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Inbox, Check, X, Layers, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { format, startOfDay, addDays } from 'date-fns';
+import { format, startOfDay } from 'date-fns';
 import { supabase } from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/use-employees';
@@ -38,10 +38,6 @@ import { fetchOrders, fetchAllDailyPayments, fetchDailyPayments } from './employ
 import { groupOrdersByDate, calculateActualTotalSalary, calculateEmployeeLoads, calculateEmployeeSalary } from './employee-salary/calculate-salary';
 import { autoSaveDailySalaries } from './employee-salary/auto-save-salaries';
 import { savePaymentAmount, togglePaymentStatus } from './employee-salary/payment-handlers';
-import { saveLoadCompletion } from './employee-salary/load-completion-handlers';
-import { LoadDetailsDialog } from '@/components/load-details-dialog';
-import type { LoadCompletionData } from './employee-salary/types';
-import { createOrderWithHistory, fetchLatestOrderId, generateNextOrderId } from '@/lib/api/orders';
 
 export function EmployeeSalary() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -55,9 +51,6 @@ export function EmployeeSalary() {
   const [editingPaymentAmount, setEditingPaymentAmount] = useState<string | null>(null);
   const [editingPaymentValue, setEditingPaymentValue] = useState<string>('');
   const [lastManualSave, setLastManualSave] = useState<Record<string, number>>({}); // Track manual saves by payment key
-  const [loadDialogOrder, setLoadDialogOrder] = useState<Order | null>(null);
-  const [loadDialogEmployeeId, setLoadDialogEmployeeId] = useState<string | null>(null);
-  const [loadDialogDate, setLoadDialogDate] = useState<Date | null>(null);
   const { toast } = useToast();
 
   const loadOrders = async () => {
@@ -351,214 +344,6 @@ export function EmployeeSalary() {
     }
   };
 
-  const handleOpenLoadDetails = (order: Order, date: Date, employeeId: string) => {
-    setLoadDialogOrder(order);
-    setLoadDialogDate(date);
-    setLoadDialogEmployeeId(employeeId);
-  };
-
-  const handleCloseLoadDetails = () => {
-    setLoadDialogOrder(null);
-    setLoadDialogDate(null);
-    setLoadDialogEmployeeId(null);
-  };
-
-  const calculateTotalFromLoads = (loads: number, servicePackage: string, distance: number): number => {
-    const baseCost = loads * 180;
-    const needsLocation = servicePackage === 'package2' || servicePackage === 'package3';
-    const isFree = needsLocation && distance > 0 && distance <= 0.5;
-    
-    let transportFee = 0;
-    if (!isFree && needsLocation) {
-      const billableDistance = Math.max(0, distance - 1);
-      if (servicePackage === 'package2') {
-        transportFee = billableDistance * 20;
-      } else if (servicePackage === 'package3') {
-        transportFee = billableDistance * 20 * 2;
-      }
-    }
-    
-    return baseCost + transportFee;
-  };
-
-  const handleSaveLoadCompletion = async (loadCompletion: LoadCompletionData) => {
-    console.log('[handleSaveLoadCompletion] Starting save operation', {
-      hasOrder: !!loadDialogOrder,
-      hasDate: !!loadDialogDate,
-      hasEmployeeId: !!loadDialogEmployeeId,
-      orderId: loadDialogOrder?.id,
-    });
-
-    if (!loadDialogOrder || !loadDialogDate || !loadDialogEmployeeId) {
-      console.warn('[handleSaveLoadCompletion] Missing required data, aborting');
-      return;
-    }
-
-    try {
-      const dateStr = format(loadDialogDate, 'yyyy-MM-dd');
-      console.log('[handleSaveLoadCompletion] Saving load completion data', { dateStr, employeeId: loadDialogEmployeeId });
-      
-      await saveLoadCompletion(
-        loadDialogEmployeeId,
-        loadDialogDate,
-        loadCompletion,
-        toast,
-        (dateStr, payments) => {
-          setDailyPayments(prev => {
-            const updated = { ...prev };
-            updated[dateStr] = payments;
-            return updated;
-          });
-        }
-      );
-
-      console.log('[handleSaveLoadCompletion] Load completion saved successfully');
-
-      // Check if there are incomplete loads for this order
-      const orderCompletion = loadCompletion[loadDialogOrder.id];
-      const incompleteLoads = orderCompletion?.incomplete_loads || [];
-      const nextDayEmployeeId = orderCompletion?.next_day_employee_id || null;
-
-      console.log('[handleSaveLoadCompletion] Checking for incomplete loads', {
-        incompleteLoadsCount: incompleteLoads.length,
-        incompleteLoads,
-        nextDayEmployeeId,
-      });
-
-      // If there are incomplete loads, create a new order for tomorrow
-      // NOTE: The original order is NOT modified - it remains unchanged in the main dashboard
-      // Only the load_completion data is used for salary calculations
-      if (incompleteLoads.length > 0) {
-        const tomorrow = startOfDay(addDays(loadDialogDate, 1));
-        const incompleteLoadCount = incompleteLoads.length;
-        
-        console.log('[handleSaveLoadCompletion] Creating order for tomorrow', {
-          tomorrow: tomorrow.toISOString(),
-          incompleteLoadCount,
-        });
-
-        // Generate new order ID for tomorrow's order
-        const { latestId, error: idError } = await fetchLatestOrderId();
-        
-        if (idError) {
-          console.error('[handleSaveLoadCompletion] Failed to generate order ID:', idError);
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: `Failed to generate order ID for tomorrow's order: ${idError.message || 'Unknown error'}. Please try again.`,
-          });
-          // Continue to finally block - don't return early
-        } else if (latestId !== null) {
-          try {
-            const newOrderId = generateNextOrderId(latestId);
-            console.log('[handleSaveLoadCompletion] Generated new order ID', { newOrderId });
-            
-            // Calculate values for tomorrow's order
-            const incompleteWeight = incompleteLoadCount * 7.5;
-            const incompleteTotal = calculateTotalFromLoads(
-              incompleteLoadCount,
-              loadDialogOrder.servicePackage,
-              loadDialogOrder.distance || 0
-            );
-            
-            // Determine employee assignment for the new order
-            const assignedEmployeeId = nextDayEmployeeId || loadDialogEmployeeId;
-            
-            if (!assignedEmployeeId) {
-              console.error('[handleSaveLoadCompletion] No employee ID available for new order');
-              toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'No employee assigned for tomorrow\'s order. Please assign an employee.',
-              });
-              // Continue to finally block
-            } else {
-              console.log('[handleSaveLoadCompletion] Creating order with data', {
-                newOrderId,
-                assignedEmployeeId,
-                incompleteLoadCount,
-                incompleteWeight,
-                incompleteTotal,
-              });
-
-              // Create the new order for tomorrow
-              const { error: createError } = await createOrderWithHistory({
-                id: newOrderId,
-                customer_id: loadDialogOrder.userId || 'admin-manual',
-                customer_name: loadDialogOrder.customerName,
-                contact_number: loadDialogOrder.contactNumber,
-                service_package: loadDialogOrder.servicePackage as 'package1' | 'package2' | 'package3',
-                weight: incompleteWeight,
-                loads: incompleteLoadCount,
-                distance: loadDialogOrder.distance ?? null,
-                delivery_option: loadDialogOrder.deliveryOption ?? null,
-                status: 'Partial Complete',
-                total: incompleteTotal,
-                is_paid: false,
-                order_type: loadDialogOrder.orderType || 'customer',
-                assigned_employee_id: assignedEmployeeId,
-                assigned_employee_ids: assignedEmployeeId ? [assignedEmployeeId] : undefined,
-                created_at: tomorrow.toISOString(),
-              });
-
-              if (createError) {
-                console.error('[handleSaveLoadCompletion] Failed to create order for tomorrow:', createError);
-                toast({
-                  variant: 'destructive',
-                  title: 'Error',
-                  description: `Failed to create order for tomorrow: ${createError.message || 'Unknown error'}. Please try again.`,
-                });
-              } else {
-                console.log('[handleSaveLoadCompletion] Order created successfully for tomorrow', { newOrderId });
-                toast({
-                  title: 'Order Created for Tomorrow',
-                  description: `New order #${newOrderId} created for tomorrow with ${incompleteLoadCount} load${incompleteLoadCount > 1 ? 's' : ''}. The original order remains unchanged.`,
-                });
-              }
-            }
-          } catch (orderCreationError: any) {
-            console.error('[handleSaveLoadCompletion] Exception creating order for tomorrow:', orderCreationError);
-            toast({
-              variant: 'destructive',
-              title: 'Error',
-              description: `Failed to create order for tomorrow: ${orderCreationError.message || 'Unknown error'}. Please try again.`,
-            });
-            // Continue execution - we've saved the load completion, just failed to create tomorrow's order
-          }
-        } else {
-          console.warn('[handleSaveLoadCompletion] Latest order ID is null, cannot generate new ID');
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Failed to generate order ID: No existing orders found. Please try again.',
-          });
-        }
-      } else {
-        console.log('[handleSaveLoadCompletion] No incomplete loads, skipping order creation');
-      }
-
-      // Refresh orders to recalculate salaries (wrap in try-catch to prevent blocking)
-      console.log('[handleSaveLoadCompletion] Refreshing orders');
-      try {
-        await loadOrders();
-        console.log('[handleSaveLoadCompletion] Orders refreshed successfully');
-      } catch (loadError) {
-        console.error('[handleSaveLoadCompletion] Error refreshing orders:', loadError);
-        // Non-critical error, don't block dialog closure
-      }
-    } catch (error: any) {
-      console.error('[handleSaveLoadCompletion] Failed to save load completion:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: `Failed to save load completion: ${error.message || 'Unknown error'}. Please try again.`,
-      });
-    } finally {
-      console.log('[handleSaveLoadCompletion] Closing dialog (finally block)');
-      // Always close the dialog, even if there were errors
-      handleCloseLoadDetails();
-    }
-  };
 
 
   return (
@@ -932,25 +717,7 @@ export function EmployeeSalary() {
                               </div>
                             </TableCell>
                             <TableCell className="text-center text-xs">
-                              {order.orderType === 'internal' ? (
-                                order.load
-                              ) : (() => {
-                                // Find the first assigned employee for this order
-                                const assignedEmployeeId = order.assignedEmployeeIds?.[0] || order.assignedEmployeeId;
-                                if (!assignedEmployeeId) {
-                                  return order.load;
-                                }
-                                return (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenLoadDetails(order, date, assignedEmployeeId)}
-                                    className="underline hover:no-underline text-primary font-medium cursor-pointer"
-                                    title="Edit load completion"
-                                  >
-                                    {order.load}
-                                  </button>
-                                );
-                              })()}
+                              {order.load}
                             </TableCell>
                             <TableCell className="text-center text-xs">
                               {order.orderType === 'internal' ? (
@@ -1081,20 +848,6 @@ export function EmployeeSalary() {
           </div>
         )}
       </CardContent>
-      {loadDialogOrder && loadDialogDate && loadDialogEmployeeId && (
-        <LoadDetailsDialog
-          isOpen={!!loadDialogOrder}
-          onClose={handleCloseLoadDetails}
-          order={loadDialogOrder}
-          date={loadDialogDate}
-          employeeId={loadDialogEmployeeId}
-          loadCompletion={(() => {
-            const dateStr = format(loadDialogDate, 'yyyy-MM-dd');
-            return dailyPayments[dateStr]?.[loadDialogEmployeeId]?.load_completion;
-          })()}
-          onSave={handleSaveLoadCompletion}
-        />
-      )}
     </Card>
   );
 }

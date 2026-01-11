@@ -26,26 +26,16 @@ export function calculateEmployeeLoads(
   eligibleOrders.forEach(order => {
     if (order.orderType === 'internal') return;
     
-    // Check for load completion data
-    const orderDateKey = format(startOfDay(new Date(order.orderDate)), 'yyyy-MM-dd');
-    const loadCompletion = dailyPayments?.[orderDateKey]?.[employee.id]?.load_completion?.[order.id];
-    
-    let loadCount = order.load;
-    if (loadCompletion && loadCompletion.incomplete_loads && loadCompletion.incomplete_loads.length > 0) {
-      // Subtract incomplete loads from count
-      loadCount = order.load - loadCompletion.incomplete_loads.length;
-    }
-    
     if (order.assignedEmployeeIds && Array.isArray(order.assignedEmployeeIds) && order.assignedEmployeeIds.length > 0) {
       if (order.assignedEmployeeIds.includes(employee.id)) {
-        const dividedLoad = loadCount / order.assignedEmployeeIds.length;
+        const dividedLoad = order.load / order.assignedEmployeeIds.length;
         customerLoadsForEmployee += dividedLoad;
       }
     } else if (order.assignedEmployeeId === employee.id) {
-      customerLoadsForEmployee += loadCount;
+      customerLoadsForEmployee += order.load;
     } else if (!order.assignedEmployeeId && (!order.assignedEmployeeIds || (Array.isArray(order.assignedEmployeeIds) && order.assignedEmployeeIds.length === 0))) {
       if (isMyra && allEmployees.length === 1) {
-        customerLoadsForEmployee += loadCount;
+        customerLoadsForEmployee += order.load;
       }
     }
   });
