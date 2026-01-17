@@ -385,49 +385,23 @@ export function EmployeeSalary() {
         {/* Employee Salary Summary Cards */}
         {!loading && employeeSalaryTotals.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <User className="h-5 w-5 text-primary" />
-              Employee Salary Summary
-            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {employeeSalaryTotals.map((emp) => (
-                <Card key={emp.id} className="border-2">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
-                        <User className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-base truncate">
-                          {emp.firstName} {emp.lastName}
-                        </CardTitle>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900">
-                      <div>
-                        <div className="text-xs text-muted-foreground">Total Paid Salary</div>
-                        <div className="text-xl font-bold text-green-700 dark:text-green-400">
-                          ₱{emp.totalPaid.toFixed(2)}
-                        </div>
-                      </div>
-                      <Badge variant="default" className="bg-green-600 hover:bg-green-700">
-                        Paid
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900">
-                      <div>
-                        <div className="text-xs text-muted-foreground">Unpaid Salary</div>
-                        <div className="text-xl font-bold text-orange-700 dark:text-orange-400">
-                          ₱{emp.totalUnpaid.toFixed(2)}
-                        </div>
-                      </div>
-                      <Badge variant="secondary" className="bg-orange-600 hover:bg-orange-700">
-                        Unpaid
-                      </Badge>
-                    </div>
-                  </CardContent>
+                <Card key={emp.id} className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-4 h-4 rounded bg-green-500"></div>
+                    <span className="text-sm text-green-600">Paid</span>
+                  </div>
+                  <div className="text-3xl font-bold text-green-600 mb-2">
+                    ₱{emp.totalPaid.toFixed(2)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {emp.totalUnpaid > 0 ? (
+                      <>₱{emp.totalUnpaid.toFixed(2)} unpaid</>
+                    ) : (
+                      <>0 unpaid</>
+                    )}
+                  </div>
                 </Card>
               ))}
             </div>
