@@ -42,7 +42,7 @@ export function useSubmitOrder(
         return;
       }
 
-      const tempOrderId = await generateTemporaryOrderId();
+      const tempOrderId = generateTemporaryOrderId();
       const initialStatus = 'Order Created';
 
       const newOrder: Order = {
@@ -82,9 +82,9 @@ export function useSubmitOrder(
 
       let saved = await saveOrder(tempOrderId);
 
-      // Retry if duplicate ID error
+      // Retry if duplicate ID error (unlikely with timestamp-based IDs, but handle edge case)
       if (!saved) {
-        const retryTempId = await generateTemporaryOrderId();
+        const retryTempId = generateTemporaryOrderId();
         saved = await saveOrder(retryTempId);
 
         if (!saved) {
@@ -104,12 +104,6 @@ export function useSubmitOrder(
 
       // Optimistically update order count
       setOrderCount(prev => (prev !== null ? prev + 1 : 1));
-
-      // Refresh order count from server to ensure DB consistency
-      setTimeout(async () => {
-        const newCount = await countCustomerOrdersToday(user.id);
-        setOrderCount(newCount);
-      }, 500);
 
       setIsCustomerInfoDialogOpen(false);
       customerFormReset();
@@ -156,7 +150,7 @@ export async function submitOrder(
       return;
     }
 
-    const tempOrderId = await generateTemporaryOrderId();
+    const tempOrderId = generateTemporaryOrderId();
     const initialStatus = 'Order Created';
 
     const newOrder: Order = {
@@ -196,9 +190,9 @@ export async function submitOrder(
 
     let saved = await saveOrder(tempOrderId);
 
-    // Retry if duplicate ID error
+    // Retry if duplicate ID error (unlikely with timestamp-based IDs, but handle edge case)
     if (!saved) {
-      const retryTempId = await generateTemporaryOrderId();
+      const retryTempId = generateTemporaryOrderId();
       saved = await saveOrder(retryTempId);
 
       if (!saved) {
@@ -218,12 +212,6 @@ export async function submitOrder(
 
     // Optimistically update order count
     setOrderCount(currentOrderCount + 1);
-
-    // Refresh order count from server to ensure DB consistency
-    setTimeout(async () => {
-      const newCount = await countCustomerOrdersToday(user.id);
-      setOrderCount(newCount);
-    }, 500);
 
     setIsCustomerInfoDialogOpen(false);
     customerFormReset();

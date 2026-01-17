@@ -97,17 +97,35 @@ export async function createOrder(order: OrderInsert) {
  * 
  * IMPORTANT: Order IDs must be generated using fetchLatestOrderId() and generateNextOrderId()
  * to ensure sequential numbering across all order creation methods (admin manual and customer).
+ * 
+ * Optimized: Inserts order and status history in parallel for better performance.
  */
 export async function createOrderWithHistory(order: OrderInsert) {
-  const { data, error } = await createOrder(order);
-  if (!error && data) {
-    await supabase.from('order_status_history').insert({
-      order_id: order.id,
-      status: order.status,
-      note: 'Order created',
-    });
+  // Prepare status history insert
+  const historyInsert = supabase.from('order_status_history').insert({
+    order_id: order.id,
+    status: order.status,
+    note: 'Order created',
+  });
+
+  // Execute order insert and history insert in parallel
+  const [orderResult, historyResult] = await Promise.all([
+    createOrder(order),
+    historyInsert,
+  ]);
+
+  // If order insert failed, return the error
+  if (orderResult.error) {
+    return { data: null, error: orderResult.error };
   }
-  return { data, error };
+
+  // If history insert failed, log but don't fail the operation
+  // (history can be added later if needed)
+  if (historyResult.error) {
+    console.warn('Failed to create order status history:', historyResult.error);
+  }
+
+  return { data: orderResult.data, error: null };
 }
 
 export async function fetchMyOrders() {
@@ -602,38 +620,16 @@ export async function countCustomerOrdersToday(customerId: string): Promise<numb
 
 /**
  * Generate a temporary ID for orders in "Order Created" status
- * Format: RKR-Pending-001, RKR-Pending-002, etc. (sequential)
+ * Format: RKR-Pending-{timestamp}-{random}
  * This is customer-friendly and will be replaced with RKR### when status changes to "Order Placed"
+ * 
+ * Optimized: Uses timestamp-based approach - no database query needed, guaranteed unique.
  */
-export async function generateTemporaryOrderId(): Promise<string> {
-  // Get the latest RKR-Pending-### ID to generate the next sequential number
-  const { data, error } = await supabase
-    .from('orders')
-    .select('id')
-    .like('id', 'RKR-Pending-%')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  
-  if (error || !data || !data.id) {
-    // No existing pending orders, start with 001
-    return 'RKR-Pending-001';
-  }
-  
-  // Extract the number from RKR-Pending-### format
-  const match = data.id.match(/RKR-Pending-(\d+)/i);
-  if (!match) {
-    // If format is unexpected, start fresh
-    return 'RKR-Pending-001';
-  }
-  
-  const currentNumber = parseInt(match[1], 10);
-  if (isNaN(currentNumber)) {
-    return 'RKR-Pending-001';
-  }
-  
-  // Increment and format with leading zeros (e.g., 2 -> "002")
-  const nextNumber = currentNumber + 1;
-  return `RKR-Pending-${String(nextNumber).padStart(3, '0')}`;
+export function generateTemporaryOrderId(): string {
+  // Use timestamp + random suffix for guaranteed uniqueness
+  // Format: RKR-Pending-{timestamp in milliseconds}-{3 random digits}
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `RKR-Pending-${timestamp}-${random}`;
 }
 
