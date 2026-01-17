@@ -393,13 +393,13 @@ export function EmployeeSalary() {
                     <span className="text-sm text-green-600">Paid</span>
                   </div>
                   <div className="text-3xl font-bold text-green-600 mb-2">
-                    ₱{emp.totalPaid.toFixed(2)}
+                    ₱{emp.totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-sm text-red-600">
                     {emp.totalUnpaid > 0 ? (
-                      <>₱{emp.totalUnpaid.toFixed(2)} unpaid</>
+                      <>₱{emp.totalUnpaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} unpaid</>
                     ) : (
-                      <>0 unpaid</>
+                      <>₱0.00 unpaid</>
                     )}
                   </div>
                 </Card>
