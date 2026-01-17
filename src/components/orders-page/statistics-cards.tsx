@@ -3,11 +3,9 @@
 import {
   Package,
   DollarSign,
-  Clock,
   CheckCircle2,
   Wallet,
-  BarChart3,
-  CreditCard,
+  Layers,
 } from 'lucide-react';
 import type { OrderStatistics } from './calculate-statistics';
 
@@ -50,7 +48,7 @@ export function StatisticsCards({ statistics }: StatisticsCardsProps) {
   ].join(' ');
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 items-stretch">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-stretch">
       {/* Total Orders Card */}
       <div className={cardBaseClasses}>
         <div className="flex items-center gap-2 mb-2">
@@ -65,63 +63,6 @@ export function StatisticsCards({ statistics }: StatisticsCardsProps) {
           </p>
           <p className={subtextClasses}>
             {statistics.todayOrders} today
-          </p>
-        </div>
-      </div>
-
-      {/* Total Revenue Card */}
-      <div className={cardBaseClasses}>
-        <div className="flex items-center gap-2 mb-2">
-          <div className={`${iconBaseClasses} bg-[#6366F1]/85`}>
-            <DollarSign className="h-3.5 w-3.5 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-          </div>
-          <p className={titleClasses}>Total Revenue</p>
-        </div>
-        <div className="flex flex-col justify-end flex-1">
-          <p className={`${valueClasses} text-[#334155] dark:text-[#F1F5F9]`}>
-            <span className="text-[#334155] dark:text-[#F1F5F9] opacity-85 text-[28px]">
-              ₱
-            </span>
-            {Math.ceil(statistics.totalRevenue).toLocaleString()}
-          </p>
-          <p className={subtextClasses}>
-            Yesterday: ₱{Math.ceil(statistics.yesterdayRevenue).toLocaleString()}
-          </p>
-        </div>
-      </div>
-
-      {/* Pending Orders Card */}
-      <div className={cardBaseClasses}>
-        <div className="flex items-center gap-2 mb-2">
-          <div className={`${iconBaseClasses} bg-[#F97316]/85`}>
-            <Clock className="h-3.5 w-3.5 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-          </div>
-          <p className={titleClasses}>Pending</p>
-        </div>
-        <div className="flex flex-col justify-end flex-1">
-          <p className={`${valueClasses} text-[#F97316] dark:text-[#F97316]`}>
-            {statistics.pendingOrders}
-          </p>
-          <p className={subtextClasses}>
-            {statistics.completedOrders} completed
-          </p>
-        </div>
-      </div>
-
-      {/* Payment Status Card */}
-      <div className={cardBaseClasses}>
-        <div className="flex items-center gap-2 mb-2">
-          <div className={`${iconBaseClasses} bg-[#16A34A]/85`}>
-            <CreditCard className="h-3.5 w-3.5 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-          </div>
-          <p className={titleClasses}>Paid</p>
-        </div>
-        <div className="flex flex-col justify-end flex-1">
-          <p className={`${valueClasses} text-[#16A34A] dark:text-[#16A34A]`}>
-            {statistics.paidOrders}
-          </p>
-          <p className={subtextClasses}>
-            {statistics.unpaidOrders} unpaid
           </p>
         </div>
       </div>
@@ -166,20 +107,41 @@ export function StatisticsCards({ statistics }: StatisticsCardsProps) {
         </div>
       </div>
 
-      {/* This Week Card */}
+      {/* Total Revenue Card */}
+      <div className={cardBaseClasses}>
+        <div className="flex items-center gap-2 mb-2">
+          <div className={`${iconBaseClasses} bg-[#6366F1]/85`}>
+            <DollarSign className="h-3.5 w-3.5 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <p className={titleClasses}>Total Revenue</p>
+        </div>
+        <div className="flex flex-col justify-end flex-1">
+          <p className={`${valueClasses} text-[#334155] dark:text-[#F1F5F9]`}>
+            <span className="text-[#334155] dark:text-[#F1F5F9] opacity-85 text-[28px]">
+              ₱
+            </span>
+            {Math.ceil(statistics.totalRevenue).toLocaleString()}
+          </p>
+          <p className={subtextClasses}>
+            Yesterday: ₱{Math.ceil(statistics.yesterdayRevenue).toLocaleString()}
+          </p>
+        </div>
+      </div>
+
+      {/* Total Loads Card */}
       <div className={cardBaseClasses}>
         <div className="flex items-center gap-2 mb-2">
           <div className={`${iconBaseClasses} bg-[#4F46E5]/85`}>
-            <BarChart3 className="h-3.5 w-3.5 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+            <Layers className="h-3.5 w-3.5 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
           </div>
-          <p className={titleClasses}>This Week</p>
+          <p className={titleClasses}>Total Loads</p>
         </div>
         <div className="flex flex-col justify-end flex-1">
           <p className={`${valueClasses} text-[#4F46E5] dark:text-[#4F46E5]`}>
-            {statistics.weekOrders}
+            {statistics.totalLoads.toLocaleString()}
           </p>
           <p className={subtextClasses}>
-            ₱{Math.ceil(statistics.weekRevenue).toLocaleString()}
+            {statistics.todayLoads.toLocaleString()} loads today
           </p>
         </div>
       </div>

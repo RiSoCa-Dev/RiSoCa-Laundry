@@ -16,6 +16,8 @@ export interface OrderStatistics {
   yesterdayRevenue: number;
   weekOrders: number;
   weekRevenue: number;
+  totalLoads: number;
+  todayLoads: number;
 }
 
 export function calculateStatistics(allOrders: Order[]): OrderStatistics {
@@ -82,6 +84,12 @@ export function calculateStatistics(allOrders: Order[]): OrderStatistics {
     0
   );
 
+  // Calculate total loads (sum of all customer orders' load property)
+  const totalLoads = customerOrders.reduce((sum, o) => sum + (o.load || 0), 0);
+  
+  // Calculate today's loads
+  const todayLoads = todayCustomerOrders.reduce((sum, o) => sum + (o.load || 0), 0);
+
   // Yesterday's stats - all customer orders created yesterday
   const yesterday = startOfDay(subDays(new Date(), 1));
   const yesterdayCustomerOrders = customerOrders.filter(
@@ -120,5 +128,7 @@ export function calculateStatistics(allOrders: Order[]): OrderStatistics {
     yesterdayRevenue,
     weekOrders: weekOrders.length,
     weekRevenue,
+    totalLoads,
+    todayLoads,
   };
 }
