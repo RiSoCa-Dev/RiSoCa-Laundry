@@ -330,7 +330,7 @@ export default function EmployeeSalaryPage() {
         </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto overflow-x-hidden scrollable pt-4 pb-4">
-        {/* Top 3 Employees Summary */}
+        {/* Top 3 Employees Summary - Admin Only */}
         {userIsAdmin && (
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">

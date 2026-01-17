@@ -6,7 +6,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '@/components/ui/card';
 import {
   Table,
@@ -352,11 +351,6 @@ export function EmployeeSalary() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex-1">
             <CardTitle>Daily Salary Calculation</CardTitle>
-            <CardDescription>
-              Salary is calculated at ₱{SALARY_PER_LOAD} per load assigned to each employee. 
-              Only orders with status "Ready for Pick Up", "Out for Delivery", "Delivered", "Success", "Partial Complete", or "Washing" (and beyond) are counted. 
-              Old unassigned orders are automatically counted for MYRA (the original employee).
-            </CardDescription>
           </div>
         </div>
       </CardHeader>
