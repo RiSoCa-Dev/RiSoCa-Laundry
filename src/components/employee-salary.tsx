@@ -6,6 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from '@/components/ui/card';
 import {
   Table,
@@ -24,7 +25,7 @@ import {
 } from "@/components/ui/accordion"
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Inbox, Check, X, Layers, Edit2 } from 'lucide-react';
+import { Loader2, Inbox, Check, X, Layers, Edit2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format, startOfDay } from 'date-fns';
 import { supabase } from '@/lib/supabase-client';
@@ -215,6 +216,32 @@ export function EmployeeSalary() {
     })
     .sort((a, b) => b.date.getTime() - a.date.getTime());
 
+  // Calculate employee salary totals (paid and unpaid)
+  const employeeSalaryTotals = employees.map((emp) => {
+    let totalPaid = 0;
+    let totalUnpaid = 0;
+
+    // Loop through all daily payments
+    Object.entries(dailyPayments).forEach(([dateKey, payments]) => {
+      const payment = payments[emp.id];
+      if (payment) {
+        const amount = payment.amount || 0;
+        if (payment.is_paid) {
+          totalPaid += amount;
+        } else {
+          totalUnpaid += amount;
+        }
+      }
+    });
+
+    return {
+      id: emp.id,
+      firstName: emp.first_name || 'Employee',
+      lastName: emp.last_name || '',
+      totalPaid,
+      totalUnpaid,
+    };
+  }).filter(emp => emp.totalPaid > 0 || emp.totalUnpaid > 0); // Only show employees with salary data
 
   const handleEditPaymentAmount = (employeeId: string, date: Date, currentAmount: number) => {
     const dateStr = format(date, 'yyyy-MM-dd');
@@ -355,6 +382,58 @@ export function EmployeeSalary() {
         </div>
       </CardHeader>
       <CardContent className="p-2 sm:p-6">
+        {/* Employee Salary Summary Cards */}
+        {!loading && employeeSalaryTotals.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              Employee Salary Summary
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {employeeSalaryTotals.map((emp) => (
+                <Card key={emp.id} className="border-2">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
+                        <User className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-base truncate">
+                          {emp.firstName} {emp.lastName}
+                        </CardTitle>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900">
+                      <div>
+                        <div className="text-xs text-muted-foreground">Total Paid Salary</div>
+                        <div className="text-xl font-bold text-green-700 dark:text-green-400">
+                          ₱{emp.totalPaid.toFixed(2)}
+                        </div>
+                      </div>
+                      <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+                        Paid
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900">
+                      <div>
+                        <div className="text-xs text-muted-foreground">Unpaid Salary</div>
+                        <div className="text-xl font-bold text-orange-700 dark:text-orange-400">
+                          ₱{emp.totalUnpaid.toFixed(2)}
+                        </div>
+                      </div>
+                      <Badge variant="secondary" className="bg-orange-600 hover:bg-orange-700">
+                        Unpaid
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
             <Loader2 className="h-12 w-12 mb-2 animate-spin" />
