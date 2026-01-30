@@ -492,7 +492,7 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                         <div className="text-xs font-medium text-muted-foreground mb-1">Found Items</div>
                         <div className="space-y-1.5 border rounded-md p-2 bg-muted/30">
                             {(editableOrder.foundItems || []).map((item, index) => (
-                                <div key={index} className="flex items-center gap-1.5">
+                                <div key={`${order.id}-found-item-edit-${index}-${item}`} className="flex items-center gap-1.5">
                                     <Input
                                         type="text"
                                         value={item}
@@ -541,7 +541,7 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                         {workingOrder.foundItems && workingOrder.foundItems.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
                                 {workingOrder.foundItems.map((item, index) => (
-                                    <Badge key={index} variant="outline" className="text-xs bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200">
+                                    <Badge key={`${order.id}-found-item-${index}-${item}`} variant="outline" className="text-xs bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200">
                                         {item}
                                     </Badge>
                                 ))}
@@ -1225,7 +1225,7 @@ function OrderCard({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUp
                                         <div className="space-y-2">
                                             <div className="space-y-1.5 border rounded-md p-2 bg-muted/30">
                                                 {(editableOrder.foundItems || []).map((item, index) => (
-                                                    <div key={index} className="flex items-center gap-1.5">
+                                                    <div key={`${order.id}-found-item-card-edit-${index}-${item}`} className="flex items-center gap-1.5">
                                                         <Input
                                                             type="text"
                                                             value={item}
@@ -1273,7 +1273,7 @@ function OrderCard({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUp
                                         <div className="flex flex-wrap gap-1">
                                             {workingOrder.foundItems && workingOrder.foundItems.length > 0 ? (
                                                 workingOrder.foundItems.map((item, index) => (
-                                                    <Badge key={index} variant="outline" className="text-xs bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200">
+                                                    <Badge key={`${order.id}-found-item-card-${index}-${item}`} variant="outline" className="text-xs bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200">
                                                         {item}
                                                     </Badge>
                                                 ))

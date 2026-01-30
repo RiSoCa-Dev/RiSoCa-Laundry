@@ -28,7 +28,8 @@ export function calculateEmployeeLoads(
     
     if (order.assignedEmployeeIds && Array.isArray(order.assignedEmployeeIds) && order.assignedEmployeeIds.length > 0) {
       if (order.assignedEmployeeIds.includes(employee.id)) {
-        const dividedLoad = order.load / order.assignedEmployeeIds.length;
+        const employeeCount = order.assignedEmployeeIds.length || 1;
+        const dividedLoad = order.load / employeeCount;
         customerLoadsForEmployee += dividedLoad;
       }
     } else if (order.assignedEmployeeId === employee.id) {

@@ -1,5 +1,6 @@
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, eachMonthOfInterval, eachYearOfInterval, subMonths, format } from 'date-fns';
 import type { OrderData, ExpenseData, SalaryPaymentData, DistributionPeriod } from './types';
+import { OWNERS } from './types';
 
 export type TimeSeriesDataPoint = {
   period: string;
@@ -81,7 +82,7 @@ export function calculateTimeSeriesData(
     const periodEmployeeSalaries = periodSalaries.reduce((sum, s) => sum + (s.amount || 0), 0);
     const periodTotalExpenses = periodRegularExpenses + periodEmployeeSalaries;
     const periodNetIncome = periodRevenue - periodTotalExpenses;
-    const periodDistribution = periodNetIncome / 3;
+    const periodDistribution = periodNetIncome / OWNERS.length;
 
     return {
       period: periodKey,

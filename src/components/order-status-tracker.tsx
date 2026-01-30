@@ -441,7 +441,7 @@ export function OrderStatusTracker({ order: initialOrder }: { order: Order }) {
                   <div className="flex flex-col gap-2">
                     <div className="flex flex-wrap gap-1.5">
                       {order.foundItems.map((item, index) => (
-                        <Badge key={index} variant="outline" className="text-xs bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200 font-medium">
+                        <Badge key={`${order.id}-found-item-tracker-${index}-${item}`} variant="outline" className="text-xs bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200 font-medium">
                           {item}
                         </Badge>
                       ))}
