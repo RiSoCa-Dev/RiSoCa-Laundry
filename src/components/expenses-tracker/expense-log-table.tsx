@@ -133,7 +133,8 @@ export function ExpenseLogTable({
                               className="h-8 w-8"
                               onClick={() => onSaveDate(expense.id)}
                               disabled={savingDate || (() => {
-                                const originalDate = expense.incurred_on || new Date(expense.date).toISOString().slice(0, 10);
+                                const originalDate = expense.incurred_on || 
+                                  (expense.date ? expense.date.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
                                 return editingDateValue === originalDate;
                               })()}
                             >
