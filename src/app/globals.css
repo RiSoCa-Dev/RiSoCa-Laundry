@@ -128,34 +128,6 @@ ins.adsbygoogle:not([data-anchor-type]):not([data-anchor-status]):not([data-vign
   visibility: hidden !important;
 }
 
-/* Hide unfilled ads completely, except side banners */
-ins.adsbygoogle[data-ad-status="unfilled"]:not(#left-side-ad):not(#right-side-ad),
-ins.adsbygoogle[data-ad-status="done"]:not([data-ad-status="filled"]):not(#left-side-ad):not(#right-side-ad) {
-  display: none !important;
-  height: 0 !important;
-  width: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* ONLY allow overlay formats (anchor ads, vignettes) - these don't affect layout */
-/* Anchor ads (top/bottom sticky) - overlay format */
-ins.adsbygoogle[data-anchor-type],
-ins.adsbygoogle[data-anchor-status] {
-  display: block !important;
-  position: fixed !important;
-  z-index: 997 !important; /* Below header */
-  /* Anchor ads are already overlay, so they don't affect layout */
-}
-
-/* Vignette ads (full-screen overlay) - popup format */
-ins.adsbygoogle[data-vignette-status] {
-  display: block !important;
-  position: fixed !important;
-  z-index: 996 !important; /* Below header */
-  /* Vignettes are already overlay, so they don't affect layout */
-}
-
 /* Ensure header is ALWAYS fixed at top and never moves */
 header,
 [role="banner"] {
@@ -168,47 +140,6 @@ header,
   width: 100% !important;
 }
 
-/* Hide ad banner container - we don't want in-page ads */
-#ad-banner-container,
-[id*="ad-banner"]:not(#left-side-ad):not(#right-side-ad) {
-  display: none !important;
-  height: 0 !important;
-  width: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  position: fixed !important;
-  top: -9999px !important;
-  left: -9999px !important;
-  visibility: hidden !important;
-}
-
-/* Allow side ad banners to be visible */
-#left-side-ad,
-#right-side-ad,
-#right-side-ad-container {
-  display: block !important;
-  visibility: visible !important;
-}
-
-/* Ensure right side ad container is visible on desktop */
-@media (min-width: 1024px) {
-  #right-side-ad-container {
-    display: flex !important;
-  }
-}
-
-/* Add margins to main content on desktop to account for side ads + spacing */
-@media (min-width: 1024px) {
-  main {
-    margin-left: calc(160px + 1.5rem) !important; /* 160px for ad + 1.5rem (24px) spacing */
-    margin-right: calc(160px + 1.5rem) !important; /* 160px for ad + 1.5rem (24px) spacing */
-  }
-  
-  /* Ensure side ads are properly positioned below header */
-  /* Side ad containers are already positioned with top: 64px in the component */
-  /* z-index is set to 10 in the component, which is below header (10000) */
-}
-
 /* Add padding to main content to account for fixed header */
 /* Header is fixed, so content needs padding to not be hidden behind it */
 /* JS will dynamically adjust this based on actual header height */
@@ -216,18 +147,10 @@ main {
   padding-top: 64px !important; /* Default header height (h-16) */
 }
 
-/* On desktop, add side margins to account for side ad banners */
-@media (min-width: 1024px) {
-  main {
-    margin-left: 160px !important;
-    margin-right: 160px !important;
-  }
-  
-  /* Override margins for admin pages (no ads) */
-  [data-admin-layout] main {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-  }
+/* Override margins for admin pages */
+[data-admin-layout] main {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 
 /* Smooth transitions for responsive design - only for layout elements */
