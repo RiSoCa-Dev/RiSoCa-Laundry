@@ -175,7 +175,10 @@ export function ExpensesTracker() {
 
   const handleStartEditDate = (expense: Expense) => {
     setEditingDateId(expense.id);
-    setEditingDateValue(expense.incurred_on || new Date(expense.date).toISOString().slice(0, 10));
+    setEditingDateValue(
+      expense.incurred_on || 
+      (expense.date ? expense.date.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10))
+    );
   };
 
   const handleCancelEditDate = () => {
