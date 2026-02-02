@@ -23,7 +23,7 @@ export const AD_SLOTS = {
  * Check if ad slots are configured
  */
 export function areAdSlotsConfigured(): boolean {
-  return Object.values(AD_SLOTS).some(slot => slot !== '');
+  return Object.values(AD_SLOTS).length > 0 && Object.values(AD_SLOTS).every(slot => slot && slot.length > 0);
 }
 
 /**

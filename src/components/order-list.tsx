@@ -168,7 +168,7 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
         return baseCost + transportFee;
     };
 
-    const handleFieldChange = (field: keyof Order, value: string | number | boolean | null | string[] | Date) => {
+    const handleFieldChange = (field: keyof Order, value: string | number | boolean | null | string[] | number[] | (number | null)[] | Date) => {
         let newOrderState = { ...editableOrder };
 
         if (field === 'status' && typeof value === 'string' && value !== editableOrder.status) {
@@ -177,13 +177,14 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                 status: value,
                 statusHistory: [...(editableOrder.statusHistory || []), { status: value, timestamp: new Date() }]
             };
-        } else if (field === 'assignedEmployeeIds' && Array.isArray(value)) {
+        } else if (field === 'assignedEmployeeIds' && Array.isArray(value) && value.every(v => typeof v === 'string')) {
             // Handle multi-select employee assignment
+            const stringArray = value as string[];
             newOrderState = {
                 ...newOrderState,
-                assignedEmployeeIds: value.length > 0 ? value : undefined,
+                assignedEmployeeIds: stringArray.length > 0 ? stringArray : undefined,
                 // For backward compatibility, set assignedEmployeeId to first employee or null
-                assignedEmployeeId: value.length > 0 ? value[0] : null
+                assignedEmployeeId: stringArray.length > 0 ? stringArray[0] : null
             };
         } else if (field === 'loadPieces' && Array.isArray(value)) {
             // Handle load pieces array
@@ -193,7 +194,7 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
             const hasAnyPieces = cleanedPieces.some(p => p !== null && p !== undefined);
             newOrderState = {
                 ...newOrderState,
-                loadPieces: hasAnyPieces ? cleanedPieces : undefined
+                loadPieces: hasAnyPieces ? cleanedPieces.filter((p): p is number => p !== null && p !== undefined) : undefined
             };
         } else if (field === 'orderDate' && value instanceof Date) {
             // Handle date field
@@ -440,7 +441,7 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                                             placeholder="pcs"
                                             value={pieceValue}
                                             onChange={(e) => {
-                                                const newPieces = [...(editableOrder.loadPieces || [])];
+                                                const newPieces: (number | null)[] = [...(editableOrder.loadPieces || [])];
                                                 // Ensure array is long enough
                                                 while (newPieces.length < editableOrder.load) {
                                                     newPieces.push(null);
@@ -511,7 +512,7 @@ function OrderRow({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUpd
                                         variant="ghost"
                                         onClick={() => {
                                             const newItems = (editableOrder.foundItems || []).filter((_, i) => i !== index);
-                                            handleFieldChange('foundItems', newItems.length > 0 ? newItems : undefined);
+                                            handleFieldChange('foundItems', newItems.length > 0 ? newItems : null);
                                         }}
                                         disabled={isSaving}
                                         className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive"
@@ -816,7 +817,7 @@ function OrderCard({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUp
 
     // Employees are now fetched via useEmployees hook with caching
 
-    const handleFieldChange = (field: keyof Order, value: string | number | boolean | null | string[] | Date | number[]) => {
+    const handleFieldChange = (field: keyof Order, value: string | number | boolean | null | string[] | number[] | (number | null)[] | Date | undefined) => {
         let newOrderState = { ...editableOrder };
 
         if (field === 'status' && typeof value === 'string' && value !== editableOrder.status) {
@@ -825,13 +826,14 @@ function OrderCard({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUp
                 status: value,
                 statusHistory: [...(editableOrder.statusHistory || []), { status: value, timestamp: new Date() }]
             };
-        } else if (field === 'assignedEmployeeIds' && Array.isArray(value)) {
+        } else if (field === 'assignedEmployeeIds' && Array.isArray(value) && value.every(v => typeof v === 'string')) {
             // Handle multi-select employee assignment
+            const stringArray = value as string[];
             newOrderState = {
                 ...newOrderState,
-                assignedEmployeeIds: value.length > 0 ? value : undefined,
+                assignedEmployeeIds: stringArray.length > 0 ? stringArray : undefined,
                 // For backward compatibility, set assignedEmployeeId to first employee or null
-                assignedEmployeeId: value.length > 0 ? value[0] : null
+                assignedEmployeeId: stringArray.length > 0 ? stringArray[0] : null
             };
         } else if (field === 'loadPieces' && Array.isArray(value)) {
             // Handle load pieces array
@@ -841,7 +843,7 @@ function OrderCard({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUp
             const hasAnyPieces = cleanedPieces.some(p => p !== null && p !== undefined);
             newOrderState = {
                 ...newOrderState,
-                loadPieces: hasAnyPieces ? cleanedPieces : undefined
+                loadPieces: hasAnyPieces ? cleanedPieces.filter((p): p is number => p !== null && p !== undefined) : undefined
             };
         } else if (field === 'orderDate' && value instanceof Date) {
             // Handle date field
@@ -1173,7 +1175,7 @@ function OrderCard({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUp
                                                                 placeholder="pcs"
                                                                 value={pieceValue}
                                                                 onChange={(e) => {
-                                                                    const newPieces = [...(editableOrder.loadPieces || [])];
+                                                                    const newPieces: (number | null)[] = [...(editableOrder.loadPieces || [])];
                                                                     // Ensure array is long enough
                                                                     while (newPieces.length < editableOrder.load) {
                                                                         newPieces.push(null);
@@ -1244,7 +1246,7 @@ function OrderCard({ order, onUpdateOrder, onDeleteOrder }: { order: Order, onUp
                                                             variant="ghost"
                                                             onClick={() => {
                                                                 const newItems = (editableOrder.foundItems || []).filter((_, i) => i !== index);
-                                                                handleFieldChange('foundItems', newItems.length > 0 ? newItems : undefined);
+                                                                handleFieldChange('foundItems', newItems.length > 0 ? newItems : null);
                                                             }}
                                                             disabled={isSaving}
                                                             className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive"
