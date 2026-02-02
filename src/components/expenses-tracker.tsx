@@ -194,7 +194,8 @@ export function ExpensesTracker() {
     // Check if date changed
     const expense = expenses.find(e => e.id === id);
     if (expense) {
-      const originalDate = expense.incurred_on || new Date(expense.date).toISOString().slice(0, 10);
+      const originalDate = expense.incurred_on || 
+        (expense.date ? expense.date.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
       if (editingDateValue === originalDate) {
         // No change, just cancel
         setEditingDateId(null);
